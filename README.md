@@ -1,6 +1,12 @@
 # Linux Cheatsheet
 Cheatsheet of common Linux commands
 
+## Table of Contents
+1. [Shell](#Shell)
+2. [Home](#Home)
+3. [Files](#Files)
+4. [History](#History)
+
 ## Shell
 ##### Known shells to Linux system
 ```
