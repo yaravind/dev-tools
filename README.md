@@ -39,14 +39,14 @@ rishik:x:1000:1000:Rishik,,,:/home/rishik:/bin/bash
 ```
 
 ## Home
-##### What is your home dir?
+##### What is my home dir?
 ```
 rishik@rishik-computer:~/ws$ echo $HOME
 /home/rishik
 ```
 
 ## Files
-##### Guess the file type
+##### Guess the file type!
 ```
 rishik@rishik-computer:~/Downloads$ file ideaIC-2018.3.2.tar.gz 
 ideaIC-2018.3.2.tar.gz: gzip compressed data, from FAT filesystem (MS-DOS, OS/2, NT)
@@ -110,10 +110,15 @@ alias ltr='ls -ltr'
 
 
 ## History
-echo $HISTFILE - shows the file where history is being stored
-history - lists all previously ran commands
-!! - runs the last command
-!2 - runs the command at index 2 from the output of history command
+- `history` lists all previously ran commands
+- `!!` runs the last command
+- `!2` runs the command at index 2 from the output of history command
+
+##### Where is my history stored?
+```
+rishik@rishik-computer:~$ echo $HISTFILE
+/home/rishik/.bash_history
+```
 
 ## Groups
 groups <userid> - list all the groups a user belongs to. deprecated.
