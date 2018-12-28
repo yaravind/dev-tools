@@ -45,6 +45,15 @@ rishik@rishik-computer:~/ws$ file datasets/citibikenyc/JC-201709-citibike-tripda
 datasets/citibikenyc/JC-201709-citibike-tripdata.csv: ASCII text
 ```
 
+```
+rishik@rishik-computer:~$ file /dev/sda
+/dev/sda: block special (8/0)
+rishik@rishik-computer:~$ file /dev/sda1
+/dev/sda1: block special (8/1)
+rishik@rishik-computer:~$ file /dev/null
+/dev/null: character special (1/3)
+```
+
 ##### `ls` default scheme color
 
 | Color | File type |
