@@ -6,6 +6,9 @@ Cheatsheet of common Linux commands
 2. [Home](#Home)
 3. [Files](#Files)
 4. [History](#History)
+5. [Groups](#Groups)
+6. [Permissions](#Permissions)
+7. [Packages](#Packages)
 
 ## Shell
 ##### Known shells to Linux system
