@@ -34,6 +34,17 @@ rishik@rishik-computer:~/ws$ echo $HOME
 ```
 
 ## Files
+##### Guess the file type
+```
+rishik@rishik-computer:~/Downloads$ file ideaIC-2018.3.2.tar.gz 
+ideaIC-2018.3.2.tar.gz: gzip compressed data, from FAT filesystem (MS-DOS, OS/2, NT)
+```
+
+```
+rishik@rishik-computer:~/ws$ file datasets/citibikenyc/JC-201709-citibike-tripdata.csv 
+datasets/citibikenyc/JC-201709-citibike-tripdata.csv: ASCII text
+```
+
 ##### `ls` default scheme color
 
 | Color | File type |
