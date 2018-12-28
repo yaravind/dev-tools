@@ -59,21 +59,22 @@ rishik@rishik-computer:~/ws$ echo $HOME
 | `\|` |	named pipe |
 
 
-# History
+## History
 echo $HISTFILE - shows the file where history is being stored
 history - lists all previously ran commands
 !! - runs the last command
 !2 - runs the command at index 2 from the output of history command
 
-#Groups
+## Groups
 groups <userid> - list all the groups a user belongs to. deprecated.
 id <userid> - groups with more details
 id -Gn <userid>
 
-# Permissions
+## Permissions
 sudo chown ownerName:groupName [dir | fileName] - change owner and group of a folder or file
 
-# Packages - Reference: https://help.ubuntu.com/community/Repositories
+## Packages
+Reference: https://help.ubuntu.com/community/Repositories
 
 cat /etc/apt/sources.list - lists all the repositories
 
