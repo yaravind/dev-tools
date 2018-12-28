@@ -76,14 +76,64 @@ rishik@rishik-computer:~$ which docker
 /usr/bin/docker
 ```
 
-##### Check if a command is an alias for another command
+##### Check if a command is an alias for another command!
 ```
 rishik@rishik-computer:~$ alias ls
 alias ls='ls --color=auto'
 rishik@rishik-computer:~$ alias ltr
 alias ltr='ls -ltr'
 ```
+##### Find all files whose filename has "readme" in it
+```
+rishik@rishik-computer:~$ find /usr -name "*readme*"
+/usr/share/snmp/mib2c-data/mfd-readme.m2c
+/usr/share/snmp/mib2c-data/syntax-DateAndTime-readme.m2i
+/usr/share/mime/text/x-readme.xml
+/usr/share/icons/elementary/mimes/128/text-x-readme.svg
+/usr/share/icons/elementary/mimes/64/text-x-readme.svg
+/usr/share/icons/elementary/mimes/32/text-x-readme.svg
+/usr/share/icons/elementary/mimes/16/text-x-readme.svg
+/usr/share/icons/elementary/mimes/24/text-x-readme.svg
+/usr/share/icons/elementary/mimes/48/text-x-readme.svg
+/usr/share/games/assaultcube/packages/maps/official/official_readme.txt
+/usr/share/games/assaultcube/packages/maps/preview/readme.txt
+/usr/share/games/assaultcube/packages/maps/servermaps/readme.txt
+/usr/share/games/assaultcube/packages/textures/kurt/dummyfiles_readme.txt
+/usr/share/doc/assaultcube-data/docs/cube_bot-readme.txt.gz
+/usr/share/doc/aufs-tools/examples/uloop/00readme.txt.gz
+/usr/share/doc/p7zip/DOC/readme.txt.gz
+/usr/share/lintian/checks/debian-readme.pm
+/usr/share/lintian/checks/debian-readme.desc
+```
 
+##### Find all files bigger than 100MB
+```
+rishik@rishik-computer:~$ find . -size +100M
+./Downloads/ideaIC-2018.3.2.tar.gz
+./.config/epiphany/gsb-threats.db
+```
+
+##### Find all files whose filename has "readme" in it
+`locate` is fast as its output is based on file index database. But it is refreshed only once everyday.
+ 
+```
+rishik@rishik-computer:~$ locate readme
+/home/rishik/ws/datasets/machine-learning-a2z/readme.txt
+/usr/share/doc/aufs-tools/examples/uloop/00readme.txt.gz
+/usr/share/doc/p7zip/DOC/readme.txt.gz
+/usr/share/icons/elementary/mimes/128/text-x-readme.svg
+/usr/share/icons/elementary/mimes/16/text-x-readme.svg
+/usr/share/icons/elementary/mimes/24/text-x-readme.svg
+/usr/share/icons/elementary/mimes/32/text-x-readme.svg
+/usr/share/icons/elementary/mimes/48/text-x-readme.svg
+/usr/share/icons/elementary/mimes/64/text-x-readme.svg
+/usr/share/lintian/checks/debian-readme.desc
+/usr/share/lintian/checks/debian-readme.pm
+/usr/share/mime/text/x-readme.xml
+/usr/share/snmp/mib2c-data/mfd-readme.m2c
+/usr/share/snmp/mib2c-data/syntax-DateAndTime-readme.m2i
+rishik@rishik-computer:~$ 
+```
 ##### `ls` default scheme color
 
 | Color | File type |
