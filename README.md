@@ -1,5 +1,8 @@
 # Linux Cheatsheet
-Cheatsheet of common Linux commands
+Cheatsheet of common Linux commands. Derived from
+
+- [The Linux Documentation Project](http://www.tldp.org/guides.html)
+- Stackoverflow (https://stackoverflow.com
 
 ## Table of Contents
 1. [Shell](#Shell)
