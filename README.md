@@ -54,6 +54,24 @@ rishik@rishik-computer:~$ file /dev/null
 /dev/null: character special (1/3)
 ```
 
+##### Find executable file
+`which` searches the user's search `PATH`. Good for troubleshooting `Command not found` problems.
+
+```
+rishik@rishik-computer:~$ which -a java
+/usr/bin/java
+rishik@rishik-computer:~$ which docker
+/usr/bin/docker
+```
+
+##### Check if a command is an alias for another command
+```
+rishik@rishik-computer:~$ alias ls
+alias ls='ls --color=auto'
+rishik@rishik-computer:~$ alias ltr
+alias ltr='ls -ltr'
+```
+
 ##### `ls` default scheme color
 
 | Color | File type |
