@@ -180,6 +180,7 @@ rishik@rishik-computer:~$ echo $HISTFILE
 Add the following aliases to `.bashrc`
 
 ```.bashrc
+alias gcfg='git config -l'
 alias gs='git status '
 alias ga='git add '
 alias gb='git branch '
