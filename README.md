@@ -179,7 +179,7 @@ rishik@rishik-computer:~$ echo $HISTFILE
 ## Git
 Add the following aliases to `.bashrc`
 
-```.bashrc
+```shell
 alias gcfg='git config -l'
 alias gs='git status '
 alias ga='git add '
@@ -194,6 +194,8 @@ alias gl='git log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]
 alias gsl='git shortlog'
 alias gslu='git log --format='%aN' | sort -u'
 alias gslc='git shortlog -sn'
+
+gsu() { git log --shortstat --author="$1" | grep -E "fil(e|es) changed" | awk '{files+=$1; inserted+=$4; deleted+=$6; delta+=$4-$6; ratio=deleted/inserted} END {printf "Commit stats:\n- Files changed (total)..  %s\n- Lines added (total)....  %s\n- Lines deleted (total)..  %s\n- Total lines (delta)....  %s\n- Add./Del. ratio (1:n)..  1 : %s\n", files, inserted, deleted, delta, ratio }' - ;}
 ```
 
 ##### Pretty print all commits
@@ -226,6 +228,35 @@ Aravind R. Yarram
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gslc
     12  Aravind R. Yarram
      1  Aravind R Yarram
+```
+
+##### What changed since given date?
+```console
+rishik@rishik-computer:~/ws/datasets$ git whatchanged --since '09/01/2018' --oneline --name-only --pretty=format: | sort | uniq
+
+computer/cpu-performance-data.csv
+flight/2014_jan_carrier_performance.csv
+.gitignore
+machine-learning-a2z/Part 1 - Data Preprocessing/Data.csv
+machine-learning-a2z/readme.txt
+README.md
+rishik@rishik-computer:~/ws/datasets$ git whatchanged --since '10/01/2018' --oneline --name-only --pretty=format: | sort | uniq
+
+computer/cpu-performance-data.csv
+flight/2014_jan_carrier_performance.csv
+.gitignore
+README.md
+```
+
+##### List file change stats by author
+```console
+rishik@rishik-computer:~/ws/linux-cheatsheet$ gsu Aravind R. Yarram
+Commit stats:
+- Files changed (total)..  18
+- Lines added (total)....  490
+- Lines deleted (total)..  35
+- Total lines (delta)....  455
+- Add./Del. ratio (1:n)..  1 : 0.0714286
 ```
 
 ## Groups
