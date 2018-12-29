@@ -282,8 +282,6 @@ rishik
 
 ## Groups
 
-groups <userid> - list all the groups a user belongs to. deprecated.
-id <userid> - groups with more details
 id -Gn <userid>
 
 ##### What is my default group and other groups I belong to?
@@ -303,6 +301,31 @@ uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),
 
 ## Permissions
 sudo chown ownerName:groupName [dir | fileName] - change owner and group of a folder or file
+
+##### What other groups do I belong to?
+:warning: `groups` is deprecated in lieu of `id -Gn`
+
+```console
+rishik@rishik-computer:~$ groups rishik
+rishik : rishik adm cdrom sudo dip plugdev lpadmin sambashare docker
+rishik@rishik-computer:~$ id -Gn rishik
+rishik adm cdrom sudo dip plugdev lpadmin sambashare docker
+````
+##### How can I login to other groups I belong to? For e.g. docker
+```console
+rishik@rishik-computer:~$ id
+uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare)
+
+rishik@rishik-computer:~$ newgrp docker
+
+rishik@rishik-computer:~$ id
+uid=1000(rishik) gid=999(docker) groups=999(docker),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare),1000(rishik)
+
+rishik@rishik-computer:~$ newgrp rishik
+
+rishik@rishik-computer:~$ id
+uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare),999(docker)
+``` 
 
 ## Packages
 Reference: https://help.ubuntu.com/community/Repositories
