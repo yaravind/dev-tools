@@ -279,16 +279,27 @@ rishik
 rishik@rishik-computer:~$ whoami
 rishik
 ```
+
+## Groups
+
+groups <userid> - list all the groups a user belongs to. deprecated.
+id <userid> - groups with more details
+id -Gn <userid>
+
 ##### What is my default group and other groups I belong to?
 ```console
 rishik@rishik-computer:~$ id
 uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare)
 ```
 
-## Groups
-groups <userid> - list all the groups a user belongs to. deprecated.
-id <userid> - groups with more details
-id -Gn <userid>
+:warning:
+>User private group scheme:
+>In order to allow more flexibility, most Linux systems follow the so
+>called user private group scheme, that assigns each user primarily to his
+>or her own group. This group is a group that only contains this
+>particular user, hence the name "private group". Usually this group has
+>the same name as the user login name, which can be a bit confusing.
+
 
 ## Permissions
 sudo chown ownerName:groupName [dir | fileName] - change owner and group of a folder or file
