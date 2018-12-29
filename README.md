@@ -49,6 +49,26 @@ Cheatsheet of common Linux commands. Derived from
 | `=`	 |socket |
 | `\|` |	named pipe |
 
+##### What is umask?
+
+- `umask` setting plays a big role in determining the permissions that are assigned to files that you create
+- The default permissions when creating a new dir is octal `777 (111 111 111)`, and a new file is octal `666 (110 110 110)`. We set the umask to block/disable certain permissions.
+- A mask bit of 1 means to block/disable that permission (put masking tape over that bit).
+- A mask bit of 0 will allow the permission to pass through (no masking tape over that bit).
+- So an octal `022 (000 010 010)` mask means to disable group write and others write, and allow all other permissions to pass through.
+- umask is a setting that directly controls the permissions assigned when you create files or directories. Create a new file using a text editor or simply with the touch command, and its permissions will be derived from your umask setting.
+- The umask setting for all users is generally set up in a system-wide file like `/etc/profile`, `/etc/bashrc` or `/etc/login.defs` — a file that's used every time someone logs into the system
+
+###### What is my default umask setting?
+Ignore the first character/zero
+
+```console
+rishik@rishik-computer:~$ umask -S
+u=rwx,g=rwx,o=rx
+rishik@rishik-computer:~$ umask
+0002
+```
+
 ## Shell
 ##### Known shells to Linux system
 ```console
