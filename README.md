@@ -17,7 +17,7 @@ Cheatsheet of common Linux commands. Derived from
 
 ## Shell
 ##### Known shells to Linux system
-```
+```console
 rishik@rishik-computer:~/ws$ cat /etc/shells
 # /etc/shells: valid login shells
 /bin/sh
@@ -26,14 +26,14 @@ rishik@rishik-computer:~/ws$ cat /etc/shells
 /bin/dash
 ```
 ##### Which shell am I using?
-```
+```console
 rishik@rishik-computer:~/ws$ echo $0
 /bin/bash
 rishik@rishik-computer:~/ws$ echo $SHELL
 /bin/bash
 ```
 ##### What is the default shell set for each user?
-```
+```console
 rishik@rishik-computer:~/ws$ cat /etc/passwd
 root:x:0:0:root:/root:/bin/bash
 ...
@@ -42,24 +42,24 @@ rishik:x:1000:1000:Rishik,,,:/home/rishik:/bin/bash
 
 ## Home
 ##### What is my home dir?
-```
+```console
 rishik@rishik-computer:~/ws$ echo $HOME
 /home/rishik
 ```
 
 ## Files
 ##### Guess the file type!
-```
+```console
 rishik@rishik-computer:~/Downloads$ file ideaIC-2018.3.2.tar.gz 
 ideaIC-2018.3.2.tar.gz: gzip compressed data, from FAT filesystem (MS-DOS, OS/2, NT)
 ```
 
-```
+```console
 rishik@rishik-computer:~/ws$ file datasets/citibikenyc/JC-201709-citibike-tripdata.csv 
 datasets/citibikenyc/JC-201709-citibike-tripdata.csv: ASCII text
 ```
 
-```
+```console
 rishik@rishik-computer:~$ file /dev/sda
 /dev/sda: block special (8/0)
 rishik@rishik-computer:~$ file /dev/sda1
@@ -71,7 +71,7 @@ rishik@rishik-computer:~$ file /dev/null
 ##### Find executable file
 `which` searches the user's search `PATH`. Good for troubleshooting `Command not found` problems.
 
-```
+```console
 rishik@rishik-computer:~$ which -a java
 /usr/bin/java
 rishik@rishik-computer:~$ which docker
@@ -79,14 +79,16 @@ rishik@rishik-computer:~$ which docker
 ```
 
 ##### Check if a command is an alias for another command!
-```
+
+```console
 rishik@rishik-computer:~$ alias ls
 alias ls='ls --color=auto'
 rishik@rishik-computer:~$ alias ltr
 alias ltr='ls -ltr'
 ```
 ##### Find all files whose filename has "readme" in it
-```
+
+```console
 rishik@rishik-computer:~$ find /usr -name "*readme*"
 /usr/share/snmp/mib2c-data/mfd-readme.m2c
 /usr/share/snmp/mib2c-data/syntax-DateAndTime-readme.m2i
@@ -109,16 +111,18 @@ rishik@rishik-computer:~$ find /usr -name "*readme*"
 ```
 
 ##### Find all files bigger than 100MB
-```
+
+```console
 rishik@rishik-computer:~$ find . -size +100M
 ./Downloads/ideaIC-2018.3.2.tar.gz
 ./.config/epiphany/gsb-threats.db
 ```
 
 ##### Find all files whose filename has "readme" in it
+
 `locate` is fast as its output is based on file index database. But it is refreshed only once everyday.
  
-```
+```console
 rishik@rishik-computer:~$ locate readme
 /home/rishik/ws/datasets/machine-learning-a2z/readme.txt
 /usr/share/doc/aufs-tools/examples/uloop/00readme.txt.gz
@@ -167,7 +171,7 @@ rishik@rishik-computer:~$
 - `!2` runs the command at index 2 from the output of history command
 
 ##### Where is my history stored?
-```
+```console
 rishik@rishik-computer:~$ echo $HISTFILE
 /home/rishik/.bash_history
 ```
@@ -175,7 +179,7 @@ rishik@rishik-computer:~$ echo $HISTFILE
 ## Git
 Add the following aliases to `.bashrc`
 
-```bash
+```.bashrc
 alias gs='git status '
 alias ga='git add '
 alias gb='git branch '
@@ -208,14 +212,14 @@ d4c2afb\ format content\ [Aravind R. Yarram]
 ```
 
 ##### List repository contributors by author name (sorted by name)
-```bash
+```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gslu
 Aravind R Yarram
 Aravind R. Yarram
 ```
 
 ##### List total commits by author (sorted by commit count)
-```bash
+```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gslc
     12  Aravind R. Yarram
      1  Aravind R Yarram
