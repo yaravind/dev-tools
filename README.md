@@ -1,11 +1,5 @@
 >“On a UNIX system, everything is a file; if something is not a file, it is a process.” ―  Machtelt Garrels, Introduction To Linux: A Hands On Guide
 
-## Reference
-
-- [The Linux Documentation Project](http://www.tldp.org/guides.html)
-- [Stackoverflow](https://stackoverflow.com)
-- [Git Gist](https://gist.github.com/eyecatchup/3fb7ef0c0cbdb72412fc)
-
 ## Table of Contents
 0. [Notes](#Notes)
 1. [Shell](#Shell)
@@ -69,6 +63,14 @@ u=rwx,g=rwx,o=rx
 rishik@rishik-computer:~$ umask
 0002
 ```
+
+##### /dev/null, /dev/random, and /dev/zero
+
+The /dev file system doesn’t just contain files that represent physical devices. Here are three of the most notable special devices it contains:
+
+1. /dev/null – Discards all data written to it – think of it as a trash can or black hole. If you ever see a comment telling you to send complains to /dev/null – that’s a geeky way of saying “throw them in the trash.”
+2. /dev/random – Produces randomness using environmental noise. It’s a random number generator you can tap into.
+3. /dev/zero – Produces zeros – a constant stream of zeros.
 
 ## Shell
 ##### Known shells to Linux system
@@ -366,3 +368,9 @@ apt-get install apache2=2.4.7-1ubuntu4.5
 apt-mark hold <package-name> - apt-mark allows you to pin the package to an installed ver. apt/apt-get upgrade doesn't upgrade to latest 
 
 aptitude versions <package-name> - shows all the versions available
+
+## Reference
+
+- [The Linux Documentation Project](http://www.tldp.org/guides.html)
+- [Stackoverflow](https://stackoverflow.com)
+- [Git Gist](https://gist.github.com/eyecatchup/3fb7ef0c0cbdb72412fc)
