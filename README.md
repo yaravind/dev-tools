@@ -1,5 +1,6 @@
-# Linux Cheatsheet
-Cheatsheet of common Linux commands. Derived from
+>“On a UNIX system, everything is a file; if something is not a file, it is a process.” ―  Machtelt Garrels, Introduction To Linux: A Hands On Guide
+
+## Reference
 
 - [The Linux Documentation Project](http://www.tldp.org/guides.html)
 - [Stackoverflow](https://stackoverflow.com)
