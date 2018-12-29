@@ -6,6 +6,7 @@ Cheatsheet of common Linux commands. Derived from
 - [Git Gist](https://gist.github.com/eyecatchup/3fb7ef0c0cbdb72412fc)
 
 ## Table of Contents
+0. [Notes](#Notes)
 1. [Shell](#Shell)
 2. [Home](#Home)
 3. [Files](#Files)
@@ -14,6 +15,36 @@ Cheatsheet of common Linux commands. Derived from
 6. [Groups](#Groups)
 7. [Permissions](#Permissions)
 8. [Packages](#Packages)
+
+## Notes
+| Hard Link | Symbolic Link |
+|-----------|---------------|
+| associate 2 or more files with same inode| a small file that is a pointer to another file |
+|share same data blocks on hard disk| contains the path to the target file instead of a physical location on the hard disk|
+|can not span partitions because inode numbers are only unique within a given partition|since inodes are not used in this system, soft links can span across partitions|
+##### `ls` default scheme color
+
+| Color | File type |
+| --- | --- |
+| blue	| directories |
+| red	| compressed archives |
+| white	| text files |
+| pink	| images |
+| cyan	| links |
+| yellow	| devices |
+| green	| executables |
+| flashing red	| broken links |
+
+##### `ls` default suffix scheme
+
+| Character |	File type |
+| --- | --- |
+| nothing |	regular file |
+| `/`	 |directory |
+| `*`	 |executable file |
+| `@`	 |link |
+| `=`	 |socket |
+| `\|` |	named pipe |
 
 ## Shell
 ##### Known shells to Linux system
@@ -140,30 +171,6 @@ rishik@rishik-computer:~$ locate readme
 /usr/share/snmp/mib2c-data/syntax-DateAndTime-readme.m2i
 rishik@rishik-computer:~$ 
 ```
-##### `ls` default scheme color
-
-| Color | File type |
-| --- | --- |
-| blue	| directories |
-| red	| compressed archives |
-| white	| text files |
-| pink	| images |
-| cyan	| links |
-| yellow	| devices |
-| green	| executables |
-| flashing red	| broken links |
-
-##### `ls` default suffix scheme
-
-| Character |	File type |
-| --- | --- |
-| nothing |	regular file |
-| `/`	 |directory |
-| `*`	 |executable file |
-| `@`	 |link |
-| `=`	 |socket |
-| `\|` |	named pipe |
-
 
 ## History
 - `history` lists all previously ran commands
