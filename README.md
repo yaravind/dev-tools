@@ -12,6 +12,7 @@ Cheatsheet of common Linux commands. Derived from
 3. [Files](#Files)
 4. [History](#History)
 5. [Git](#Git)
+6. [Users](#Users)
 6. [Groups](#Groups)
 7. [Permissions](#Permissions)
 8. [Packages](#Packages)
@@ -268,6 +269,20 @@ Commit stats:
 - Lines deleted (total)..  35
 - Total lines (delta)....  455
 - Add./Del. ratio (1:n)..  1 : 0.0714286
+```
+## Users
+
+##### What is my username?
+```console
+rishik@rishik-computer:~$ echo $USER
+rishik
+rishik@rishik-computer:~$ whoami
+rishik
+```
+##### What is my default group and other groups I belong to?
+```console
+rishik@rishik-computer:~$ id
+uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare)
 ```
 
 ## Groups
