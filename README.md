@@ -302,8 +302,6 @@ rishik
 
 ## Groups
 
-id -Gn <userid>
-
 ##### What is my default group and other groups I belong to?
 ```console
 rishik@rishik-computer:~$ id
@@ -318,9 +316,10 @@ uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),
 >particular user, hence the name "private group". Usually this group has
 >the same name as the user login name, which can be a bit confusing.
 
-
-## Permissions
-sudo chown ownerName:groupName [dir | fileName] - change owner and group of a folder or file
+##### How to change user and group ownership on a file or directory?
+- `sudo chown ownerName:groupName [dir | fileName]` - change owner and group of a folder or file
+- `sudo chgrp` - change only group permissions
+- Both `chown` and `chgrp` can be used to change ownership recursively, using the `-R` option
 
 ##### What other groups do I belong to?
 :warning: `groups` is deprecated in lieu of `id -Gn`
@@ -346,6 +345,9 @@ rishik@rishik-computer:~$ newgrp rishik
 rishik@rishik-computer:~$ id
 uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare),999(docker)
 ``` 
+
+## Permissions
+Use `chmod` to change access modes for user, group or others.
 
 ## Packages
 Reference: https://help.ubuntu.com/community/Repositories
