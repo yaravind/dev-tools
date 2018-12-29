@@ -3,15 +3,17 @@ Cheatsheet of common Linux commands. Derived from
 
 - [The Linux Documentation Project](http://www.tldp.org/guides.html)
 - [Stackoverflow](https://stackoverflow.com)
+- [Git Gist](https://gist.github.com/eyecatchup/3fb7ef0c0cbdb72412fc)
 
 ## Table of Contents
 1. [Shell](#Shell)
 2. [Home](#Home)
 3. [Files](#Files)
 4. [History](#History)
-5. [Groups](#Groups)
-6. [Permissions](#Permissions)
-7. [Packages](#Packages)
+5. [Git](#Git)
+6. [Groups](#Groups)
+7. [Permissions](#Permissions)
+8. [Packages](#Packages)
 
 ## Shell
 ##### Known shells to Linux system
@@ -168,6 +170,55 @@ rishik@rishik-computer:~$
 ```
 rishik@rishik-computer:~$ echo $HISTFILE
 /home/rishik/.bash_history
+```
+
+## Git
+Add the following aliases to `.bashrc`
+
+```bash
+alias gs='git status '
+alias ga='git add '
+alias gb='git branch '
+alias gc='git commit'
+alias gp='git push origin master'
+alias gd='git diff'
+alias go='git checkout '
+alias gl='git log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate'
+alias gsl='git shortlog'
+alias gslu='git log --format='%aN' | sort -u'
+alias gslc='git shortlog -sn'
+```
+
+##### Pretty print all commits
+```console
+rishik@rishik-computer:~/ws/linux-cheatsheet$ gl
+5e737fc (HEAD -> master)\ add examples for git commands\ [Aravind R. Yarram]
+accef64 (origin/master, origin/HEAD)\ add exaples for find & locate\ [Aravind R. Yarram]
+d592777\ add history command examples\ [Aravind R. Yarram]
+46b5609\ add references\ [Aravind R. Yarram]
+caa8be3\ add references\ [Aravind R. Yarram]
+6c3afc4\ add TOC\ [Aravind R. Yarram]
+6d72532\ add TOC\ [Aravind R. Yarram]
+75d2fe9\ add examples for which and alias  commands\ [Aravind R. Yarram]
+ff00092\ add examples for file command\ [Aravind R. Yarram]
+f0b1593\ notes for file command\ [Aravind R. Yarram]
+d4c2afb\ format content\ [Aravind R. Yarram]
+3751b09\ add notes for Files\ [Aravind R. Yarram]
+2617c7e\ Initial commit\ [GitHub]
+```
+
+##### List repository contributors by author name (sorted by name)
+```bash
+rishik@rishik-computer:~/ws/linux-cheatsheet$ gslu
+Aravind R Yarram
+Aravind R. Yarram
+```
+
+##### List total commits by author (sorted by commit count)
+```bash
+rishik@rishik-computer:~/ws/linux-cheatsheet$ gslc
+    12  Aravind R. Yarram
+     1  Aravind R Yarram
 ```
 
 ## Groups
