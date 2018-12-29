@@ -20,7 +20,7 @@ Cheatsheet of common Linux commands. Derived from
 | Hard Link | Symbolic Link |
 |-----------|---------------|
 | associate 2 or more files with same inode| a small file that is a pointer to another file |
-|share same data blocks on hard disk| contains the path to the target file instead of a physical location on the hard disk|
+|share same data blocks on hard disk. That is why hard links show the same size as the original file| contains the path to the target file instead of a physical location on the hard disk. That is why they are always small in size|
 |can not span partitions because inode numbers are only unique within a given partition|since inodes are not used in this system, soft links can span across partitions|
 ##### `ls` default scheme color
 
