@@ -1,48 +1,52 @@
->“On a UNIX system, everything is a file; if something is not a file, it is a process.” ―  Machtelt Garrels, Introduction To Linux: A Hands On Guide
+>“On a UNIX system, everything is a file; if something is not a file, it is a process.” ―  Machtelt Garrels, Introduction To Linux: A Hands-On Guide
 
 ## Table of Contents
-0. [Notes](#Notes)
-1. [Shell](#Shell)
-2. [Home](#Home)
-3. [Files](#Files)
-4. [History](#History)
-5. [Git](#Git)
-6. [Users](#Users)
-6. [Groups](#Groups)
-7. [Permissions](#Permissions)
-8. [Packages](#Packages)
+1. [Notes](#Notes)
+2. [Shell](#Shell)
+3. [Home](#Home)
+4. [Files](#Files)
+5. [History](#History)
+6. [Git](#Git)
+7. [Users](#Users)
+8. [Groups](#Groups)
+9. [Permissions](#Permissions)
+10. [Packages](#Packages)
+
+> If you want to learn more, take the course: [Unix Tools: Data, Software and Production Engineering](https://www.edx.org/course/unix-tools-data-software-and-production-engineering) by Prof. Diomidis Spinellis.
 
 ## Notes
-| Hard Link | Symbolic Link |
-|-----------|---------------|
-| associate 2 or more files with same inode| a small file that is a pointer to another file |
-|share same data blocks on hard disk. That is why hard links show the same size as the original file| contains the path to the target file instead of a physical location on the hard disk. That is why they are always small in size|
-|can not span partitions because inode numbers are only unique within a given partition|since inodes are not used in this system, soft links can span across partitions|
-|`ln sfile1file link1file` | `ln -s targetfile linkname` is used to create symbolic link|
+| Hard Link                                                                                           | Symbolic Link                                                                                                                   |
+|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| associate 2 or more files with same inode                                                           | a small file that is a pointer to another file                                                                                  |
+| share same data blocks on hard disk. That is why hard links show the same size as the original file | contains the path to the target file instead of a physical location on the hard disk. That is why they are always small in size |
+| can not span partitions because inode numbers are only unique within a given partition              | since inodes are not used in this system, soft links can span across partitions                                                 |
+| `ln sfile1file link1file`                                                                           | `ln -s targetfile linkname` is used to create symbolic link                                                                     |
+
+#### `alias` list all aliases currently set for your shell account
 
 ##### `ls` default scheme color
 
-| Color | File type |
-| --- | --- |
-| blue	| directories |
-| red	| compressed archives |
-| white	| text files |
-| pink	| images |
-| cyan	| links |
-| yellow	| devices |
-| green	| executables |
-| flashing red	| broken links |
+| Color         | File type           |
+|---------------|---------------------|
+| blue	         | directories         |
+| red	          | compressed archives |
+| white	        | text files          |
+| pink	         | images              |
+| cyan	         | links               |
+| yellow	       | devices             |
+| green	        | executables         |
+| flashing red	 | broken links        |
 
 ##### `ls` default suffix scheme
 
-| Character |	File type |
-| --- | --- |
-| nothing |	regular file |
-| `/`	 |directory |
-| `*`	 |executable file |
-| `@`	 |link |
-| `=`	 |socket |
-| `\|` |	named pipe |
+| Character | 	File type      |
+|-----------|-----------------|
+| nothing   | 	regular file   |
+| `/`	      | directory       |
+| `*`	      | executable file |
+| `@`	      | link            |
+| `=`	      | socket          |
+| `\|`      | 	named pipe     |
 
 ##### What is umask?
 
@@ -66,7 +70,7 @@ rishik@rishik-computer:~$ umask
 
 ##### /dev/null, /dev/random, and /dev/zero
 
-The /dev file system doesn’t just contain files that represent physical devices. Here are three of the most notable special devices it contains:
+The /dev file system does not just contain files that represent physical devices. Here are three of the most notable special devices it contains:
 
 1. /dev/null – Discards all data written to it – think of it as a trash can or black hole. If you ever see a comment telling you to send complains to /dev/null – that’s a geeky way of saying “throw them in the trash.”
 2. /dev/random – Produces randomness using environmental noise. It’s a random number generator you can tap into.
@@ -177,7 +181,7 @@ rishik@rishik-computer:~$ find . -size +100M
 
 ##### Find all files whose filename has "readme" in it
 
-`locate` is fast as its output is based on file index database. But it is refreshed only once everyday.
+`locate` is fast as its output is based on file index database. But it is refreshed only once every day.
  
 ```console
 rishik@rishik-computer:~$ locate readme
@@ -328,7 +332,7 @@ rishik : rishik adm cdrom sudo dip plugdev lpadmin sambashare docker
 rishik@rishik-computer:~$ id -Gn rishik
 rishik adm cdrom sudo dip plugdev lpadmin sambashare docker
 ````
-##### How can I login to other groups I belong to? For e.g. docker
+##### How can I log in to other groups I belong to? For e.g. docker
 ```console
 rishik@rishik-computer:~$ id
 uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare)
