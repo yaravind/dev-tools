@@ -18,13 +18,14 @@ apps=(
   "jq"   # Lightweight and flexible command-line JSON processor
   "gh"   # GitHub command-line tool
   "azure-cli"
-  "tldr"    # Simplified and community-driven man pages
-  "fig"     # Adds IDE-style autocomplete to the terminal
-  "exa"     # Exa is a modern replacement for the ls command
-  "trash"   # Moves files to the trash, which is safer because it is reversible
-  "jenv"    # Manage multiple versions of Java
-  "bat"     # Clone of cat(1) with syntax highlighting and Git integration
-  "thefuck" # Programmatically correct last mistyped console command
+  "tldr"       # Simplified and community-driven man pages
+  "fig"        # Adds IDE-style autocomplete to the terminal
+  "exa"        # Exa is a modern replacement for the ls command
+  "trash"      # Moves files to the trash, which is safer because it is reversible
+  "jenv"       # Manage multiple versions of Java
+  "bat"        # Clone of cat(1) with syntax highlighting and Git integration
+  "thefuck"    # Programmatically correct last mistyped console command
+  "micromamba" # micromamba is faster alternative to conda, gives clearer error reporting
 )
 
 # List of casks to be installed
