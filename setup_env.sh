@@ -3,12 +3,8 @@
 # This script is designed to automate the installation and configuration of some
 # commonly used developer tools on macOS M1/M2 chip
 
-# Remove the login banner that shows up every time the terminal is opened
-echo -e "\033[1;35m===> Disabling login banner using .hushlogin ...\033[0m"
-touch ~/.hushlogin
-
-# Install formulae and casks
-echo -e "\033[1;35m===> Start installation...\033[0m"
+# Import colors codes for text
+source colors.sh
 
 # List of apps to be installed
 apps=(
@@ -44,41 +40,50 @@ casks=(
 
 # Function to install app using brew
 install_app() {
-  echo -e "\033[1;36m===> Installing formula: $1...\033[0m"
+  echo -e "${RED}===> Installing formula: $1...${RESET}"
   brew install "$1"
 }
 
 # Function to install cask using brew
 install_cask() {
-  echo -e "\033[1;36m===> Installing cask: $1...\033[0m"
+  echo -e "${RED}===> Installing cask: $1...${RESET}"
   brew install --cask "$1"
 }
 
+# -------------------------------------------------------------------
+# Remove the login banner that shows up every time the terminal is opened
+# -------------------------------------------------------------------
+echo -e "${YELLOW}===> Creating ~/.hushlogin to disable login banner.${RESET}"
+touch ~/.hushlogin
+
+# -------------------------------------------------------------------
+# Install formulae and casks
+# -------------------------------------------------------------------
+echo -e "\n"
+echo -e "${UMAGENTA}===> Start installation.${RESET}"
+
 # Check if Homebrew is installed, otherwise install it
 if ! command -v brew &>/dev/null; then
-  echo -e "\033[1;33m===> Homebrew not found. Installing...\033[0m"
+  echo -e "${RED}===> Homebrew not found. Installing...${RESET}"
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
 # Update Homebrew
-echo -e "\033[1;32m===> Updating Homebrew...\033[0m"
+echo -e "${BLUE}===> Updating Homebrew...${RESET}"
 brew update
 
 # Allow brew to lookup versions
-echo -e "\033[1;32m===> Allowing brew to lookup versions...\033[0m"
+echo -e "${BLUE}===> Allowing brew to lookup versions...${RESET}"
 brew tap homebrew/cask-versions
 
 # Allow brew to find nerd fonts
-echo -e "\033[1;32m===> Allowing brew to find nerd fonts...\033[0m"
+echo -e "${BLUE}===> Allowing brew to find nerd fonts...${RESET}"
 brew tap homebrew/cask-fonts
 
-# Install Oh My Posh
-echo -e "\033[1;32m===> Installing fonts for Oh My Posh...\033[0m"
-
-echo -e "\033[1;32m===> Installing formulae...\033[0m"
+echo -e "${BLUE}===> Installing formulae...${RESET}"
 
 # Install maven separately to ignore installing Java 20 as a dependency
-echo -e "\033[1;36m===> Installing maven without java dependency...\033[0m"
+echo -e "${RED}===> Installing maven without java dependency...${RESET}"
 brew install --ignore-dependencies maven
 
 # Install apps
@@ -87,61 +92,85 @@ for app in "${apps[@]}"; do
 done
 
 # Install casks
-echo -e "\033[1;32m===> Installing casks...\033[0m"
+echo -e "${BLUE}===> Installing casks...${RESET}"
 for cask in "${casks[@]}"; do
   install_cask "$cask"
 done
 
-# Cleanup Homebrew
-echo -e "\033[1;32m===> Cleaning up Homebrew...\033[0m"
-brew cleanup
+# -------------------------------------------------------------------
+# Install mamba
+# -------------------------------------------------------------------
+echo -e "${RED}===> Install mamba - faster alternative to conda ...${RESET}"
+# Check if mamba is installed
+if command -v mamba >/dev/null 2>&1; then
+  echo -e "${BBLACK}*** Mamba is already installed. Use it as an alternative to conda. ***${RESET}"
+else
+  echo -e "${RED}Mamba not found. Installing Mamba via Conda...${RESET}"
 
-echo -e "\033[1;35m===> Completed installation.\033[0m"
+  # Check if conda is installed, if not, exit the script
+  if ! command -v conda >/dev/null 2>&1; then
+    echo -e "${BRED}Error: Conda is not installed. Please install Conda and try again.${RESET}"
+    exit 1
+  fi
+
+  # Install mamba using Conda from the conda-forge channel
+  conda install --quiet -c conda-forge mamba
+
+  # Verify successful installation
+  if ! command -v mamba >/dev/null 2>&1; then
+    echo -e "${BRED}Error: Mamba installation failed. Using Conda for environment management${RESET}"
+  else
+    echo "${BBLACK}*** Mamba successfully installed. Use it as an alternative to conda. ***${RESET}"
+  fi
+fi
+
+# Cleanup Homebrew
+echo -e "${BLUE}===> Cleaning up Homebrew...${RESET}"
+brew cleanup
 
 # -------------------------------------------------------------------
 # Set environment variables
 # -------------------------------------------------------------------
-echo -e "\033[1;35m===> Start setting ENV VARs...\033[0m"
+echo -e "\n"
+echo -e "${UMAGENTA}===> Start setting ENV VARs${RESET}"
 #export JAVA_HOME=$(/usr/libexec/java_home)
 if [[ -z "${JAVA_HOME}" ]]; then
-  echo -e "\033[1;36m===> Adding JAVA_HOME env variable to .zshrc...\033[0m"
+  echo -e "${CYAN}===> Adding JAVA_HOME env variable to .zshrc...${RESET}"
   echo "# brew_install_apps.sh - Appending JAVA_HOME env var" >>~/.zshrc
   echo "export JAVA_HOME=$(/usr/libexec/java_home)" >>~/.zshrc
 else
-  echo -e "\033[1;36m===> JAVA_HOME is already set to: ${JAVA_HOME}\033[0m"
+  echo -e "${CYAN}===> JAVA_HOME is already set to: ${JAVA_HOME}${RESET}"
 fi
 
-echo -e "\033[1;36m===> Source .zshrc...\033[0m"
+echo -e "${BLUE}===> Source .zshrc...${RESET}"
 source ~/.zshrc
-echo -e "\033[1;35m===> Completed setting ENV VARs.\033[0m"
 
 # -------------------------------------------------------------------
 # Verify installation
 # -------------------------------------------------------------------
-echo -e "\033[1;35m===> Start verification...\033[0m"
+echo -e "\n"
+echo -e "${UMAGENTA}===> Start verification${RESET}"
 
-echo -e "\033[1;32m===> All installed packages (formulae and casks)...\033[0m"
+echo -e "${BLUE}===> All installed packages (formulae and casks)...${RESET}"
 brew list --versions
 
-echo -e "\033[1;32m===> Verify apps...\033[0m"
+echo -e "${BLUE}===> Verify apps...${RESET}"
 
-echo -e "\033[1;36m===> Verify JAVA_HOME...\033[0m"
+echo -e "${CYAN}===> Verify JAVA_HOME...${RESET}"
 echo "$JAVA_HOME"
 
-echo -e "\033[1;36m===> Verify Java...\033[0m"
+echo -e "${CYAN}===> Verify Java...${RESET}"
 java -version
 
-echo -e "\033[1;36m===> Verify Maven...\033[0m"
+echo -e "${CYAN}===> Verify Maven...${RESET}"
 mvn -version
 
-echo -e "\033[1;36m===> Verify Conda...\033[0m"
+echo -e "${CYAN}===> Verify Conda...${RESET}"
 conda --version
 
-echo -e "\033[1;36m===> Verify Python...\033[0m"
+echo -e "${CYAN}===> Verify Python...${RESET}"
 which -a python3
 python3 -V
 
-echo -e "\033[1;36m===> Add alias rm=trash to .zshrc\033[0m"
-echo -e "\033[1;36m===> Add alias cat=bat to .zshrc\033[0m"
-
-echo -e "\033[1;35m===> Completed verification.\033[0m"
+echo -e "${BBLACK}*** Add alias rm='trash' to .zshrc ***${RESET}"
+echo -e "${BBLACK}*** Add alias cat='bat' to .zshrc ***${RESET}"
