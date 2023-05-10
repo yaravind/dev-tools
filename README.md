@@ -9,16 +9,17 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 
 ## Table of Contents
 
-1. [Notes](#Notes)
-2. [Shell](#Shell)
-3. [Home](#Home)
-4. [Files](#Files)
-5. [History](#History)
-6. [Git](#Git)
-7. [Users](#Users)
-8. [Groups](#Groups)
-9. [Permissions](#Permissions)
-10. [Packages](#Packages)
+1. [setup_env.sh](#setup_env.sh)
+2. [Notes](#Notes)
+3. [Shell](#Shell)
+4. [Home](#Home)
+5. [Files](#Files)
+6. [History](#History)
+7. [Git](#Git)
+8. [Users](#Users)
+9. [Groups](#Groups)
+10. [Permissions](#Permissions)
+11. [Packages](#Packages)
 
 ## setup_env.sh
 
