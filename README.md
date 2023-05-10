@@ -12,7 +12,7 @@ SE: [Unix Tools: Data, Software and Production Engineering](https://www.edx.org/
 
 ## Table of Contents
 
-1. [Environment setup](#Environment setup)
+1. [Environment setup](#setup_env.sh)
 2. [Notes](#Notes)
 2. [Shell](#Shell)
 3. [Home](#Home)
@@ -24,7 +24,7 @@ SE: [Unix Tools: Data, Software and Production Engineering](https://www.edx.org/
 9. [Permissions](#Permissions)
 10. [Packages](#Packages)
 
-## Environment setup
+## setup_env.sh
 
 > ***Note***
 > The script is tested on Apple M2 Pro (should also work on M1) and `zsh` shell.
