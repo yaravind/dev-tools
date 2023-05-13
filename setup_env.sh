@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 # This script is designed to automate the installation and configuration of some
 # commonly used developer tools on macOS M1/M2 chip
