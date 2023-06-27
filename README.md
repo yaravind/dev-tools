@@ -36,13 +36,14 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 **Details**
 
 `set_env.sh` automates the installation and configuration of various developer tools for Apple M1/M2 Pro. At a high
-level it
+level it will
 
-- disables the terminal login banner
-- installs developer command and other productivity tools (JDK compatible with M1/M2, Maven, Mamba, Conda, Python etc.)
-- install modern developer fonts
-- sets environment variables
-- verifies and highlights the successful installation and configuration of the tools
+- Disables the terminal login banner.
+- Install developer command-line and other productivity tools (JDK compatible with M1/M2, Maven, Mamba, Conda, Python etc.).
+- Install modern developer fonts.
+- Install IntelliJ IDEA CE/Ultimate, PyCharm CE/Ultimate and VS Code.
+- Set required environment variables.
+- Verify and highlight the successful installation and configuration of the tools.
 - Some notable tools include
 
 **Installed productivity shell utils**

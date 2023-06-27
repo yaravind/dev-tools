@@ -28,8 +28,11 @@ apps=(
 casks=(
   "zulu8" # JDK 8 for Mac ARM M1/M2 Chip
   "miniconda"
-  "intellij-idea-ce"    # Use intellij-idea for Ultimate Edition
-  "pycharm-ce"          # Use pycharm for Ultimate Edition
+  "intellij-idea-ce"    # Use intellij-idea-ce for Community Edition
+  "intellij-idea"       # Use intellij-idea for Ultimate Edition
+  "pycharm-ce"          # Use pycharm-ce for Community Edition
+  "pycharm"             # Use pycharm for Ultimate Edition
+  "visual-studio-code"  # VS Code
   "font-3270-nerd-font" # Modern fonts to show icons etc
   "font-agave-nerd-font"
   "font-anonymice-nerd-font"
