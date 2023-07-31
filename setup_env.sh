@@ -24,7 +24,7 @@ apps=(
   "micromamba" # micromamba is faster alternative to conda, gives clearer error reporting
 )
 
-# List of casks to be installed
+# List of casks (GUI apps) to be installed
 casks=(
   "zulu8" # JDK 8 for Mac ARM M1/M2 Chip
   "miniconda"
@@ -39,6 +39,9 @@ casks=(
   "font-code-new-roman-nerd-font"
   "font-fira-code-nerd-font"
   "font-jetbrains-mono-nerd-font"
+  "azure-data-studio" # Data management tool that enables working with Azure DB Services
+  "azure-data-studio-insiders"
+  "drawio"
 )
 
 # Function to install app using brew
