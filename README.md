@@ -33,13 +33,20 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 5. Make `setup_env.sh` executable: `chmod +x setup_env.sh`
 6. Run: `./setup_env.sh`
 
+> ***Warning (on macOS)***
+> 
+> Your terminal does not have App Management permissions, so Homebrew will delete and reinstall the app.
+> This may result in some configurations (like notification settings or location in the Dock/Launchpad) being lost.
+> To fix this, go to System Settings > Privacy & Security > App Management and add or enable your terminal.
+
 **Details**
 
 `set_env.sh` automates the installation and configuration of various developer tools for Apple M1/M2 Pro. At a high
 level it will
 
 - Disables the terminal login banner.
-- Install developer command-line and other productivity tools (JDK compatible with M1/M2, Maven, Mamba, Conda, Python etc.).
+- Install developer command-line and other productivity tools (JDK compatible with M1/M2, Maven, Mamba, Conda, Python
+  etc.).
 - Install modern developer fonts.
 - Install IntelliJ IDEA CE/Ultimate, PyCharm CE/Ultimate and VS Code.
 - Set required environment variables.
@@ -65,7 +72,8 @@ level it will
 | micromamba	 | micromamba is faster alternative to conda, gives clearer error reporting |
 
 > Highly recommend this course if you are beginning your career as a software
-> engineer: [Unix Tools: Data, Software and Production Engineering](https://www.edx.org/course/unix-tools-data-software-and-production-engineering)
+>
+engineer: [Unix Tools: Data, Software and Production Engineering](https://www.edx.org/course/unix-tools-data-software-and-production-engineering)
 > by Prof. Diomidis Spinellis.
 
 ## Notes
