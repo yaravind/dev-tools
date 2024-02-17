@@ -30,19 +30,21 @@ casks=(
   "zulu8" # JDK 8 for Mac ARM M1/M2 Chip
   "miniconda"
 #  "intellij-idea-ce"    # Use intellij-idea-ce for Community Edition
-#  "intellij-idea"       # Use intellij-idea for Ultimate Edition
+  "intellij-idea"       # Use intellij-idea for Ultimate Edition
 #  "pycharm-ce"          # Use pycharm-ce for Community Edition
-#  "pycharm"             # Use pycharm for Ultimate Edition
-#  "visual-studio-code"  # VS Code
+  "pycharm"             # Use pycharm for Ultimate Edition
+  "visual-studio-code"  # VS Code
   "font-3270-nerd-font" # Modern fonts to show icons etc
-  "font-agave-nerd-font"
+ # "font-agave-nerd-font"
   "font-anonymice-nerd-font"
   "font-code-new-roman-nerd-font"
   "font-fira-code-nerd-font"
   "font-jetbrains-mono-nerd-font"
-  "azure-data-studio" # Data management tool that enables working with Azure DB Services
+ # "azure-data-studio" # Data management tool that enables working with Azure DB Services
   "azure-data-studio-insiders"
-  "drawio"
+  "microsoft-azure-storage-explorer"
+  "drawio" # Online diagram software
+  "Zed" # Multiplayer code editor
 )
 
 # Function to install app using brew

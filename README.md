@@ -26,6 +26,7 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 > ***Warning***
 > The script is tested on Apple M2 Pro (should also work on M1) and zsh shell.
 
+0. Change to `bash` shell as Homebrew install script uses batch. Type `bash` and hit enter in the terminal. You would see error "Bash is required to interpret this script" otherwise.
 1. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
 2. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git`
 3. cd `dev-tools`
