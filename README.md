@@ -9,7 +9,7 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 
 ## Table of Contents
 
-1. [setup_env.sh](#setup_env.sh)
+1. [setup_env.sh](#setup_env)
 2. [Notes](#Notes)
 3. [Shell](#Shell)
 4. [Home](#Home)
@@ -21,18 +21,18 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 10. [Permissions](#Permissions)
 11. [Packages](#Packages)
 
-## setup_env.sh
+## setup_env
 
 > ***Warning***
 > The script is tested on Apple M2 Pro (should also work on M1) and zsh shell.
 
-0. Change to `bash` shell as Homebrew install script uses batch. Type `bash` and hit enter in the terminal. You would see error "Bash is required to interpret this script" otherwise.
-1. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
-2. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git`
-3. cd `dev-tools`
-4. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: `mv .zshrc ~/`
-5. Make `setup_env.sh` executable: `chmod +x setup_env.sh`
-6. Run: `./setup_env.sh`
+1. Change to `bash` shell as Homebrew install script uses batch. Type `bash` and hit enter in the terminal. You would see error "Bash is required to interpret this script" otherwise.
+2. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
+3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git`
+4. cd `dev-tools`
+5. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: `mv .zshrc ~/`
+6. Make `setup_env.sh` executable: `chmod +x setup_env.sh`
+7. Run: `./setup_env.sh`
 
 > ***Warning (on macOS)***
 > 
