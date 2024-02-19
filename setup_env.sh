@@ -28,6 +28,7 @@ apps=(
 # List of casks (GUI apps) to be installed
 casks=(
   "zulu8" # JDK 8 for Mac ARM M1/M2 Chip
+  "git-credential-manager"
   "miniconda"
 #  "intellij-idea-ce"    # Use intellij-idea-ce for Community Edition
   "intellij-idea"       # Use intellij-idea for Ultimate Edition
