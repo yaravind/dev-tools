@@ -22,7 +22,6 @@ apps=(
   "bat"        # Clone of cat(1) with syntax highlighting and Git integration
   "thefuck"    # Programmatically correct last mistyped console command
   "micromamba" # micromamba is faster alternative to conda, gives clearer error reporting
-  "datacontract/brew/datacontract" # The datacontract CLI lets you work with your datacontract.yaml
 )
 
 # List of casks (GUI apps) to be installed
