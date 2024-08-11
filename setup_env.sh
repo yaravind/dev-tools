@@ -9,6 +9,7 @@ source colors.sh
 # List of apps to be installed
 apps=(
   "python@3.10"
+  "pipx" # Needed to install poetry
   "htop" # Improved top (interactive process viewer)
   "tree" # Display directories as trees (with optional color/HTML output)
   "jq"   # Lightweight and flexible command-line JSON processor
@@ -22,6 +23,7 @@ apps=(
   "bat"        # Clone of cat(1) with syntax highlighting and Git integration
   "thefuck"    # Programmatically correct last mistyped console command
   "micromamba" # micromamba is faster alternative to conda, gives clearer error reporting
+  "node"       # cross-platform JavaScript runtime environment that lets developers create servers, web apps, command line tools and scripts
 )
 
 # List of casks (GUI apps) to be installed
@@ -40,8 +42,8 @@ casks=(
   "font-code-new-roman-nerd-font"
   "font-fira-code-nerd-font"
   "font-jetbrains-mono-nerd-font"
- # "azure-data-studio" # Data management tool that enables working with Azure DB Services
-  "azure-data-studio-insiders"
+  "azure-data-studio" # Data management tool that enables working with Azure DB Services
+ # "azure-data-studio-insiders"
   "microsoft-azure-storage-explorer"
   "drawio" # Online diagram software
   "Zed" # Multiplayer code editor
