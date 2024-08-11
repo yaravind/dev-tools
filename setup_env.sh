@@ -9,6 +9,7 @@ source colors.sh
 # List of apps to be installed
 apps=(
   "python@3.11"
+  "rust"
   "pipx" # Needed to install poetry
   "htop" # Improved top (interactive process viewer)
   "tree" # Display directories as trees (with optional color/HTML output)
