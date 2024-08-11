@@ -8,7 +8,7 @@ source colors.sh
 
 # List of apps to be installed
 apps=(
-  "python@3.10"
+  "python@3.11"
   "pipx" # Needed to install poetry
   "htop" # Improved top (interactive process viewer)
   "tree" # Display directories as trees (with optional color/HTML output)
@@ -22,8 +22,9 @@ apps=(
   "jenv"       # Manage multiple versions of Java
   "bat"        # Clone of cat(1) with syntax highlighting and Git integration
   "thefuck"    # Programmatically correct last mistyped console command
-  "micromamba" # micromamba is faster alternative to conda, gives clearer error reporting
+  #"micromamba" # micromamba is faster alternative to conda, gives clearer error reporting
   "node"       # cross-platform JavaScript runtime environment that lets developers create servers, web apps, command line tools and scripts
+  "pandoc" # Swiss-army knife of markup format conversion.
 )
 
 # List of casks (GUI apps) to be installed
@@ -47,6 +48,7 @@ casks=(
   "microsoft-azure-storage-explorer"
   "drawio" # Online diagram software
   "Zed" # Multiplayer code editor
+  "protege" #OWL for ontologies and knowledge graph
 )
 
 # Function to install app using brew
@@ -111,29 +113,29 @@ done
 # -------------------------------------------------------------------
 # Install mamba
 # -------------------------------------------------------------------
-echo -e "${RED}===> Install mamba - faster alternative to conda ...${RESET}"
-# Check if mamba is installed
-if command -v mamba >/dev/null 2>&1; then
-  echo -e "${BBLACK}*** Mamba is already installed. Use it as an alternative to conda. ***${RESET}"
-else
-  echo -e "${RED}Mamba not found. Installing Mamba via Conda...${RESET}"
-
-  # Check if conda is installed, if not, exit the script
-  if ! command -v conda >/dev/null 2>&1; then
-    echo -e "${BRED}Error: Conda is not installed. Please install Conda and try again.${RESET}"
-    exit 1
-  fi
-
-  # Install mamba using Conda from the conda-forge channel
-  conda install --quiet -c conda-forge mamba
-
-  # Verify successful installation
-  if ! command -v mamba >/dev/null 2>&1; then
-    echo -e "${BRED}Error: Mamba installation failed. Using Conda for environment management${RESET}"
-  else
-    echo "${BBLACK}*** Mamba successfully installed. Use it as an alternative to conda. ***${RESET}"
-  fi
-fi
+#echo -e "${RED}===> Install mamba - faster alternative to conda ...${RESET}"
+## Check if mamba is installed
+#if command -v mamba >/dev/null 2>&1; then
+#  echo -e "${BBLACK}*** Mamba is already installed. Use it as an alternative to conda. ***${RESET}"
+#else
+#  echo -e "${RED}Mamba not found. Installing Mamba via Conda...${RESET}"
+#
+#  # Check if conda is installed, if not, exit the script
+#  if ! command -v conda >/dev/null 2>&1; then
+#    echo -e "${BRED}Error: Conda is not installed. Please install Conda and try again.${RESET}"
+#    exit 1
+#  fi
+#
+#  # Install mamba using Conda from the conda-forge channel
+#  conda install --quiet -c conda-forge mamba
+#
+#  # Verify successful installation
+#  if ! command -v mamba >/dev/null 2>&1; then
+#    echo -e "${BRED}Error: Mamba installation failed. Using Conda for environment management${RESET}"
+#  else
+#    echo "${BBLACK}*** Mamba successfully installed. Use it as an alternative to conda. ***${RESET}"
+#  fi
+#fi
 
 # Cleanup Homebrew
 echo -e "${BLUE}===> Cleaning up Homebrew...${RESET}"
@@ -176,8 +178,8 @@ java -version
 echo -e "${CYAN}===> Verify Maven...${RESET}"
 mvn -version
 
-echo -e "${CYAN}===> Verify Conda...${RESET}"
-conda --version
+#echo -e "${CYAN}===> Verify Conda...${RESET}"
+#conda --version
 
 echo -e "${CYAN}===> Verify Python...${RESET}"
 which -a python3
