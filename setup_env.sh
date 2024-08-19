@@ -50,6 +50,7 @@ casks=(
   "drawio" # Online diagram software
   "Zed" # Multiplayer code editor
   "protege" #OWL for ontologies and knowledge graph
+  "google-cloud-sdk" #for NL API and Vertex AI
 )
 
 # Function to install app using brew
