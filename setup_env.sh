@@ -26,7 +26,7 @@ apps=(
   #"micromamba" # micromamba is faster alternative to conda, gives clearer error reporting
   "node"        # cross-platform JavaScript runtime environment that lets developers create servers, web apps, command line tools and scripts
   "pandoc"      # Swiss-army knife of markup format conversion.
-  "llama.cpp"   # Run LLM locally
+  # "llama.cpp"   # Run LLM locally
 )
 
 # List of casks (GUI apps) to be installed
@@ -52,6 +52,7 @@ casks=(
   "Zed"                       # Multiplayer code editor
   "protege"                   # OWL for ontologies and knowledge graph
   "google-cloud-sdk"          # For NL API and Vertex AI
+  "ollama"                    # Manage Local LLMs
 )
 
 # Function to install app using brew
