@@ -33,6 +33,7 @@ apps=(
 casks=(
   "zulu8" # JDK 8 for Mac ARM M1/M2 Chip
   "git-credential-manager"
+  "appcleaner"                # Allows you to thoroughly uninstall unwanted apps.
  # "miniconda"
 #  "intellij-idea-ce"         # Use intellij-idea-ce for Community Edition
   "intellij-idea"             # Use intellij-idea for Ultimate Edition
@@ -40,13 +41,11 @@ casks=(
   "pycharm"                   # Use pycharm for Ultimate Edition
   "visual-studio-code"        # VS Code
   "font-3270-nerd-font"       # Modern fonts to show icons etc
- # "font-agave-nerd-font"
   "font-anonymice-nerd-font"
   "font-code-new-roman-nerd-font"
   "font-fira-code-nerd-font"
   "font-jetbrains-mono-nerd-font"
   "azure-data-studio"         # Data management tool that enables working with Azure DB Services
- # "azure-data-studio-insiders"
   "microsoft-azure-storage-explorer"
   "drawio"                    # Online diagram software
   "Zed"                       # Multiplayer code editor
