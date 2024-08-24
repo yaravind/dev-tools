@@ -10,47 +10,48 @@ source colors.sh
 apps=(
   "python@3.11"
   "rust"
-  "pipx" # Needed to install poetry
-  "htop" # Improved top (interactive process viewer)
-  "tree" # Display directories as trees (with optional color/HTML output)
-  "jq"   # Lightweight and flexible command-line JSON processor
-  "gh"   # GitHub command-line tool
+  "pipx"        # Needed to install poetry
+  "htop"        # Improved top (interactive process viewer)
+  "tree"        # Display directories as trees (with optional color/HTML output)
+  "jq"          # Lightweight and flexible command-line JSON processor
+  "gh"          # GitHub command-line tool
   "azure-cli"
-  "tldr"       # Simplified and community-driven man pages
-  "fig"        # Adds IDE-style autocomplete to the terminal
-  "exa"        # Exa is a modern replacement for the ls command
-  "trash"      # Moves files to the trash, which is safer because it is reversible
-  "jenv"       # Manage multiple versions of Java
-  "bat"        # Clone of cat(1) with syntax highlighting and Git integration
-  "thefuck"    # Programmatically correct last mistyped console command
+  "tldr"        # Simplified and community-driven man pages
+  "fig"         # Adds IDE-style autocomplete to the terminal
+  "exa"         # Exa is a modern replacement for the ls command
+  "trash"       # Moves files to the trash, which is safer because it is reversible
+  "jenv"        # Manage multiple versions of Java
+  "bat"         # Clone of cat(1) with syntax highlighting and Git integration
+  "thefuck"     # Programmatically correct last mistyped console command
   #"micromamba" # micromamba is faster alternative to conda, gives clearer error reporting
-  "node"       # cross-platform JavaScript runtime environment that lets developers create servers, web apps, command line tools and scripts
-  "pandoc" # Swiss-army knife of markup format conversion.
+  "node"        # cross-platform JavaScript runtime environment that lets developers create servers, web apps, command line tools and scripts
+  "pandoc"      # Swiss-army knife of markup format conversion.
+  "llama.cpp"   # Run LLM locally
 )
 
 # List of casks (GUI apps) to be installed
 casks=(
   "zulu8" # JDK 8 for Mac ARM M1/M2 Chip
   "git-credential-manager"
-  "miniconda"
-#  "intellij-idea-ce"    # Use intellij-idea-ce for Community Edition
-  "intellij-idea"       # Use intellij-idea for Ultimate Edition
-#  "pycharm-ce"          # Use pycharm-ce for Community Edition
-  "pycharm"             # Use pycharm for Ultimate Edition
-  "visual-studio-code"  # VS Code
-  "font-3270-nerd-font" # Modern fonts to show icons etc
+ # "miniconda"
+#  "intellij-idea-ce"         # Use intellij-idea-ce for Community Edition
+  "intellij-idea"             # Use intellij-idea for Ultimate Edition
+#  "pycharm-ce"               # Use pycharm-ce for Community Edition
+  "pycharm"                   # Use pycharm for Ultimate Edition
+  "visual-studio-code"        # VS Code
+  "font-3270-nerd-font"       # Modern fonts to show icons etc
  # "font-agave-nerd-font"
   "font-anonymice-nerd-font"
   "font-code-new-roman-nerd-font"
   "font-fira-code-nerd-font"
   "font-jetbrains-mono-nerd-font"
-  "azure-data-studio" # Data management tool that enables working with Azure DB Services
+  "azure-data-studio"         # Data management tool that enables working with Azure DB Services
  # "azure-data-studio-insiders"
   "microsoft-azure-storage-explorer"
-  "drawio" # Online diagram software
-  "Zed" # Multiplayer code editor
-  "protege" #OWL for ontologies and knowledge graph
-  "google-cloud-sdk" #for NL API and Vertex AI
+  "drawio"                    # Online diagram software
+  "Zed"                       # Multiplayer code editor
+  "protege"                   # OWL for ontologies and knowledge graph
+  "google-cloud-sdk"          # For NL API and Vertex AI
 )
 
 # Function to install app using brew
