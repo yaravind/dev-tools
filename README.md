@@ -24,9 +24,30 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 ## setup_env
 
 > ***Warning***
-> The script is tested on Apple M2 Pro (should also work on M1) and zsh shell.
+> 1. The script is tested on Apple M2 Pro (should also work on M1) and zsh shell.
+> 2. f you haven't already installed Xcode Command Line Tools, you'll see a message that "The Xcode Command Line Tools
+     will be installed."
 
-1. Change to `bash` shell as Homebrew install script uses batch. Type `bash` and hit enter in the terminal. You would see error "Bash is required to interpret this script" otherwise.
+Check the output below to see if the Command Line Tools are installed:
+
+```console
+    ==> Searching online for the Command Line Tools
+    ==> /usr/bin/sudo /usr/bin/touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+    ==> Installing Command Line Tools for Xcode-15.3
+    ==> /usr/bin/sudo /usr/sbin/softwareupdate -i Command\ Line\ Tools\ for\ Xcode-15.3
+    Software Update Tool
+
+    Finding available software
+
+    Downloading Command Line Tools for Xcode
+    Downloaded Command Line Tools for Xcode
+    Installing Command Line Tools for Xcode
+
+    Done with Command Line Tools for Xcode
+```
+
+1. Change to `bash` shell as Homebrew install script uses batch. Type `bash` and hit enter in the terminal. You would
+   see error "Bash is required to interpret this script" otherwise.
 2. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
 3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git`
 4. cd `dev-tools`
@@ -35,7 +56,7 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 7. Run: `./setup_env.sh`
 
 > ***Warning (on macOS)***
-> 
+>
 > Your terminal does not have App Management permissions, so Homebrew will delete and reinstall the app.
 > This may result in some configurations (like notification settings or location in the Dock/Launchpad) being lost.
 > To fix this, go to System Settings > Privacy & Security > App Management and add or enable your terminal.
