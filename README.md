@@ -55,7 +55,7 @@ Check the output below to see if the Command Line Tools are installed:
     Done with Command Line Tools for Xcode
 ```
 
-1. Change to `bash` shell as Homebrew install script uses batch. Type `bash` and hit enter in the terminal. You would
+1. Change to `bash` shell as Homebrew install script uses batch. Type `bash` and hit enter. You would
    see error "Bash is required to interpret this script" otherwise.
 2. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
 3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git`
@@ -110,7 +110,7 @@ engineer: [Unix Tools: Data, Software and Production Engineering](https://www.ed
 ## 1.3. Colorized Logs
 
 `setup_env.sh` installs `lnv` package that enables tailing and colorizing logs, searching etc. Run the following
-commands after running the setup to setup a custom log viewer for python logs.
+commands after running the setup to set up a custom log viewer for python logs.
 
 This enables colorized viewer for the following python log format:
 
