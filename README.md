@@ -9,24 +9,26 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 
 ## 1.1. Table of Contents
 
-1. [setup_env](#1.2.-setup_env)
-2. [Notes](#1.3.-notes)
-3. [Common Commands](#1.4.-common-commands)
-    1. [Shell](#1.4.1.-shell)
-    2. [Home](#1.4.2.-home)
-    3. [Files](#1.4.3-Files)
-    4. [History](#1.4.4-History)
-    5. [Users](#1.4.5-Users)
-    6. [Groups](#1.4.6-Groups)
-    7. [Permissions](#1.4.7.-Permissions)
-4. [Git](#Git)
-    1. [Pretty print all commits](#Pretty-print-all-commits)
-    2. [List repository contributors by author name (sorted by name)](#List-repository-contributors-by-author-name-(sorted-by-name))
-    3. [List total commits by author (sorted by commit count)](#List-total-commits-by-author-(sorted-by-commit-count))
-    4. [What changed since given date?](#What-changed-since-given-date?)
-    5. [List file change stats by author](#List-file-change-stats-by-author)
-5. [Packages](#Packages)
-6. [Reference](#Reference)
+1. [Table of Contents](#11-table-of-contents)
+2. [setup_env](#12-setup_env)
+3. [Colorized Logs](#13-colorized-logs)
+4. [Notes](#14-notes)
+5. [Common Commands](#15-Common-Commands)
+    1. [Shell](#151-Shell)
+    2. [Home](#152-Home)
+    3. [Files](#153-Files)
+    4. [History](#154-History)
+    5. [Users](#155-Users)
+    6. [Groups](#156-Groups)
+    7. [Permissions](#157-Permissions)
+6. [Git](#16-Git)
+    1. [Pretty print all commits](#161-Pretty-print-all-commits)
+    2. [List repository contributors by author name (sorted by name)](#162-List-repository-contributors-by-author-name-(sorted-by-name))
+    3. [List total commits by author (sorted by commit count)](#163-List-total-commits-by-author-(sorted-by-commit-count))
+    4. [What changed since given date?](#164-What-changed-since-given-date?)
+    5. [List file change stats by author](#165-List-file-change-stats-by-author)
+7. [Packages](#17-Packages)
+8. [Reference](#18-Reference)
 
 ## 1.2. setup_env
 
@@ -105,7 +107,24 @@ level it will
 engineer: [Unix Tools: Data, Software and Production Engineering](https://www.edx.org/course/unix-tools-data-software-and-production-engineering)
 > by Prof. Diomidis Spinellis.
 
-## 1.3. Notes
+## 1.3. Colorized Logs
+
+`setup_env.sh` installs `lnv` package that enables tailing and colorizing logs, searching etc. Run the following
+commands after running the setup to setup a custom log viewer for python logs.
+
+This enables colorized viewer for the following python log format:
+
+`[%(asctime)s] %(levelname)s %(name)s - %(message)s`
+
+```console
+% mkdir -p ~/.lnav/formats/ 
+% cp lnav_format_python.json ~/.lnav/formats/
+% lnav -i ~/.lnav/formats/lnav_format_python.json
+✔ installed -- /Users/O60774/.lnav/formats/installed/pythonlogger.json
+%    
+```
+
+## 1.4. Notes
 
 | Hard Link                                                                                           | Symbolic Link                                                                                                                   |
 |-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
@@ -114,9 +133,9 @@ engineer: [Unix Tools: Data, Software and Production Engineering](https://www.ed
 | can not span partitions because inode numbers are only unique within a given partition              | since inodes are not used in this system, soft links can span across partitions                                                 |
 | `ln sfile1file link1file`                                                                           | `ln -s targetfile linkname` is used to create symbolic link                                                                     |
 
-#### 1.3.1. `alias` list all aliases currently set for your shell account
+#### 1.4.1. `alias` list all aliases currently set for your shell account
 
-##### 1.3.1.1. `ls` default scheme color
+##### 1.4.1.1. `ls` default scheme color
 
 | Color         | File type           |
 |---------------|---------------------|
@@ -129,7 +148,7 @@ engineer: [Unix Tools: Data, Software and Production Engineering](https://www.ed
 | green	        | executables         |
 | flashing red	 | broken links        |
 
-##### 1.3.1.2. `ls` default suffix scheme
+##### 1.4.1.2. `ls` default suffix scheme
 
 | Character | 	File type      |
 |-----------|-----------------|
@@ -140,7 +159,7 @@ engineer: [Unix Tools: Data, Software and Production Engineering](https://www.ed
 | `=`	      | socket          |
 | `\|`      | 	named pipe     |
 
-##### 1.3.1.3. What is umask?
+##### 1.4.1.3. What is umask?
 
 - `umask` setting plays a big role in determining the permissions that are assigned to files that you create
 - The default permissions when creating a new dir is octal `777 (111 111 111)`, and a new file is
@@ -155,7 +174,7 @@ engineer: [Unix Tools: Data, Software and Production Engineering](https://www.ed
 - The umask setting for all users is generally set up in a system-wide file like `/etc/profile`, `/etc/bashrc`
   or `/etc/login.defs` — a file that's used every time someone logs into the system
 
-###### 1.3.1.3.1. What is my default umask setting?
+###### 1.4.1.3.1. What is my default umask setting?
 
 Ignore the first character/zero
 
@@ -166,7 +185,7 @@ rishik@rishik-computer:~$ umask
 0002
 ```
 
-##### 1.3.1.4. /dev/null, /dev/random, and /dev/zero
+##### 1.4.1.4. /dev/null, /dev/random, and /dev/zero
 
 The /dev file system does not just contain files that represent physical devices. Here are three of the most notable
 special devices it contains:
@@ -176,11 +195,11 @@ special devices it contains:
 2. /dev/random – Produces randomness using environmental noise. It’s a random number generator you can tap into.
 3. /dev/zero – Produces zeros – a constant stream of zeros.
 
-## 1.4. Common Commands
+## 1.5. Common Commands
 
-### 1.4.1. Shell
+### 1.5.1. Shell
 
-##### 1.4.1.1. Known shells to Linux system
+##### 1.5.1.1. Known shells to Linux system
 
 ```console
 rishik@rishik-computer:~/ws$ cat /etc/shells
@@ -191,7 +210,7 @@ rishik@rishik-computer:~/ws$ cat /etc/shells
 /bin/dash
 ```
 
-##### 1.4.1.2. Which shell am I using?
+##### 1.5.1.2. Which shell am I using?
 
 ```console
 rishik@rishik-computer:~/ws$ echo $0
@@ -200,7 +219,7 @@ rishik@rishik-computer:~/ws$ echo $SHELL
 /bin/bash
 ```
 
-##### 1.4.1.3. What is the default shell set for each user?
+##### 1.5.1.3. What is the default shell set for each user?
 
 ```console
 rishik@rishik-computer:~/ws$ cat /etc/passwd
@@ -209,18 +228,18 @@ root:x:0:0:root:/root:/bin/bash
 rishik:x:1000:1000:Rishik,,,:/home/rishik:/bin/bash
 ```
 
-### 1.4.2. Home
+### 1.5.2. Home
 
-##### 1.4.2.1. What is my home dir?
+##### 1.5.2.1. What is my home dir?
 
 ```console
 rishik@rishik-computer:~/ws$ echo $HOME
 /home/rishik
 ```
 
-### 1.4.3. Files
+### 1.5.3. Files
 
-##### 1.4.3.1. Guess the file type!
+##### 1.5.3.1. Guess the file type!
 
 ```console
 rishik@rishik-computer:~/Downloads$ file ideaIC-2018.3.2.tar.gz 
@@ -241,7 +260,7 @@ rishik@rishik-computer:~$ file /dev/null
 /dev/null: character special (1/3)
 ```
 
-##### 1.4.3.2. Find executable file
+##### 1.5.3.2. Find executable file
 
 `which` searches the user's search `PATH`. Good for troubleshooting `Command not found` problems.
 
@@ -252,7 +271,7 @@ rishik@rishik-computer:~$ which docker
 /usr/bin/docker
 ```
 
-##### 1.4.3.3. Check if a command is an alias for another command!
+##### 1.5.3.3. Check if a command is an alias for another command!
 
 ```console
 rishik@rishik-computer:~$ alias ls
@@ -261,7 +280,7 @@ rishik@rishik-computer:~$ alias ltr
 alias ltr='ls -ltr'
 ```
 
-##### 1.4.3.4. Find all files whose filename has "readme" in it
+##### 1.5.3.4. Find all files whose filename has "readme" in it
 
 ```console
 rishik@rishik-computer:~$ find /usr -name "*readme*"
@@ -285,7 +304,7 @@ rishik@rishik-computer:~$ find /usr -name "*readme*"
 /usr/share/lintian/checks/debian-readme.desc
 ```
 
-##### 1.4.3.5. Find all files bigger than 100MB
+##### 1.5.3.5. Find all files bigger than 100MB
 
 ```console
 rishik@rishik-computer:~$ find . -size +100M
@@ -293,7 +312,7 @@ rishik@rishik-computer:~$ find . -size +100M
 ./.config/epiphany/gsb-threats.db
 ```
 
-##### 1.4.3.6. Find all files whose filename has "readme" in it
+##### 1.5.3.6. Find all files whose filename has "readme" in it
 
 `locate` is fast as its output is based on file index database. But it is refreshed only once every day.
 
@@ -316,22 +335,22 @@ rishik@rishik-computer:~$ locate readme
 rishik@rishik-computer:~$ 
 ```
 
-### 1.4.4. History
+### 1.5.4. History
 
 - `history` lists all previously ran commands
 - `!!` runs the last command
 - `!2` runs the command at index 2 from the output of history command
 
-##### 1.4.4.1. Where is my history stored?
+##### 1.5.4.1. Where is my history stored?
 
 ```console
 rishik@rishik-computer:~$ echo $HISTFILE
 /home/rishik/.bash_history
 ```
 
-### 1.4.5. Users
+### 1.5.5. Users
 
-##### 1.4.5.1. What is my username?
+##### 1.5.5.1. What is my username?
 
 ```console
 rishik@rishik-computer:~$ echo $USER
@@ -340,9 +359,9 @@ rishik@rishik-computer:~$ whoami
 rishik
 ```
 
-### 1.4.6. Groups
+### 1.5.6. Groups
 
-##### 1.4.6.1. What is my default group and other groups I belong to?
+##### 1.5.6.1. What is my default group and other groups I belong to?
 
 ```console
 rishik@rishik-computer:~$ id
@@ -357,7 +376,7 @@ uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),
 > particular user, hence the name "private group". Usually this group has
 > the same name as the user login name, which can be a bit confusing.
 
-##### 1.4.6.2. What other groups do I belong to?
+##### 1.5.6.2. What other groups do I belong to?
 
 :warning: `groups` is deprecated in lieu of `id -Gn`
 
@@ -368,7 +387,7 @@ rishik@rishik-computer:~$ id -Gn rishik
 rishik adm cdrom sudo dip plugdev lpadmin sambashare docker
 ````
 
-##### 1.4.6.3. How can I log in to other groups I belong to? For e.g. docker
+##### 1.5.6.3. How can I log in to other groups I belong to? For e.g. docker
 
 ```console
 rishik@rishik-computer:~$ id
@@ -385,17 +404,17 @@ rishik@rishik-computer:~$ id
 uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare),999(docker)
 ``` 
 
-##### 1.4.6.4. How to change user and group ownership on a file or directory?
+##### 1.5.6.4. How to change user and group ownership on a file or directory?
 
 - `sudo chown ownerName:groupName [dir | fileName]` - change owner and group of a folder or file
 - `sudo chgrp` - change only group permissions
 - Both `chown` and `chgrp` can be used to change ownership recursively, using the `-R` option
 
-### 1.4.7. Permissions
+### 1.5.7. Permissions
 
 Use `chmod` to change access modes for user, group or others.
 
-## 1.5. Git
+## 1.6. Git
 
 Add the following aliases to `.bashrc`
 
@@ -420,7 +439,7 @@ gsu() { git log --shortstat --author="$1" | grep -E "fil(e|es) changed" | awk '{
 gw() { git whatchanged --since "$1" --oneline --name-only --pretty=format: | sort | uniq; }
 ```
 
-##### 1.5.1. Pretty print all commits
+##### 1.6.1. Pretty print all commits
 
 ```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gl
@@ -439,7 +458,7 @@ d4c2afb\ format content\ [Aravind R. Yarram]
 2617c7e\ Initial commit\ [GitHub]
 ```
 
-##### 1.5.2. List repository contributors by author name (sorted by name)
+##### 1.6.2. List repository contributors by author name (sorted by name)
 
 ```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gslu
@@ -447,7 +466,7 @@ Aravind R Yarram
 Aravind R. Yarram
 ```
 
-##### 1.5.3. List total commits by author (sorted by commit count)
+##### 1.6.3. List total commits by author (sorted by commit count)
 
 ```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gslc
@@ -455,7 +474,7 @@ rishik@rishik-computer:~/ws/linux-cheatsheet$ gslc
      1  Aravind R Yarram
 ```
 
-##### 1.5.4. What changed since given date?
+##### 1.6.4. What changed since given date?
 
 ```console
 rishik@rishik-computer:~/ws/datasets$ gw 09/01/2018
@@ -474,7 +493,7 @@ flight/2014_jan_carrier_performance.csv
 README.md
 ```
 
-##### 1.5.5. List file change stats by author
+##### 1.6.5. List file change stats by author
 
 ```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gsu Aravind R. Yarram
@@ -486,7 +505,7 @@ Commit stats:
 - Add./Del. ratio (1:n)..  1 : 0.0714286
 ```
 
-## 1.6. Packages
+## 1.7. Packages
 
 Reference: https://help.ubuntu.com/community/Repositories
 
@@ -506,7 +525,7 @@ upgrade to latest
 
 aptitude versions <package-name> - shows all the versions available
 
-## 1.7. Reference
+## 1.8. Reference
 
 - [The Linux Documentation Project](http://www.tldp.org/guides.html)
 - [Stackoverflow](https://stackoverflow.com)
