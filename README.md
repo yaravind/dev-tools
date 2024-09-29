@@ -23,9 +23,9 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
     7. [Permissions](#157-Permissions)
 6. [Git](#16-Git)
     1. [Pretty print all commits](#161-Pretty-print-all-commits)
-    2. [List repository contributors by author name (sorted by name)](#162-List-repository-contributors-by-author-name-(sorted-by-name))
-    3. [List total commits by author (sorted by commit count)](#163-List-total-commits-by-author-(sorted-by-commit-count))
-    4. [What changed since given date?](#164-What-changed-since-given-date?)
+    2. [List repository contributors by author name (sorted by name)](#162-List-repository-contributors-by-author-name)
+    3. [List total commits by author (sorted by commit count)](#163-List-total-commits-by-author)
+    4. [What changed since given date?](#164-What-changed-since-given-date)
     5. [List file change stats by author](#165-List-file-change-stats-by-author)
 7. [Packages](#17-Packages)
 8. [Reference](#18-Reference)
@@ -458,7 +458,9 @@ d4c2afb\ format content\ [Aravind R. Yarram]
 2617c7e\ Initial commit\ [GitHub]
 ```
 
-##### 1.6.2. List repository contributors by author name (sorted by name)
+##### 1.6.2. List repository contributors by author name
+
+Output is sorted by name.
 
 ```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gslu
@@ -466,7 +468,9 @@ Aravind R Yarram
 Aravind R. Yarram
 ```
 
-##### 1.6.3. List total commits by author (sorted by commit count)
+##### 1.6.3. List total commits by author
+
+Output is sorted by commit count.
 
 ```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gslc
