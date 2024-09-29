@@ -534,3 +534,4 @@ aptitude versions <package-name> - shows all the versions available
 - [The Linux Documentation Project](http://www.tldp.org/guides.html)
 - [Stackoverflow](https://stackoverflow.com)
 - [Git Gist](https://gist.github.com/eyecatchup/3fb7ef0c0cbdb72412fc)
+- [Install custom logger formats for lnav](https://docs.lnav.org/en/latest/formats.html)
