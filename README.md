@@ -1,4 +1,4 @@
-# Developer Tools
+# 1. Developer Tools
 
 I have been consistently using a series of commands for some time to reproduce a development environment across
 various machines. For the most part, these commands were kept as gists. Recently, I managed to compile them all
@@ -7,21 +7,28 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 > “On a UNIX system, everything is a file; if something is not a file, it is a process.” ― Machtelt Garrels,
 > Introduction To Linux: A Hands-On Guide
 
-## Table of Contents
+## 1.1. Table of Contents
 
-1. [setup_env.sh](#setup_env)
-2. [Notes](#Notes)
-3. [Shell](#Shell)
-4. [Home](#Home)
-5. [Files](#Files)
-6. [History](#History)
-7. [Git](#Git)
-8. [Users](#Users)
-9. [Groups](#Groups)
-10. [Permissions](#Permissions)
-11. [Packages](#Packages)
+1. [setup_env](#1.2.-setup_env)
+2. [Notes](#1.3.-notes)
+3. [Common Commands](#1.4.-common-commands)
+    1. [Shell](#1.4.1.-shell)
+    2. [Home](#1.4.2.-home)
+    3. [Files](#1.4.3-Files)
+    4. [History](#1.4.4-History)
+    5. [Users](#1.4.5-Users)
+    6. [Groups](#1.4.6-Groups)
+    7. [Permissions](#1.4.7.-Permissions)
+4. [Git](#Git)
+    1. [Pretty print all commits](#Pretty-print-all-commits)
+    2. [List repository contributors by author name (sorted by name)](#List-repository-contributors-by-author-name-(sorted-by-name))
+    3. [List total commits by author (sorted by commit count)](#List-total-commits-by-author-(sorted-by-commit-count))
+    4. [What changed since given date?](#What-changed-since-given-date?)
+    5. [List file change stats by author](#List-file-change-stats-by-author)
+5. [Packages](#Packages)
+6. [Reference](#Reference)
 
-## setup_env
+## 1.2. setup_env
 
 > ***Warning***
 > 1. The script is tested on Apple M2 Pro (should also work on M1) and zsh shell.
@@ -98,7 +105,7 @@ level it will
 engineer: [Unix Tools: Data, Software and Production Engineering](https://www.edx.org/course/unix-tools-data-software-and-production-engineering)
 > by Prof. Diomidis Spinellis.
 
-## Notes
+## 1.3. Notes
 
 | Hard Link                                                                                           | Symbolic Link                                                                                                                   |
 |-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
@@ -107,9 +114,9 @@ engineer: [Unix Tools: Data, Software and Production Engineering](https://www.ed
 | can not span partitions because inode numbers are only unique within a given partition              | since inodes are not used in this system, soft links can span across partitions                                                 |
 | `ln sfile1file link1file`                                                                           | `ln -s targetfile linkname` is used to create symbolic link                                                                     |
 
-#### `alias` list all aliases currently set for your shell account
+#### 1.3.1. `alias` list all aliases currently set for your shell account
 
-##### `ls` default scheme color
+##### 1.3.1.1. `ls` default scheme color
 
 | Color         | File type           |
 |---------------|---------------------|
@@ -122,7 +129,7 @@ engineer: [Unix Tools: Data, Software and Production Engineering](https://www.ed
 | green	        | executables         |
 | flashing red	 | broken links        |
 
-##### `ls` default suffix scheme
+##### 1.3.1.2. `ls` default suffix scheme
 
 | Character | 	File type      |
 |-----------|-----------------|
@@ -133,7 +140,7 @@ engineer: [Unix Tools: Data, Software and Production Engineering](https://www.ed
 | `=`	      | socket          |
 | `\|`      | 	named pipe     |
 
-##### What is umask?
+##### 1.3.1.3. What is umask?
 
 - `umask` setting plays a big role in determining the permissions that are assigned to files that you create
 - The default permissions when creating a new dir is octal `777 (111 111 111)`, and a new file is
@@ -148,7 +155,7 @@ engineer: [Unix Tools: Data, Software and Production Engineering](https://www.ed
 - The umask setting for all users is generally set up in a system-wide file like `/etc/profile`, `/etc/bashrc`
   or `/etc/login.defs` — a file that's used every time someone logs into the system
 
-###### What is my default umask setting?
+###### 1.3.1.3.1. What is my default umask setting?
 
 Ignore the first character/zero
 
@@ -159,7 +166,7 @@ rishik@rishik-computer:~$ umask
 0002
 ```
 
-##### /dev/null, /dev/random, and /dev/zero
+##### 1.3.1.4. /dev/null, /dev/random, and /dev/zero
 
 The /dev file system does not just contain files that represent physical devices. Here are three of the most notable
 special devices it contains:
@@ -169,9 +176,11 @@ special devices it contains:
 2. /dev/random – Produces randomness using environmental noise. It’s a random number generator you can tap into.
 3. /dev/zero – Produces zeros – a constant stream of zeros.
 
-## Shell
+## 1.4. Common Commands
 
-##### Known shells to Linux system
+### 1.4.1. Shell
+
+##### 1.4.1.1. Known shells to Linux system
 
 ```console
 rishik@rishik-computer:~/ws$ cat /etc/shells
@@ -182,7 +191,7 @@ rishik@rishik-computer:~/ws$ cat /etc/shells
 /bin/dash
 ```
 
-##### Which shell am I using?
+##### 1.4.1.2. Which shell am I using?
 
 ```console
 rishik@rishik-computer:~/ws$ echo $0
@@ -191,7 +200,7 @@ rishik@rishik-computer:~/ws$ echo $SHELL
 /bin/bash
 ```
 
-##### What is the default shell set for each user?
+##### 1.4.1.3. What is the default shell set for each user?
 
 ```console
 rishik@rishik-computer:~/ws$ cat /etc/passwd
@@ -200,18 +209,18 @@ root:x:0:0:root:/root:/bin/bash
 rishik:x:1000:1000:Rishik,,,:/home/rishik:/bin/bash
 ```
 
-## Home
+### 1.4.2. Home
 
-##### What is my home dir?
+##### 1.4.2.1. What is my home dir?
 
 ```console
 rishik@rishik-computer:~/ws$ echo $HOME
 /home/rishik
 ```
 
-## Files
+### 1.4.3. Files
 
-##### Guess the file type!
+##### 1.4.3.1. Guess the file type!
 
 ```console
 rishik@rishik-computer:~/Downloads$ file ideaIC-2018.3.2.tar.gz 
@@ -232,7 +241,7 @@ rishik@rishik-computer:~$ file /dev/null
 /dev/null: character special (1/3)
 ```
 
-##### Find executable file
+##### 1.4.3.2. Find executable file
 
 `which` searches the user's search `PATH`. Good for troubleshooting `Command not found` problems.
 
@@ -243,7 +252,7 @@ rishik@rishik-computer:~$ which docker
 /usr/bin/docker
 ```
 
-##### Check if a command is an alias for another command!
+##### 1.4.3.3. Check if a command is an alias for another command!
 
 ```console
 rishik@rishik-computer:~$ alias ls
@@ -252,7 +261,7 @@ rishik@rishik-computer:~$ alias ltr
 alias ltr='ls -ltr'
 ```
 
-##### Find all files whose filename has "readme" in it
+##### 1.4.3.4. Find all files whose filename has "readme" in it
 
 ```console
 rishik@rishik-computer:~$ find /usr -name "*readme*"
@@ -276,7 +285,7 @@ rishik@rishik-computer:~$ find /usr -name "*readme*"
 /usr/share/lintian/checks/debian-readme.desc
 ```
 
-##### Find all files bigger than 100MB
+##### 1.4.3.5. Find all files bigger than 100MB
 
 ```console
 rishik@rishik-computer:~$ find . -size +100M
@@ -284,7 +293,7 @@ rishik@rishik-computer:~$ find . -size +100M
 ./.config/epiphany/gsb-threats.db
 ```
 
-##### Find all files whose filename has "readme" in it
+##### 1.4.3.6. Find all files whose filename has "readme" in it
 
 `locate` is fast as its output is based on file index database. But it is refreshed only once every day.
 
@@ -307,20 +316,86 @@ rishik@rishik-computer:~$ locate readme
 rishik@rishik-computer:~$ 
 ```
 
-## History
+### 1.4.4. History
 
 - `history` lists all previously ran commands
 - `!!` runs the last command
 - `!2` runs the command at index 2 from the output of history command
 
-##### Where is my history stored?
+##### 1.4.4.1. Where is my history stored?
 
 ```console
 rishik@rishik-computer:~$ echo $HISTFILE
 /home/rishik/.bash_history
 ```
 
-## Git
+### 1.4.5. Users
+
+##### 1.4.5.1. What is my username?
+
+```console
+rishik@rishik-computer:~$ echo $USER
+rishik
+rishik@rishik-computer:~$ whoami
+rishik
+```
+
+### 1.4.6. Groups
+
+##### 1.4.6.1. What is my default group and other groups I belong to?
+
+```console
+rishik@rishik-computer:~$ id
+uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare)
+```
+
+:warning:
+> User private group scheme:
+> In order to allow more flexibility, most Linux systems follow the so
+> called user private group scheme, that assigns each user primarily to his
+> or her own group. This group is a group that only contains this
+> particular user, hence the name "private group". Usually this group has
+> the same name as the user login name, which can be a bit confusing.
+
+##### 1.4.6.2. What other groups do I belong to?
+
+:warning: `groups` is deprecated in lieu of `id -Gn`
+
+```console
+rishik@rishik-computer:~$ groups rishik
+rishik : rishik adm cdrom sudo dip plugdev lpadmin sambashare docker
+rishik@rishik-computer:~$ id -Gn rishik
+rishik adm cdrom sudo dip plugdev lpadmin sambashare docker
+````
+
+##### 1.4.6.3. How can I log in to other groups I belong to? For e.g. docker
+
+```console
+rishik@rishik-computer:~$ id
+uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare)
+
+rishik@rishik-computer:~$ newgrp docker
+
+rishik@rishik-computer:~$ id
+uid=1000(rishik) gid=999(docker) groups=999(docker),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare),1000(rishik)
+
+rishik@rishik-computer:~$ newgrp rishik
+
+rishik@rishik-computer:~$ id
+uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare),999(docker)
+``` 
+
+##### 1.4.6.4. How to change user and group ownership on a file or directory?
+
+- `sudo chown ownerName:groupName [dir | fileName]` - change owner and group of a folder or file
+- `sudo chgrp` - change only group permissions
+- Both `chown` and `chgrp` can be used to change ownership recursively, using the `-R` option
+
+### 1.4.7. Permissions
+
+Use `chmod` to change access modes for user, group or others.
+
+## 1.5. Git
 
 Add the following aliases to `.bashrc`
 
@@ -345,7 +420,7 @@ gsu() { git log --shortstat --author="$1" | grep -E "fil(e|es) changed" | awk '{
 gw() { git whatchanged --since "$1" --oneline --name-only --pretty=format: | sort | uniq; }
 ```
 
-##### Pretty print all commits
+##### 1.5.1. Pretty print all commits
 
 ```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gl
@@ -364,7 +439,7 @@ d4c2afb\ format content\ [Aravind R. Yarram]
 2617c7e\ Initial commit\ [GitHub]
 ```
 
-##### List repository contributors by author name (sorted by name)
+##### 1.5.2. List repository contributors by author name (sorted by name)
 
 ```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gslu
@@ -372,7 +447,7 @@ Aravind R Yarram
 Aravind R. Yarram
 ```
 
-##### List total commits by author (sorted by commit count)
+##### 1.5.3. List total commits by author (sorted by commit count)
 
 ```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gslc
@@ -380,7 +455,7 @@ rishik@rishik-computer:~/ws/linux-cheatsheet$ gslc
      1  Aravind R Yarram
 ```
 
-##### What changed since given date?
+##### 1.5.4. What changed since given date?
 
 ```console
 rishik@rishik-computer:~/ws/datasets$ gw 09/01/2018
@@ -399,7 +474,7 @@ flight/2014_jan_carrier_performance.csv
 README.md
 ```
 
-##### List file change stats by author
+##### 1.5.5. List file change stats by author
 
 ```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gsu Aravind R. Yarram
@@ -411,73 +486,7 @@ Commit stats:
 - Add./Del. ratio (1:n)..  1 : 0.0714286
 ```
 
-## Users
-
-##### What is my username?
-
-```console
-rishik@rishik-computer:~$ echo $USER
-rishik
-rishik@rishik-computer:~$ whoami
-rishik
-```
-
-## Groups
-
-##### What is my default group and other groups I belong to?
-
-```console
-rishik@rishik-computer:~$ id
-uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare)
-```
-
-:warning:
-> User private group scheme:
-> In order to allow more flexibility, most Linux systems follow the so
-> called user private group scheme, that assigns each user primarily to his
-> or her own group. This group is a group that only contains this
-> particular user, hence the name "private group". Usually this group has
-> the same name as the user login name, which can be a bit confusing.
-
-##### What other groups do I belong to?
-
-:warning: `groups` is deprecated in lieu of `id -Gn`
-
-```console
-rishik@rishik-computer:~$ groups rishik
-rishik : rishik adm cdrom sudo dip plugdev lpadmin sambashare docker
-rishik@rishik-computer:~$ id -Gn rishik
-rishik adm cdrom sudo dip plugdev lpadmin sambashare docker
-````
-
-##### How can I log in to other groups I belong to? For e.g. docker
-
-```console
-rishik@rishik-computer:~$ id
-uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare)
-
-rishik@rishik-computer:~$ newgrp docker
-
-rishik@rishik-computer:~$ id
-uid=1000(rishik) gid=999(docker) groups=999(docker),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare),1000(rishik)
-
-rishik@rishik-computer:~$ newgrp rishik
-
-rishik@rishik-computer:~$ id
-uid=1000(rishik) gid=1000(rishik) groups=1000(rishik),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),118(lpadmin),127(sambashare),999(docker)
-``` 
-
-##### How to change user and group ownership on a file or directory?
-
-- `sudo chown ownerName:groupName [dir | fileName]` - change owner and group of a folder or file
-- `sudo chgrp` - change only group permissions
-- Both `chown` and `chgrp` can be used to change ownership recursively, using the `-R` option
-
-## Permissions
-
-Use `chmod` to change access modes for user, group or others.
-
-## Packages
+## 1.6. Packages
 
 Reference: https://help.ubuntu.com/community/Repositories
 
@@ -497,7 +506,7 @@ upgrade to latest
 
 aptitude versions <package-name> - shows all the versions available
 
-## Reference
+## 1.7. Reference
 
 - [The Linux Documentation Project](http://www.tldp.org/guides.html)
 - [Stackoverflow](https://stackoverflow.com)
