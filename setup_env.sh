@@ -27,19 +27,20 @@ apps=(
   "node"        # cross-platform JavaScript runtime environment that lets developers create servers, web apps, command line tools and scripts
   "pandoc"      # Swiss-army knife of markup format conversion.
   "llm"         # A CLI utility and Python library for interacting with Large Language Models. https://llm.datasette.io/en/stable/index.html
-  "lnav"                      # A robust log colorizer to tail logs:   tail -f your_log_file.log | ccze -A
+  "lnav"        # A robust log colorizer to tail logs:   tail -f your_log_file.log | ccze -A
 )
 
 # List of casks (GUI apps) to be installed
 casks=(
-  "zulu8" # JDK 8 for Mac ARM M1/M2 Chip
-  "git-credential-manager"
+  "zulu8"                     # JDK 8 for Mac ARM M1/M2 Chip
+  "microsoft-openjdk@11"      # For Fabric Runtime 1.3
+  "git-credential-manager"    # Cross-platform Git credential storage for multiple hosting providers
   "appcleaner"                # Allows you to thoroughly uninstall unwanted apps.
  # "miniconda"
 #  "intellij-idea-ce"         # Use intellij-idea-ce for Community Edition
-  "intellij-idea"             # Use intellij-idea for Ultimate Edition
+#  "intellij-idea"             # Use intellij-idea for Ultimate Edition
 #  "pycharm-ce"               # Use pycharm-ce for Community Edition
-  "pycharm"                   # Use pycharm for Ultimate Edition
+ # "pycharm"                   # Use pycharm for Ultimate Edition
   "visual-studio-code"        # VS Code
   "font-3270-nerd-font"       # Modern fonts to show icons etc
   "font-anonymice-nerd-font"
@@ -53,6 +54,13 @@ casks=(
   "protege"                   # OWL for ontologies and knowledge graph
   "google-cloud-sdk"          # For NL API and Vertex AI
   "ollama"                    # Manage Local LLMs
+  "bunch"                     # Automate tasks on your Mac
+  #"warp"                     # Rust based AI terminal https://www.warp.dev/pricing
+  "alt-tab"                   # Alt-Tab is a window switcher for Mac
+  "hovrly"                    # Display and convert timezones time in different cities
+  "aldente"                   # Menu bar tool to limit maximum charging percentage
+  "maccy"                     # Clipboard manager
+  "bruno"                     # open-source desktop alternative to Postman. saved to filesystem. use markup
 )
 
 # Function to install app using brew
@@ -160,6 +168,12 @@ else
 fi
 
 echo -e "${BLUE}===> Source .zshrc...${RESET}"
+# Initialize jenv in the shell. jenv modifies the JAVA_HOME environment variable and updates the PATH to ensure the
+# correct Java version is being used. This requires jenv to be initialized in the shell's configuration so that all
+# shell sessions recognize and use the Java version specified by jenv.
+echo 'export PATH="$HOME/.jenv/bin:$PATH"' >> ~/.zshrc
+echo 'eval "$(jenv init -)"' >> ~/.zshrc
+
 source ~/.zshrc
 
 # -------------------------------------------------------------------

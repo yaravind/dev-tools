@@ -10,8 +10,9 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 ## 1.1. Table of Contents
 
 1. [Table of Contents](#11-table-of-contents)
-2. [setup_env](#12-setup_env)
-3. [Colorized Logs](#13-colorized-logs)
+2. [setup_env](#12-setup_envsh)
+    1. [Developer folder](#121-developer-folder)
+3. [setup_jenv](#13-setup_jenvsh)
 4. [Git](#16-Git)
     1. [Pretty print all commits](#161-Pretty-print-all-commits)
     2. [List repository contributors by author name (sorted by name)](#162-List-repository-contributors-by-author-name)
@@ -21,7 +22,7 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 5. [Packages](#17-Packages)
 6. [Reference](#18-Reference)
 
-## 1.2. setup_env
+## 1.2. setup_env.sh
 
 > ***Warning***
 > 1. The script is tested on Apple M2 Pro (should also work on M1) and zsh shell.
@@ -96,10 +97,38 @@ level it will
 | node        | JavaScript runtime environment                                           |
 | llm         | Access large language models from the command-line                       |
 
-> Highly recommend this course if you are beginning your career as a software
->
-engineer: [Unix Tools: Data, Software and Production Engineering](https://www.edx.org/course/unix-tools-data-software-and-production-engineering)
+> Highly recommend this course if you are beginning your career as a software engineer:
+> [Unix Tools: Data, Software and Production Engineering](https://www.edx.org/course/unix-tools-data-software-and-production-engineering)
 > by Prof. Diomidis Spinellis.
+
+### 1.2.1 Developer Folder
+
+`mkdir ~/Developer`: It has a fancy icon in finder!
+
+## 1.3 setup_jenv.sh
+
+`setp_jenv.sh` automates the process of adding Java Virtual Machine (JVM) installations to the `jenv` version manager on
+a
+macOS system. Here is an overview of what the script does:
+
+1. Uses `/usr/libexec/java_home --xml` to get xml output of the installed JVMs.
+2. Parses the installation directories using `xmllint`
+3. Adds the JVMs to `jenv` using `jenv add` command.
+4. Lists the JVMs managed `jenv versions` command.
+
+To list the version, architecture, and folder location of all installed JVMs on your Mac:
+
+```$ /usr/libexec/java_home --verbose```
+
+Output:
+
+```shell
+Matching Java Virtual Machines (2):
+    11.0.25 (arm64) "Microsoft" - "OpenJDK 11.0.25" /Library/Java/JavaVirtualMachines/microsoft-11.jdk/Contents/Home
+    1.8.0_422 (arm64) "Amazon" - "Amazon Corretto 8" /Users/aravind/Library/Java/JavaVirtualMachines/corretto-1.8.0_422/Contents/Home
+/Library/Java/JavaVirtualMachines/microsoft-11.jdk/Contents/Home
+
+```
 
 ## 1.6. Git
 
@@ -223,3 +252,24 @@ aptitude versions <package-name> - shows all the versions available
 - [Stackoverflow](https://stackoverflow.com)
 - [Git Gist](https://gist.github.com/eyecatchup/3fb7ef0c0cbdb72412fc)
 - [Install custom logger formats for lnav](https://docs.lnav.org/en/latest/formats.html)
+
+## 1.9. TODO
+
+- https://www.warp.dev/pricing
+- https://www.cursor.com/
+- https://lawand.io/taskbar/
+- https://displaybuddy.app/
+- https://github.com/sharkdp/vivid
+- https://icemenubar.app/
+- https://github.com/dmarcotte/easy-move-resize
+- https://www.alfredapp.com/
+- https://obsidian.md/
+- cmd
+    - https://github.com/junegunn/fzf
+
+Disable .DS_Store files
+
+`defaults write com.apple.desktopservices DSDontWriteNetworkStores true`
+`defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true`
+`defaults write =com.apple.finder ShowPathbar -bool true` - It show the path on the bottom of finder when navigating
+nested folder
