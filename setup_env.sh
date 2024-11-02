@@ -174,7 +174,7 @@ echo -e "${BLUE}===> Source .zshrc...${RESET}"
 echo 'export PATH="$HOME/.jenv/bin:$PATH"' >> ~/.zshrc
 echo 'eval "$(jenv init -)"' >> ~/.zshrc
 
-source ~/.zshrc
+source "$HOME/.zshrc"
 
 # -------------------------------------------------------------------
 # Verify installation
