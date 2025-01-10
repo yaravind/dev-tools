@@ -103,7 +103,7 @@ level it will
 
 ### 1.2.1 Developer Folder
 
-`mkdir ~/Developer`: It has a fancy icon in finder!
+<kbd>mkdir ~/Developer</kbd>: It has a fancy icon in finder!
 
 ## 1.3 setup_jenv.sh
 
@@ -116,9 +116,9 @@ macOS system. Here is an overview of what the script does:
 3. Adds the JVMs to `jenv` using `jenv add` command.
 4. Lists the JVMs managed `jenv versions` command.
 
-To list the version, architecture, and folder location of all installed JVMs on your Mac:
+Use the following command to list the version, architecture, and folder location of all installed JVMs on your Mac:
 
-```$ /usr/libexec/java_home --verbose```
+<kbd>$ /usr/libexec/java_home --verbose<kbd>
 
 Output:
 

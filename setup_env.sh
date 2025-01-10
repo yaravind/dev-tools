@@ -38,10 +38,11 @@ casks=(
   "appcleaner"                # Allows you to thoroughly uninstall unwanted apps.
  # "miniconda"
 #  "intellij-idea-ce"         # Use intellij-idea-ce for Community Edition
-#  "intellij-idea"             # Use intellij-idea for Ultimate Edition
+  "intellij-idea"             # Use intellij-idea for Ultimate Edition
 #  "pycharm-ce"               # Use pycharm-ce for Community Edition
- # "pycharm"                   # Use pycharm for Ultimate Edition
+  "pycharm"                   # Use pycharm for Ultimate Edition
   "visual-studio-code"        # VS Code
+  "uv"                        # Extremely fast Python package installer and resolver, written in Rust
   "font-3270-nerd-font"       # Modern fonts to show icons etc
   "font-anonymice-nerd-font"
   "font-code-new-roman-nerd-font"
