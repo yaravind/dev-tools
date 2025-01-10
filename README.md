@@ -51,10 +51,10 @@ Check the output below to see if the Command Line Tools are installed:
    see error "Bash is required to interpret this script" otherwise.
 2. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
 3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git`
-4. cd `dev-tools`
-5. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: <kbd>mv .zshrc ~/</kbd>
-6. Make `setup_env.sh` executable: `chmod +x setup_env.sh`
-7. Run: `./setup_env.sh`
+4. cd <kbd>dev-tools</kbd>
+5. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: <kbd>cp .zshrc ~/</kbd>
+6. Make `setup_env.sh` executable: <kbd>chmod +x setup_env.sh</kbd>
+7. Run: <kbd>./setup_env.sh</kbd>
 
 > ***Warning (on macOS)***
 >
