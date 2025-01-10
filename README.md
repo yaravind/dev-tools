@@ -26,8 +26,8 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 
 > ***Warning***
 > 1. The script is tested on Apple M2 Pro (should also work on M1) and zsh shell.
-> 2. f you haven't already installed Xcode Command Line Tools, you'll see a message that "The Xcode Command Line Tools
-     will be installed."
+> 2. If you haven't already installed Xcode Command Line Tools, you'll see a message that **The Xcode Command Line Tools
+     will be installed.**
 
 Check the output below to see if the Command Line Tools are installed:
 
@@ -52,7 +52,7 @@ Check the output below to see if the Command Line Tools are installed:
 2. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
 3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git`
 4. cd `dev-tools`
-5. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: `mv .zshrc ~/`
+5. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: <kbd>mv .zshrc ~/</kbd>
 6. Make `setup_env.sh` executable: `chmod +x setup_env.sh`
 7. Run: `./setup_env.sh`
 
@@ -78,7 +78,7 @@ level it will
 
 **Installed productivity shell utils**
 
-| Utility     | Usage                                                                    | 
+| Utility     | Usage                                                                    |
 |-------------|--------------------------------------------------------------------------|
 | htop	       | Improved top (interactive process viewer)                                |
 | tree	       | Display directories as trees (with optional color/HTML output)           |

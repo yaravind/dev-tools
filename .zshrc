@@ -158,3 +158,7 @@ alias mvnp='mvn clean package'
 export EDITOR=/usr/bin/nano
 # brew_install_apps.sh - Appending JAVA_HOME env var
 export JAVA_HOME=
+# brew_install_apps.sh - Appending JAVA_HOME env var
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/microsoft-11.jdk/Contents/Home
+export PATH="$HOME/.jenv/bin:$PATH"
+eval "$(jenv init -)"
