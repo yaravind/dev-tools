@@ -28,6 +28,7 @@ apps=(
   "pandoc"      # Swiss-army knife of markup format conversion.
   "llm"         # A CLI utility and Python library for interacting with Large Language Models. https://llm.datasette.io/en/stable/index.html
   "lnav"        # A robust log colorizer to tail logs:   tail -f your_log_file.log | ccze -A
+  "hugo"        # Configurable fastest static site generator
 )
 
 # List of casks (GUI apps) to be installed
@@ -53,8 +54,9 @@ casks=(
   "drawio"                    # Online diagram software
   "Zed"                       # Multiplayer code editor
   "protege"                   # OWL for ontologies and knowledge graph
-  "google-cloud-sdk"          # For NL API and Vertex AI
+  #"google-cloud-sdk"          # For NL API and Vertex AI
   "ollama"                    # Manage Local LLMs
+  "logi-options+"             # Software for Logitech WebCam
   "bunch"                     # Automate tasks on your Mac
   #"warp"                     # Rust based AI terminal https://www.warp.dev/pricing
   "alt-tab"                   # Alt-Tab is a window switcher for Mac
