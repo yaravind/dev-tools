@@ -21,6 +21,8 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
     5. [List file change stats by author](#165-List-file-change-stats-by-author)
 5. [Packages](#17-Packages)
 6. [Reference](#18-Reference)
+7. [IntelliJ Tasks - GitHub Issue Integration](#19-intellij-tasks---github-issue-integration)
+8. [TODO](#110-todo)
 
 ## 1.2. setup_env.sh
 
@@ -229,16 +231,16 @@ Commit stats:
 
 Reference: https://help.ubuntu.com/community/Repositories
 
-cat /etc/apt/sources.list - lists all the repositories
+`cat /etc/apt/sources.list` - lists all the repositories
 
-sudo apt update - updates the package index cache
-sudo apt upgrade - upgrades all packages to latest versions
-sudo apt upgrade <package-name> - upgrades specified package to latest version
+`sudo apt update` - updates the package index cache
+`sudo apt upgrade` - upgrades all packages to latest versions
+`sudo apt upgrad <package-name>` - upgrades specified package to latest version
 
-apt-cache policy <package-name> - lists the currently installed version and available versions
-apt-get install <package-name>=<version> - install specific version of a package. get version from apt-cache policy
+`apt-cache policy <package-name>` - lists the currently installed version and available versions
+`apt-get install <package-name>=<version>` - install specific version of a package. get version from apt-cache policy
 command
-apt-get install apache2=2.4.7-1ubuntu4.5
+`apt-get install apache2=2.4.7-1ubuntu4.5`
 
 apt-mark hold <package-name> - apt-mark allows you to pin the package to an installed ver. apt/apt-get upgrade doesn't
 upgrade to latest
@@ -253,7 +255,14 @@ aptitude versions <package-name> - shows all the versions available
 - [Git Gist](https://gist.github.com/eyecatchup/3fb7ef0c0cbdb72412fc)
 - [Install custom logger formats for lnav](https://docs.lnav.org/en/latest/formats.html)
 
-## 1.9. TODO
+## 1.9. IntelliJ Tasks - GitHub Issue Integration
+
+Configure IntelliJ to use GitHub Issues as a task manager. This allows you to create, view, and manage GitHub issues
+directly.
+
+![Configure Servers](intellij-tasks.png)
+
+## 1.10. TODO
 
 - https://www.warp.dev/pricing
 - https://www.cursor.com/
@@ -273,3 +282,4 @@ Disable .DS_Store files
 `defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true`
 `defaults write =com.apple.finder ShowPathbar -bool true` - It show the path on the bottom of finder when navigating
 nested folder
+
