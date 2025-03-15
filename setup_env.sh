@@ -35,6 +35,7 @@ apps=(
 casks=(
   "zulu8"                     # JDK 8 for Mac ARM M1/M2 Chip
   "microsoft-openjdk@11"      # For Fabric Runtime 1.3
+  "dotnet-sdk"                # Needed to run different VS Code plugins related to Fabric and Synapse
   "git-credential-manager"    # Cross-platform Git credential storage for multiple hosting providers
   "appcleaner"                # Allows you to thoroughly uninstall unwanted apps.
  # "miniconda"
