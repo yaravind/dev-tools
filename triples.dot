@@ -1,0 +1,25 @@
+digraph RDFTriples {
+    rankdir=LR;
+    node [shape=box, style=filled, fillcolor="#ADD8E6"]; // Light blue for resources
+    literal [shape=plaintext, fontname="Courier New", fontsize=10]; // For literals
+
+    // Define nodes
+    "http://example.org/vocabulary/device#JohnDoe" [label="JohnDoe"];
+    "http://example.org/vocabulary/device#JohnsPhone" [label="JohnsPhone"];
+    "John Doe" [label="\"John Doe\"", class="literal"];
+
+    // Define predicates (properties)
+    "http://example.org/vocabulary/device#hasCellPhone" [label="hasCellPhone", shape=none];
+    "http://www.w3.org/2001/vcard-rdf/3.0#FN" [label="vcard:FN", shape=none];
+
+    // Define edges (triples)
+    "http://example.org/vocabulary/device#JohnDoe" -> "http://example.org/vocabulary/device#hasCellPhone" [label=""];
+    "http://example.org/vocabulary/device#hasCellPhone" -> "http://example.org/vocabulary/device#JohnsPhone" [label=""];
+
+    "http://example.org/vocabulary/device#JohnDoe" -> "http://www.w3.org/2001/vcard-rdf/3.0#FN" [label=""];
+    "http://www.w3.org/2001/vcard-rdf/3.0#FN" -> "John Doe" [label=""];
+
+    // Optional: Grouping for clarity (subgraphs or invisible nodes)
+    // For simplicity, directly linking subject to object via invisible predicate node.
+    // This is a common way to represent RDF in DOT.
+}

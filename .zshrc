@@ -61,11 +61,11 @@ alias ~="cd ~"
 #History
 alias hist='history'
 alias h='history'
-alias h1="history 10"
-alias h2="history 15"
-alias h3="history 20"
-#Hisotry search (use: hs sometext)
-alias hs='history | grep $1'
+alias h1='history 10'
+alias h2='history 15'
+alias h3='history 20'
+# History search (use: hs sometext)
+hs() { history | grep "$1"; }
 
 ## Colorize the grep command output for ease of use (good for log files)##
 alias grep='grep --color=auto'

@@ -249,7 +249,7 @@ aptitude versions <package-name> - shows all the versions available
 
 ## 1.8. Reference
 
-- [Notes](NOTES.md)
+- [Notes](notes.md)
 - [The Linux Documentation Project](http://www.tldp.org/guides.html)
 - [Stackoverflow](https://stackoverflow.com)
 - [Git Gist](https://gist.github.com/eyecatchup/3fb7ef0c0cbdb72412fc)
@@ -282,4 +282,3 @@ Disable .DS_Store files
 `defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true`
 `defaults write =com.apple.finder ShowPathbar -bool true` - It show the path on the bottom of finder when navigating
 nested folder
-
