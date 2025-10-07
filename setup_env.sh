@@ -11,6 +11,7 @@ apps=(
   "python@3.11"
   "rust"
   "pipx"        # Needed to install poetry
+  "uv"          # Extremely fast Python package installer and resolver, written in Rust
   "htop"        # Improved top (interactive process viewer)
   "tree"        # Display directories as trees (with optional color/HTML output)
   "jq"          # Lightweight and flexible command-line JSON processor
@@ -42,7 +43,6 @@ casks=(
   "intellij-idea"             # Use intellij-idea for Ultimate Edition
   "pycharm"                   # Use pycharm for Ultimate Edition
   "visual-studio-code"        # VS Code
-  "uv"                        # Extremely fast Python package installer and resolver, written in Rust
   "font-3270-nerd-font"       # Modern fonts to show icons etc
   "font-anonymice-nerd-font"
   "font-code-new-roman-nerd-font"
@@ -61,6 +61,7 @@ casks=(
   "aldente"                   # Menu bar tool to limit maximum charging percentage
   "maccy"                     # Clipboard manager
   "bruno"                     # open-source desktop alternative to Postman. saved to filesystem. use markup
+  "powershell"                # PowerShell for Mac
 )
 
 # Function to check if a command exists
