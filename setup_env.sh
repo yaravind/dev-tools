@@ -62,6 +62,7 @@ casks=(
   "maccy"                     # Clipboard manager
   "bruno"                     # open-source desktop alternative to Postman. saved to filesystem. use markup
   "powershell"                # PowerShell for Mac
+  "fsnotes"                   # Note taking app with markdown support
 )
 
 # Function to check if a command exists
