@@ -152,9 +152,7 @@ alias mvnp='mvn clean package'
 
 # Default editor to Nano - http://stackoverflow.com/questions/41866734/what-is-the-advantage-of-setting-a-default-editor-for-bash
 export EDITOR=/usr/bin/nano
-# brew_install_apps.sh - Appending JAVA_HOME env var
-export JAVA_HOME=
-# brew_install_apps.sh - Appending JAVA_HOME env var
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/microsoft-11.jdk/Contents/Home
+
+# jenv setup
 export PATH="$HOME/.jenv/bin:$PATH"
 eval "$(jenv init -)"

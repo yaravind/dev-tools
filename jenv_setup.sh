@@ -45,19 +45,31 @@ for JAVA_PATH in "${JAVA_PATHS[@]}"; do
 done
 
 #Verify jenv installation
-echo "Verifying jenv installation"
+printf "\n-> Verifying jenv installation\n"
 jenv doctor
 
 # List all Java versions managed by jenv
 jenv versions
 
-echo "Chose the version (from above) to set as Global version: "
+printf "\nChose the version (from above) to set as Global version: "
 read globalVer
 
 jenv global "$globalVer"
 
-echo "Verifying by running 'java -version":
+printf "\n-> Verifying by running 'java -version'"
 java -version
 
-echo "Verifying by running 'echo ${JAVA_HOME}":
+printf "\n-> Verifying by running 'echo ${JAVA_HOME}. If you are running this first time them the JAVA_HOME will be empty"
 echo $JAVA_HOME
+
+# Enable the jenv plugins
+printf "\n-> Enable the jenv plugin: export. Sets JAVA_HOME automatically (safe to run multiple times)"
+jenv enable-plugin export
+
+printf "\n-> Enable the jenv plugin: maven. Sets the JAVA_HOME environment variable for Maven builds to match the Java version selected by jenv (safe to run multiple times)"
+jenv enable-plugin maven
+
+printf "\n-> Verifying by running 'echo ${JAVA_HOME} after enabling jenv export plugin"
+echo $JAVA_HOME
+
+printf "\n\n👌 Awesome, all set.\n"
