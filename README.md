@@ -66,7 +66,7 @@ Check the output below to see if the Command Line Tools are installed:
 5. Make `setup_env.sh` executable: <kbd>chmod +x setup_env.sh jenv_setup.sh git_setup.sh gen_dock_apps.sh
    dock_setup.sh</kbd>
 6. Run: <kbd>./setup_env.sh</kbd>
-7. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: <kbd>cp .zshrc ~/</kbd>
+7. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: <kbd>cp .zshrc ~/</kbd> and run <kbd>source ~/.zshrc</kbd>
 8. Run <kbd>./jenv_setup.sh</kbd> to add JDK
 9. Run <kbd>./git_setup.sh</kbd> to setup Git Credentials
 10. Run <kbd>./dock_setup.sh</kbd> to setup macOS Dock
