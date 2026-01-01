@@ -18,6 +18,7 @@ to others!
     4. [git_setup.sh](#124-git_setupsh)
     5. [jenv_setup.sh](#125-jenv_setupsh)
     6. [dock_setup.sh](#126-dock_setupsh)
+    7. [vscode_setup.sh](#127-vscode_setupsh)
 3. [Git](#14-git)
     1. [Pretty print all commits](#141-Pretty-print-all-commits)
     2. [List repository contributors by author name (sorted by name)](#142-List-repository-contributors-by-author-name)
@@ -66,7 +67,8 @@ Check the output below to see if the Command Line Tools are installed:
 5. Make `setup_env.sh` executable: <kbd>chmod +x setup_env.sh jenv_setup.sh git_setup.sh gen_dock_apps.sh
    dock_setup.sh</kbd>
 6. Run: <kbd>./setup_env.sh</kbd>
-7. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: <kbd>cp .zshrc ~/</kbd> and run <kbd>source ~/.zshrc</kbd>
+7. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: <kbd>cp .zshrc ~/</kbd> and run <kbd>source ~
+   /.zshrc</kbd>
 8. Run <kbd>./jenv_setup.sh</kbd> to add JDK
 9. Run <kbd>./git_setup.sh</kbd> to setup Git Credentials
 10. Run <kbd>./dock_setup.sh</kbd> to setup macOS Dock
@@ -188,6 +190,10 @@ gen_dock_apps.sh</kbd> script. You can also manually create and edit the file by
        ignored by the script.
     6. You use `SPACER` as a placeholder to add a spacer in the Dock.
     7. Example content of `dock_apps.txt`:
+
+### 1.2.7. vscode_setup.sh
+
+`vscode_setup.sh` automates the installation of Visual Studio Code extensions listed in a file named `vscode.txt`.
 
 ## 1.4. Git
 
