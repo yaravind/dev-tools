@@ -44,5 +44,20 @@ for JAVA_PATH in "${JAVA_PATHS[@]}"; do
   fi
 done
 
+#Verify jenv installation
+echo "Verifying jenv installation"
+jenv doctor
+
 # List all Java versions managed by jenv
 jenv versions
+
+echo "Chose the version (from above) to set as Global version: "
+read globalVer
+
+jenv global "$globalVer"
+
+echo "Verifying by running 'java -version":
+java -version
+
+echo "Verifying by running 'echo ${JAVA_HOME}":
+echo $JAVA_HOME
