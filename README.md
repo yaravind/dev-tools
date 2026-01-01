@@ -11,9 +11,9 @@ to others!
 ## 1.1. Table of Contents
 
 1. [Table of Contents](#11-table-of-contents)
-2. [Setup Instructions](#12-Setup-Instructions)
+2. [Setup Instructions](#12-setup-instructions)
     1. [Steps](#121-steps)
-    2. [Primary Script](#122-primary-script---setup_envsh)
+    2. [Primary Script](#122-setup_envsh)
     3. [Developer folder](#123-developer-folder)
 3. [setup_jenv](#13-setup_jenvsh)
 4. [Git](#14-git)
@@ -71,7 +71,7 @@ Check the output below to see if the Command Line Tools are installed:
 > This may result in some configurations (like notification settings or location in the Dock/Launchpad) being lost.
 > To fix this, go to System Settings > Privacy & Security > App Management and add or enable your terminal.
 
-### 1.2.2. Primary Script - setup_env.sh
+### 1.2.2. setup_env.sh
 
 `set_env.sh` automates the installation and configuration of various developer tools for Apple M1/M2 Pro. At a high
 level it will
