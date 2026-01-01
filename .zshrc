@@ -36,21 +36,22 @@ function up {
 
 # External IP/Internet Speed
 alias myip="curl https://ipinfo.io/json" # or /ip for plain-text ip
-alias speedtest="curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python -"
+alias speedtest="curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -"
 alias path='echo -e ${PATH//:/\n}'
 
 alias cls="clear"
 alias c="clear"
-alias ltr="ls -ltrFh"
+alias ltr="eza -l -t modified -r -F -h"
 #-F appends symbols to filenames.
-alias lta="ls -alFh"
+alias lta="eza -a -l -F -h"
 #list only directories
-alias ld='ls -ldh */'
+alias ld='setopt +o nomatch; eza -ldh */ 2>/dev/null || eza -ldh .; setopt -o nomatch'
 #list only files (exclude hidden files)
-alias lf='ls -lph | grep -v /'
+alias lf='eza -l --color=always | grep --color=always -v /$'
 #list only files (include hidden files)
-alias lfa='ls -alph | grep -v /'
-alias l.="ls -A | egrep '^\.'"      # List only dotfiles (hidden files)
+alias lfa='eza -al --color=always | grep --color=always -v /$'
+# List only dotfiles (hidden files)
+alias l.='eza -a | grep "^\."'
 
 # Open the current directory in Finder (Mac only)
 alias o="open ."
