@@ -18,7 +18,6 @@ apps=(
   "gh"          # GitHub command-line tool
   "azure-cli"
   "tldr"        # Simplified and community-driven man pages
-  "fig"         # Adds IDE-style autocomplete to the terminal
   "exa"         # Exa is a modern replacement for the ls command
   "trash"       # Moves files to the trash, which is safer because it is reversible
   "jenv"        # Manage multiple versions of Java
@@ -28,13 +27,12 @@ apps=(
   "pandoc"      # Swiss-army knife of markup format conversion.
   "llm"         # A CLI utility and Python library for interacting with Large Language Models. https://llm.datasette.io/en/stable/index.html
   "lnav"        # A robust log colorizer to tail logs:   tail -f your_log_file.log | ccze -A
-  "hugo"        # Configurable fastest static site generator
+  #"hugo"        # Configurable fastest static site generator
   "graphviz"    # Convert dot files to images
 )
 
 # List of casks (GUI apps) to be installed
 casks=(
-  "zulu8"                     # JDK 8 for Mac ARM M1/M2 Chip
   "microsoft-openjdk@11"      # For Fabric Runtime 1.3
   "microsoft-openjdk@17"      # For Apache Jena 5.4.x
   "dotnet-sdk"                # Needed to run different VS Code plugins related to Fabric and Synapse
@@ -43,26 +41,26 @@ casks=(
   "intellij-idea"             # Use intellij-idea for Ultimate Edition
   "pycharm"                   # Use pycharm for Ultimate Edition
   "visual-studio-code"        # VS Code
-  "font-3270-nerd-font"       # Modern fonts to show icons etc
-  "font-anonymice-nerd-font"
-  "font-code-new-roman-nerd-font"
-  "font-fira-code-nerd-font"
-  "font-jetbrains-mono-nerd-font"
-  "azure-data-studio"         # Data management tool that enables working with Azure DB Services
+  #"font-3270-nerd-font"       # Modern fonts to show icons etc
+  #"font-anonymice-nerd-font"
+  #"font-code-new-roman-nerd-font"
+  #"font-fira-code-nerd-font"
+  #"font-jetbrains-mono-nerd-font"
   "microsoft-azure-storage-explorer"
   "drawio"                    # Online diagram software
   "Zed"                       # Multiplayer code editor
-  "protege"                   # OWL for ontologies and knowledge graph
+  #"protege"                   # OWL for ontologies and knowledge graph
   "ollama"                    # Manage Local LLMs
   "logi-options+"             # Software for Logitech WebCam
-  "bunch"                     # Automate tasks on your Mac
-  "alt-tab"                   # Alt-Tab is a window switcher for Mac
-  "hovrly"                    # Display and convert timezones time in different cities
-  "aldente"                   # Menu bar tool to limit maximum charging percentage
-  "maccy"                     # Clipboard manager
-  "bruno"                     # open-source desktop alternative to Postman. saved to filesystem. use markup
+  #"bunch"                     # Automate tasks on your Mac
+  #"alt-tab"                   # Alt-Tab is a window switcher for Mac
+  #"hovrly"                    # Display and convert timezones time in different cities
+  #"aldente"                   # Menu bar tool to limit maximum charging percentage
+  #"maccy"                     # Clipboard manager
+  #"bruno"                     # open-source desktop alternative to Postman. saved to filesystem. use markup
   "powershell"                # PowerShell for Mac
   "fsnotes"                   # Note taking app with markdown support
+  "go2shell"                  # Opens a terminal window to the current directory in Finder
 )
 
 # Function to check if a command exists
@@ -164,5 +162,5 @@ done
 echo -e "${BLUE}===> Cleaning up Homebrew...${RESET}"
 brew cleanup
 
-set_env_vars
+# set_env_vars comment this as jenv manages versions
 verify_installations
