@@ -8,7 +8,7 @@ source colors.sh
 
 # List of apps to be installed
 apps=(
-  "python@3.11"
+  "python@3.13"
   "rust"
   "pipx"        # Needed to install poetry
   "uv"          # Extremely fast Python package installer and resolver, written in Rust
@@ -18,7 +18,7 @@ apps=(
   "gh"          # GitHub command-line tool
   "azure-cli"
   "tldr"        # Simplified and community-driven man pages
-  "exa"         # Exa is a modern replacement for the ls command
+  "eza"         # Eza is a modern replacement for the ls command
   "trash"       # Moves files to the trash, which is safer because it is reversible
   "jenv"        # Manage multiple versions of Java
   "bat"         # Clone of cat(1) with syntax highlighting and Git integration
@@ -29,6 +29,7 @@ apps=(
   "lnav"        # A robust log colorizer to tail logs:   tail -f your_log_file.log | ccze -A
   #"hugo"        # Configurable fastest static site generator
   "graphviz"    # Convert dot files to images
+  "dockutil"     # Command line tool for manipulating macOS Dock items
 )
 
 # List of casks (GUI apps) to be installed
@@ -113,8 +114,11 @@ verify_installations() {
   brew list --versions
 
   echo -e "${BLUE}===> Verify apps...${RESET}"
-  echo -e "${CYAN}===> Verify JAVA_HOME...${RESET}"
-  echo "$JAVA_HOME"
+#  for app in "${apps[@]}"; do
+#    echo -e "${CYAN}===> Verifying $app...${RESET}"
+#    which -a "$app"
+#    "$app" --version
+#  done
 
   echo -e "${CYAN}===> Verify Java...${RESET}"
   java -version
@@ -164,3 +168,5 @@ brew cleanup
 
 # set_env_vars comment this as jenv manages versions
 verify_installations
+
+printf "\n\n👌 Awesome, all set.\n"
