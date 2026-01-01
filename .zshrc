@@ -33,6 +33,12 @@ function up {
 
 
 # ----------------------------------------Aravind bashrc ----------------------------------------
+
+# External IP/Internet Speed
+alias myip="curl https://ipinfo.io/json" # or /ip for plain-text ip
+alias speedtest="curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python -"
+alias path='echo -e ${PATH//:/\n}'
+
 alias cls="clear"
 alias c="clear"
 alias ltr="ls -ltrFh"
@@ -143,16 +149,6 @@ alias bashrc="${EDITOR:-nano} +120 ~/.bashrc && source ~/.bashrc && echo Bash co
 alias mvni='mvn clean install'
 alias mvnc='mvn clean compile'
 alias mvnp='mvn clean package'
-
-# Prompt
-#BGREEN='\[\033[1;32m\]'
-#GREEN='\[\033[0;32m\]'
-#BRED='\[\033[1;31m\]'
-#RED='\[\033[0;31m\]'
-#BBLUE='\[\033[1;34m\]'
-#BLUE='\[\033[0;34m\]'
-#NORMAL='\[\033[00m\]'
-#PS1="${BLUE}(${RED}\w${BLUE}) ${NORMAL}\h ${RED}\$ ${NORMAL}"
 
 # Default editor to Nano - http://stackoverflow.com/questions/41866734/what-is-the-advantage-of-setting-a-default-editor-for-bash
 export EDITOR=/usr/bin/nano
