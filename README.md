@@ -2,7 +2,8 @@
 
 I have been consistently using a series of commands for some time to reproduce a development environment across
 various machines. For the most part, these commands were kept as gists. Recently, I managed to compile them all
-into a single shell script and a runcom (rc) file. I hope this proves helpful to others!
+into a primary shell script (along with optional secondary scripts) and a runcom (rc) file. I hope this proves helpful
+to others!
 
 > “On a UNIX system, everything is a file; if something is not a file, it is a process.” ― Machtelt Garrels,
 > Introduction To Linux: A Hands-On Guide
@@ -10,25 +11,29 @@ into a single shell script and a runcom (rc) file. I hope this proves helpful to
 ## 1.1. Table of Contents
 
 1. [Table of Contents](#11-table-of-contents)
-2. [setup_env](#12-setup_envsh)
-    1. [Developer folder](#121-developer-folder)
+2. [Setup Instructions](#12-Setup-Instructions)
+    1. [Steps](#121-steps)
+    2. [Primary Script](#122-primary-script---setup_envsh)
+    3. [Developer folder](#123-developer-folder)
 3. [setup_jenv](#13-setup_jenvsh)
-4. [Git](#16-Git)
-    1. [Pretty print all commits](#161-Pretty-print-all-commits)
-    2. [List repository contributors by author name (sorted by name)](#162-List-repository-contributors-by-author-name)
-    3. [List total commits by author (sorted by commit count)](#163-List-total-commits-by-author)
-    4. [What changed since given date?](#164-What-changed-since-given-date)
-    5. [List file change stats by author](#165-List-file-change-stats-by-author)
-5. [Packages](#17-Packages)
-6. [Reference](#18-Reference)
-7. [IntelliJ Tasks - GitHub Issue Integration](#19-intellij-tasks---github-issue-integration)
-8. [TODO](#110-todo)
+4. [Git](#14-git)
+    1. [Pretty print all commits](#141-Pretty-print-all-commits)
+    2. [List repository contributors by author name (sorted by name)](#142-List-repository-contributors-by-author-name)
+    3. [List total commits by author (sorted by commit count)](#143-List-total-commits-by-author)
+    4. [What changed since given date?](#144-What-changed-since-given-date)
+    5. [List file change stats by author](#145-List-file-change-stats-by-author)
+5. [Packages](#15-Packages)
+6. [Reference](#16-Reference)
+7. [IntelliJ Tasks - GitHub Issue Integration](#17-intellij-tasks---github-issue-integration)
+8. [TODO](#18-todo)
 
-## 1.2. setup_env.sh
+## 1.2. Setup Instructions
 
 > ***Warning***
-> 1. The script is tested on Apple M2 Pro (should also work on M1) and zsh shell.
-> 2. If you haven't already installed Xcode Command Line Tools, you'll see a message that **The Xcode Command Line Tools
+> 1. The script is tested on Apple M2/M3/M4 Pro (should also work on M1) and zsh shell.
+> 2. Type `bash` and hit enter. If you see the error "Bash is required to interpret this script", change to `bash` shell
+     as Homebrew install script uses bash.
+> 3. If you haven't already installed Xcode Command Line Tools, you'll see a message that **The Xcode Command Line Tools
      will be installed.**
 
 Check the output below to see if the Command Line Tools are installed:
@@ -49,14 +54,16 @@ Check the output below to see if the Command Line Tools are installed:
     Done with Command Line Tools for Xcode
 ```
 
-1. Change to `bash` shell as Homebrew install script uses batch. Type `bash` and hit enter. You would
-   see error "Bash is required to interpret this script" otherwise.
+### 1.2.1. Steps
+
+1. If your Mac is **managed (work or school)** then try to get an admin account and switch user. For e.g. if the admin
+   account is `Koadmin` then `su Koadmin` and enter the password for that account with higher privileges
 2. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
-3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git`
+3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
 4. cd <kbd>dev-tools</kbd>
-5. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: <kbd>cp .zshrc ~/</kbd>
-6. Make `setup_env.sh` executable: <kbd>chmod +x setup_env.sh</kbd>
-7. Run: <kbd>./setup_env.sh</kbd>
+5. Make `setup_env.sh` executable: <kbd>chmod +x setup_env.sh</kbd>
+6. Run: <kbd>./setup_env.sh</kbd>
+7. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: <kbd>cp .zshrc ~/</kbd>
 
 > ***Warning (on macOS)***
 >
@@ -64,7 +71,7 @@ Check the output below to see if the Command Line Tools are installed:
 > This may result in some configurations (like notification settings or location in the Dock/Launchpad) being lost.
 > To fix this, go to System Settings > Privacy & Security > App Management and add or enable your terminal.
 
-**Details**
+### 1.2.2. Primary Script - setup_env.sh
 
 `set_env.sh` automates the installation and configuration of various developer tools for Apple M1/M2 Pro. At a high
 level it will
@@ -103,17 +110,16 @@ level it will
 > [Unix Tools: Data, Software and Production Engineering](https://www.edx.org/course/unix-tools-data-software-and-production-engineering)
 > by Prof. Diomidis Spinellis.
 
-### 1.2.1 Developer Folder
+### 1.2.3. Developer Folder
 
-<kbd>mkdir ~/Developer</kbd>: It has a fancy icon in finder!
+<kbd>mkdir ~/Developer</kbd>: It has a fancy icon in Finder!
 
-## 1.3 setup_jenv.sh
+## 1.3. setup_jenv.sh
 
 `setp_jenv.sh` automates the process of adding Java Virtual Machine (JVM) installations to the `jenv` version manager on
-a
-macOS system. Here is an overview of what the script does:
+a macOS system. Here is an overview of what the script does:
 
-1. Uses `/usr/libexec/java_home --xml` to get xml output of the installed JVMs.
+1. Uses `/usr/libexec/java_home --xml` to get XML output of the installed JVMs.
 2. Parses the installation directories using `xmllint`
 3. Adds the JVMs to `jenv` using `jenv add` command.
 4. Lists the JVMs managed `jenv versions` command.
@@ -132,7 +138,7 @@ Matching Java Virtual Machines (2):
 
 ```
 
-## 1.6. Git
+## 1.4. Git
 
 Add the following aliases to `.bashrc`
 
@@ -157,7 +163,7 @@ gsu() { git log --shortstat --author="$1" | grep -E "fil(e|es) changed" | awk '{
 gw() { git whatchanged --since "$1" --oneline --name-only --pretty=format: | sort | uniq; }
 ```
 
-##### 1.6.1. Pretty print all commits
+##### 1.4.1. Pretty print all commits
 
 ```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gl
@@ -176,7 +182,7 @@ d4c2afb\ format content\ [Aravind R. Yarram]
 2617c7e\ Initial commit\ [GitHub]
 ```
 
-##### 1.6.2. List repository contributors by author name
+##### 1.4.2. List repository contributors by author name
 
 Output is sorted by name.
 
@@ -186,7 +192,7 @@ Aravind R Yarram
 Aravind R. Yarram
 ```
 
-##### 1.6.3. List total commits by author
+##### 1.4.3. List total commits by author
 
 Output is sorted by commit count.
 
@@ -196,7 +202,7 @@ rishik@rishik-computer:~/ws/linux-cheatsheet$ gslc
      1  Aravind R Yarram
 ```
 
-##### 1.6.4. What changed since given date?
+##### 1.4.4. What changed since given date?
 
 ```console
 rishik@rishik-computer:~/ws/datasets$ gw 09/01/2018
@@ -215,7 +221,7 @@ flight/2014_jan_carrier_performance.csv
 README.md
 ```
 
-##### 1.6.5. List file change stats by author
+##### 1.4.5. List file change stats by author
 
 ```console
 rishik@rishik-computer:~/ws/linux-cheatsheet$ gsu Aravind R. Yarram
@@ -227,7 +233,7 @@ Commit stats:
 - Add./Del. ratio (1:n)..  1 : 0.0714286
 ```
 
-## 1.7. Packages
+## 1.5. Packages
 
 Reference: https://help.ubuntu.com/community/Repositories
 
@@ -247,7 +253,7 @@ upgrade to latest
 
 aptitude versions <package-name> - shows all the versions available
 
-## 1.8. Reference
+## 1.6. Reference
 
 - [Notes](notes.md)
 - [The Linux Documentation Project](http://www.tldp.org/guides.html)
@@ -255,14 +261,14 @@ aptitude versions <package-name> - shows all the versions available
 - [Git Gist](https://gist.github.com/eyecatchup/3fb7ef0c0cbdb72412fc)
 - [Install custom logger formats for lnav](https://docs.lnav.org/en/latest/formats.html)
 
-## 1.9. IntelliJ Tasks - GitHub Issue Integration
+## 1.7. IntelliJ Tasks - GitHub Issue Integration
 
 Configure IntelliJ to use GitHub Issues as a task manager. This allows you to create, view, and manage GitHub issues
 directly.
 
 ![Configure Servers](intellij-tasks.png)
 
-## 1.10. TODO
+## 1.8. TODO
 
 - https://www.warp.dev/pricing
 - https://www.cursor.com/
