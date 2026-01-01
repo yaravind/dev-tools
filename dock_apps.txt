@@ -1,0 +1,29 @@
+/Applications/Microsoft\ Outlook.app
+/Applications/Microsoft\ Teams.app
+/Applications/Microsoft\ Word.app
+/Applications/Microsoft\ Excel.app
+/Applications/Microsoft\ PowerPoint.app
+/Applications/Google\ Chrome.app
+SPACER
+/System/Applications/Apps.app
+/System/Applications/Utilities/Screenshot.app
+/System/Applications/System\ Settings.app
+/System/Applications/Utilities/Terminal.app
+/Applications/Microsoft\ 365\ Copilot.app
+SPACER
+/Applications/IntelliJ\ IDEA.app
+/Applications/PyCharm.app
+/Applications/Visual\ Studio\ Code.app
+/Applications/Microsoft\ Azure\ Storage\ Explorer.app
+/Applications/FSNotes.app
+SPACER
+/Applications/Zed.app
+/Applications/Ollama.app
+
+--/Applications/TextEdit.app
+--/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app
+--/Applications/Microsoft\ Edge.app
+--/Applications/Microsoft\ OneNote.app
+--/Applications/OneDrive.app
+--/Applications/Company\ Portal.app
+--/Library/Application\ Support/Microsoft/MAU2.0/Microsoft\ AutoUpdate.app

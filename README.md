@@ -13,19 +13,21 @@ to others!
 1. [Table of Contents](#11-table-of-contents)
 2. [Setup Instructions](#12-setup-instructions)
     1. [Steps](#121-steps)
-    2. [Primary Script](#122-setup_envsh)
+    2. [setup_env.sh](#122-setup_envsh)
     3. [Developer folder](#123-developer-folder)
-3. [setup_jenv](#13-setup_jenvsh)
-4. [Git](#14-git)
+    4. [git_setup.sh](#124-git_setupsh)
+    5. [jenv_setup.sh](#125-jenv_setupsh)
+    6. [dock_setup.sh](#126-dock_setupsh)
+3. [Git](#14-git)
     1. [Pretty print all commits](#141-Pretty-print-all-commits)
     2. [List repository contributors by author name (sorted by name)](#142-List-repository-contributors-by-author-name)
     3. [List total commits by author (sorted by commit count)](#143-List-total-commits-by-author)
     4. [What changed since given date?](#144-What-changed-since-given-date)
     5. [List file change stats by author](#145-List-file-change-stats-by-author)
-5. [Packages](#15-Packages)
-6. [Reference](#16-Reference)
-7. [IntelliJ Tasks - GitHub Issue Integration](#17-intellij-tasks---github-issue-integration)
-8. [TODO](#18-todo)
+4. [Packages](#15-Packages)
+5. [IntelliJ Tasks - GitHub Issue Integration](#16-intellij-tasks---github-issue-integration)
+6. [TODO](#17-todo)
+7. [Reference](#18-reference)
 
 ## 1.2. Setup Instructions
 
@@ -61,9 +63,13 @@ Check the output below to see if the Command Line Tools are installed:
 2. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
 3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
 4. cd <kbd>dev-tools</kbd>
-5. Make `setup_env.sh` executable: <kbd>chmod +x setup_env.sh</kbd>
+5. Make `setup_env.sh` executable: <kbd>chmod +x setup_env.sh jenv_setup.sh git_setup.sh gen_dock_apps.sh
+   dock_setup.sh</kbd>
 6. Run: <kbd>./setup_env.sh</kbd>
 7. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: <kbd>cp .zshrc ~/</kbd>
+8. Run <kbd>./jenv_setup.sh</kbd> to add JDK
+9. Run <kbd>./git_setup.sh</kbd> to setup Git Credentials
+10. Run <kbd>./dock_setup.sh</kbd> to setup macOS Dock
 
 > ***Warning (on macOS)***
 >
@@ -73,8 +79,8 @@ Check the output below to see if the Command Line Tools are installed:
 
 ### 1.2.2. setup_env.sh
 
-`set_env.sh` automates the installation and configuration of various developer tools for Apple M1/M2 Pro. At a high
-level it will
+`set_env.sh` is the primary script and starting point that automates the installation and configuration of various
+developer tools for Apple M1/M2 Pro. At a high level it will
 
 - Disables the terminal login banner.
 - Install developer command-line and other productivity tools (JDK compatible with M1/M2, Maven, Mamba, Conda, Python
@@ -87,24 +93,24 @@ level it will
 
 **Installed productivity shell utils**
 
-| Utility     | Usage                                                                    |
-|-------------|--------------------------------------------------------------------------|
-| htop	       | Improved top (interactive process viewer)                                |
-| tree	       | Display directories as trees (with optional color/HTML output)           |
-| jq	         | Lightweight and flexible command-line JSON processor                     |
-| gh	         | GitHub command-line tool                                                 |
-| azure-cli	  |                                                                          |
-| tldr	       | Simplified and community-driven man pages                                |
-| fig	        | Adds IDE-style autocomplete to the terminal                              |
-| exa	        | Exa is a modern replacement for the ls command                           |
-| trash	      | Moves files to the trash, which is safer because it is reversible        |
-| jenv	       | Manage multiple versions of Java                                         |
-| bat	        | Clone of cat(1) with syntax highlighting and Git integration             |
-| thefuck	    | Programmatically correct last mistyped console command                   |
-| micromamba	 | micromamba is faster alternative to conda, gives clearer error reporting |
-| lnav        | tool for viewing and analyzing log files                                 |
-| node        | JavaScript runtime environment                                           |
-| llm         | Access large language models from the command-line                       |
+| Utility    | Usage                                                             |
+|------------|-------------------------------------------------------------------|
+| htop	      | Improved top (interactive process viewer)                         |
+| tree	      | Display directories as trees (with optional color/HTML output)    |
+| jq	        | Lightweight and flexible command-line JSON processor              |
+| gh	        | GitHub command-line tool                                          |
+| azure-cli	 |                                                                   |
+| tldr	      | Simplified and community-driven man pages                         |
+| graphviz	  | Convert dot files to images                                       |
+| eza	       | A modern alternative to `ls`                                      |
+| trash	     | Moves files to the trash, which is safer because it is reversible |
+| jenv	      | Manage multiple versions of Java                                  |
+| bat	       | Clone of cat(1) with syntax highlighting and Git integration      |
+| thefuck	   | Programmatically correct last mistyped console command            |
+| pandoc	    | Swiss-army knife of markup format conversion                      |
+| lnav       | tool for viewing and analyzing log files                          |
+| node       | JavaScript runtime environment                                    |
+| llm        | Access large language models from the command-line                |
 
 > Highly recommend this course if you are beginning your career as a software engineer:
 > [Unix Tools: Data, Software and Production Engineering](https://www.edx.org/course/unix-tools-data-software-and-production-engineering)
@@ -114,7 +120,11 @@ level it will
 
 <kbd>mkdir ~/Developer</kbd>: It has a fancy icon in Finder!
 
-## 1.3. setup_jenv.sh
+### 1.2.4 git_setup.sh
+
+`git_setup.sh` automates the configuration of Git user credentials. It prompts the user to input their name and email
+
+### 1.2.5 jenv_setup.sh
 
 `setp_jenv.sh` automates the process of adding Java Virtual Machine (JVM) installations to the `jenv` version manager on
 a macOS system. Here is an overview of what the script does:
@@ -137,6 +147,47 @@ Matching Java Virtual Machines (2):
 /Library/Java/JavaVirtualMachines/microsoft-11.jdk/Contents/Home
 
 ```
+
+You can use the following commands to then enable specific JDK versions:
+
+- Set Global version: <kbd>jenv global xx</kbd>
+- Set Local version: <kbd>jenv local xx</kbd>. Local Java version for the current working directory. This will create a
+  `.java-version` file we can check into Git for your projects
+
+### 1.2.6 dock_setup.sh
+
+`dock_setup.sh` automates the customization of the macOS Dock by adding commonly used applications and removing
+default ones. The script uses the `dockutil` command-line utility to manage the Dock items. Here is an overview of what
+the script does:
+
+1. Customizes the settings of the Dock such as icon size, magnification, and auto-hide behavior.
+2. Removes all existing applications from the Dock to start with a clean slate.
+3. Adds a predefined list of preferred applications to the Dock (chrome, finder, vscode etc.) in a specific order.
+4. Adds default folders to the right side of the Dock for easy access. The folders added are:
+    1. Applications folder
+    2. Documents folder
+    3. Downloads folder
+    4. Trash
+5. Restarts the Dock to apply the changes immediately.
+
+The Application names to be added to the Dock are read from `dock_apps.txt` file. It can be generated using the <kbd>
+gen_dock_apps.sh</kbd> script. You can also manually create and edit the file by following the guidelines:
+
+1. Create a new text file named `dock_apps.txt` in the same directory as the `dock_setup.sh` script.
+2. Open the `dock_apps.txt` file in a text editor.
+3. List the names of the applications you want to add to the Dock, one per line.
+    1. Ensure that the names match the application names as they appear in the `/Applications` folder. You can
+       right-click on an application in the Applications folder and select "Get Info" to see the exact name. If there is
+       a space in the name, ensure to escape it with `\`. For e.g. `/Applications/Microsoft\ Teams.app`
+    2. Include the file extension `.app` for each application name.
+    3. If you want to add folders (like Documents or Downloads), you can include them as well, but make sure to specify
+       the full path (e.g., `/Users/yourusername/Documents`).
+    4. If you want to add system applications, you may need to provide the full path (e.g.,
+       `/System/Applications/System Settings.app`).
+    5. You can add a comment line starting with `--` to describe sections or provide context, but these lines will be
+       ignored by the script.
+    6. You use `SPACER` as a placeholder to add a spacer in the Dock.
+    7. Example content of `dock_apps.txt`:
 
 ## 1.4. Git
 
@@ -253,22 +304,14 @@ upgrade to latest
 
 aptitude versions <package-name> - shows all the versions available
 
-## 1.6. Reference
-
-- [Notes](notes.md)
-- [The Linux Documentation Project](http://www.tldp.org/guides.html)
-- [Stackoverflow](https://stackoverflow.com)
-- [Git Gist](https://gist.github.com/eyecatchup/3fb7ef0c0cbdb72412fc)
-- [Install custom logger formats for lnav](https://docs.lnav.org/en/latest/formats.html)
-
-## 1.7. IntelliJ Tasks - GitHub Issue Integration
+## 1.6. IntelliJ Tasks - GitHub Issue Integration
 
 Configure IntelliJ to use GitHub Issues as a task manager. This allows you to create, view, and manage GitHub issues
 directly.
 
 ![Configure Servers](intellij-tasks.png)
 
-## 1.8. TODO
+## 1.7. TODO
 
 - https://www.warp.dev/pricing
 - https://www.cursor.com/
@@ -288,3 +331,11 @@ Disable .DS_Store files
 `defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true`
 `defaults write =com.apple.finder ShowPathbar -bool true` - It show the path on the bottom of finder when navigating
 nested folder
+
+## 1.8. Reference
+
+- [Notes](notes.md)
+- [The Linux Documentation Project](http://www.tldp.org/guides.html)
+- [Stackoverflow](https://stackoverflow.com)
+- [Git Gist](https://gist.github.com/eyecatchup/3fb7ef0c0cbdb72412fc)
+- [Install custom logger formats for lnav](https://docs.lnav.org/en/latest/formats.html)
