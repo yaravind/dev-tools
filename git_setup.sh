@@ -7,4 +7,4 @@ read email
 git config --global user.email "$email"
 git config --global user.name "$full_name"
 
-echo "👌 Awesome, all set."
+printf "\n\n👌 Awesome, all set.\n"
