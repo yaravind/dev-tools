@@ -14,6 +14,7 @@ SPACER
 /Applications/IntelliJ\ IDEA.app
 /Applications/PyCharm.app
 /Applications/Visual\ Studio\ Code.app
+/Applications/draw.io.app
 /Applications/Microsoft\ Azure\ Storage\ Explorer.app
 /Applications/FSNotes.app
 SPACER
