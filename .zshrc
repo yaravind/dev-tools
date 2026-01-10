@@ -1,5 +1,7 @@
 alias profile='nano ~/.zshrc'
 alias reload='source ~/.zshrc && echo "Done"'
+alias cpreload='cp .zshrc ~/ && source ~/.zshrc && echo "Done"'
+
 alias hosts='sudo nano /etc/hosts'
 alias gitconfig='nano ~/.gitconfig'
 
@@ -9,9 +11,8 @@ alias cat='bat'
 # Grabs the disk usage in the current directory
 alias usage='du -ch | grep total'
 # Gets the total disk usage on your machine
-alias totalusage='df -hl --total | grep total'
-# Shows the individual partition usages without the temporary memory values
-alias partusage='df -hlT --exclude-type=tmpfs --exclude-type=devtmpfs'
+alias totalusage='df -hl'
+
 # Gives you what is using the most space. Both directories and files. Varies on current directory
 alias most='du -hsx * | sort -rh | head -10'
 
@@ -36,14 +37,18 @@ function up {
 
 # External IP/Internet Speed
 alias myip="curl https://ipinfo.io/json" # or /ip for plain-text ip
+#know your external IP address
+alias ipe='curl ipinfo.io/ip'
+#know your local/internal IP address
+alias ipi='ipconfig getifaddr en0'
 alias speedtest="curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -"
 alias path='echo -e ${PATH//:/\n}'
 
 alias cls="clear"
 alias c="clear"
-alias ltr="eza -l -t modified -r -F -h"
+alias ltr="eza -l -t modified -r -F -h --color=always"
 #-F appends symbols to filenames.
-alias lta="eza -a -l -F -h"
+alias lta="eza -a -l -F -h --color=always"
 #list only directories
 alias ld='setopt +o nomatch; eza -ldh */ 2>/dev/null || eza -ldh .; setopt -o nomatch'
 #list only files (exclude hidden files)
@@ -68,9 +73,9 @@ alias ~="cd ~"
 #History
 alias hist='history'
 alias h='history'
-alias h1='history 10'
-alias h2='history 15'
-alias h3='history 20'
+alias h1='history | tail -10'
+alias h2='history | tail -20'
+alias h3='history | tail -30'
 # History search (use: hs sometext)
 hs() { history | grep "$1"; }
 
@@ -83,8 +88,8 @@ alias cdiff='colordiff'
 #pretty format json using python tool
 #usage: prettyjson file.json
 #OR pipe unformatted to these to nicely format the JSON e.g. cat file.json | prettyjson
-alias prettyjson='python -m json.tool'
-alias json="python -m json.tool"
+alias prettyjson='python3 -m json.tool'
+alias json="python3 -m json.tool"
 
 #git
 alias gi='git init'
@@ -113,12 +118,6 @@ glf() { git log --all --grep="$1"; }
 #tar
 alias untar='tar -zxvf '
 
-#know your external IP address
-alias ipe='curl ipinfo.io/ip'
-
-#know your local/internal IP address
-alias ipi='ipconfig getifaddr en0'
-
 #repository
 alias aptu='sudo apt-get update && sudo apt-get upgrade'
 
@@ -146,7 +145,8 @@ alias gpumeminfo='grep -i --color memory /var/log/Xorg.0.log'
 alias sshconfig="${EDITOR:-nano} ~/.ssh/config"
 alias bashrc="${EDITOR:-nano} +120 ~/.bashrc && source ~/.bashrc && echo Bash config edited and reloaded."
 
-#Maven
+#JDK & Maven
+alias jdks='/usr/libexec/java_home -V'
 alias mvni='mvn clean install'
 alias mvnc='mvn clean compile'
 alias mvnp='mvn clean package'
