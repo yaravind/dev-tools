@@ -189,6 +189,18 @@ function Set-JavaHome {
     }
 }
 
+# Install Git if not already present
+function Install-Git {
+    Write-Step "Checking for Git..."
+    if (Test-CommandExists "git") {
+        Write-Warn "git is already installed — skipping."
+    } else {
+        Write-Info "git not found. Installing Git for Windows..."
+        Install-WingetApp -Id "Git.Git" -Description "Git for Windows"
+        Write-Warn "Restart your terminal for git to be available in PATH."
+    }
+}
+
 # Install JEnv-for-Windows (https://github.com/FelixSelter/JEnv-for-Windows)
 function Install-JEnv {
     Write-Step "Installing JEnv-for-Windows..."
@@ -208,6 +220,9 @@ function Invoke-Verify {
 
     Write-Info "All installed packages (via winget list)..."
     winget list
+
+    Write-Info "Verify Git..."
+    if (Test-CommandExists "git") { git --version } else { Write-Warn "git not found in PATH. Restart your terminal." }
 
     Write-Info "Verify Java..."
     if (Test-CommandExists "java") { java -version } else { Write-Warn "java not found in PATH. Restart your terminal." }
@@ -252,6 +267,8 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";
             [System.Environment]::GetEnvironmentVariable("Path", "User")
 
 Install-PipTools
+
+Install-Git
 
 Install-JEnv
 
