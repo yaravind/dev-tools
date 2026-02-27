@@ -12,7 +12,7 @@ Setting up a new machine is tedious. Hunting down the right tools, configuring s
 | 🔁 **Reproducible** | Identical setup across every machine, every time |
 | 🧰 **Curated toolset** | Hand-picked CLI utilities, JVM toolchain, Python/Rust, LLM tools, and modern IDEs |
 | 🔧 **Shell-ready** | Pre-wired `.zshrc` with aliases, helpers, and prompt tweaks that survive reboots |
-| 📊 **Data & ML friendly** | Includes `uv`, `mamba`, `conda`, Python, and cloud CLIs out of the box |
+| 📊 **Data & ML friendly** | Includes `uv`, `mamba`, `conda`, Python, cloud CLIs, and `ollama` for local LLMs out of the box |
 
 > “On a UNIX system, everything is a file; if something is not a file, it is a process.” ― Machtelt Garrels,
 > Introduction To Linux: A Hands-On Guide
