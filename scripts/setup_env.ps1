@@ -40,8 +40,8 @@ $cliTools = @(
 #             `pip install pipx`
 # - trash:    No direct equivalent.
 #             Use the built-in Recycle Bin or the RecycleBin PowerShell module.
-# - jenv:     Not available on Windows. Manage JAVA_HOME manually or
-#             use jabba (https://github.com/shyiko/jabba) in WSL.
+# - jenv:     Use JEnv-for-Windows (https://github.com/FelixSelter/JEnv-for-Windows).
+#             Installed below. Run jenv_setup.ps1 after this script to register JDKs.
 # - thefuck:  Not fully supported on Windows. Limited functionality only.
 # - lnav:     Not available on Windows.
 #             Consider BareTail (https://www.baremetalsoft.com/baretail/) or WSL.
@@ -189,6 +189,19 @@ function Set-JavaHome {
     }
 }
 
+# Install JEnv-for-Windows (https://github.com/FelixSelter/JEnv-for-Windows)
+function Install-JEnv {
+    Write-Step "Installing JEnv-for-Windows..."
+    if ($null -ne (Get-Command "jenv" -ErrorAction SilentlyContinue)) {
+        Write-Warn "jenv is already installed — skipping."
+    } else {
+        # NOTE: Review the installer script before running in sensitive environments:
+        # https://raw.githubusercontent.com/FelixSelter/JEnv-for-Windows/main/jenv.ps1
+        iwr -useb "https://raw.githubusercontent.com/FelixSelter/JEnv-for-Windows/main/jenv.ps1" | iex
+        Write-Ok "JEnv-for-Windows installed. Run .\scripts\jenv_setup.ps1 to register your JDKs."
+    }
+}
+
 # Verify that key tools installed correctly
 function Invoke-Verify {
     Write-Step "Start verification"
@@ -239,6 +252,8 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";
             [System.Environment]::GetEnvironmentVariable("Path", "User")
 
 Install-PipTools
+
+Install-JEnv
 
 Set-JavaHome
 

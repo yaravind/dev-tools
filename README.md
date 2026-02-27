@@ -89,7 +89,8 @@ Check the output below to see if the Command Line Tools are installed:
 4. cd <kbd>dev-tools</kbd>
 5. Run: <kbd>.\scripts\setup_env.ps1</kbd>
 6. Restart your terminal to apply PATH and environment variable changes
-7. Run <kbd>.\git_setup.sh</kbd> (in Git Bash) or configure Git credentials manually:
+7. Run <kbd>.\scripts\jenv_setup.ps1</kbd> to register installed JDKs with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows)
+8. Run <kbd>.\git_setup.sh</kbd> (in Git Bash) or configure Git credentials manually:
    ```powershell
    git config --global user.name "Your Name"
    git config --global user.email "you@example.com"
@@ -97,7 +98,7 @@ Check the output below to see if the Command Line Tools are installed:
 
 > ***Note on unavailable tools***
 >
-> Some tools from `setup_env.sh` have no Windows equivalent (e.g. `htop`, `lnav`, `dockutil`, `jenv`, `thefuck`).
+> Some tools from `setup_env.sh` have no Windows equivalent (e.g. `htop`, `lnav`, `dockutil`, `thefuck`).
 > These are documented with alternatives inside `scripts/setup_env.ps1`.
 
 ---
@@ -109,6 +110,7 @@ Check the output below to see if the Command Line Tools are installed:
 | `setup_env.sh` | Primary bootstrap script — installs and configures 30+ developer tools (JDK, Python, Rust, fonts, IDEs, shell utils) on macOS Apple Silicon |
 | `git_setup.sh` | Configures global Git user credentials (name and email) |
 | `jenv_setup.sh` | Discovers all installed JVMs and registers them with the `jenv` version manager |
+| `jenv_setup.ps1` | Discovers all installed JDKs and registers them with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows) |
 | `dock_setup.sh` | Customizes the macOS Dock — sets icon size, removes defaults, and adds preferred apps from `config/dock_apps.txt` |
 | `gen_dock_apps.sh` | Generates `config/dock_apps.txt` by reading the current Dock configuration |
 | `vscode_setup.sh` | Installs VS Code extensions listed in `config/vscode.txt` |
