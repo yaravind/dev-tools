@@ -11,38 +11,46 @@ This repository contains shell scripts and configuration files to bootstrap a pr
 | `setup_env.sh` | Primary bootstrap script — installs 30+ tools via Homebrew (formulae and casks) |
 | `git_setup.sh` | Configures global Git user credentials (name and email) |
 | `jenv_setup.sh` | Discovers all installed JVMs and registers them with `jenv` |
-| `dock_setup.sh` | Customizes the macOS Dock (icon size, apps, folders) |
+| `dock_setup.sh` | Customizes the macOS Dock (icon size, apps, folders) with rollback support |
 | `gen_dock_apps.sh` | Generates `dock_apps.txt` from the current Dock configuration |
 | `vscode_setup.sh` | Installs VS Code extensions listed in `vscode.txt` |
 | `conv-dot-to-png.sh` | Converts `triples.dot` to PNG using Graphviz |
-| `colors.sh` | Defines ANSI color-code variables sourced by other scripts |
+| `colors.sh` | Defines ANSI color-code variables (ANSI escape codes and zsh prompt sequences) |
 | `.zshrc` / `.bashrc` | Shell configuration files with aliases and environment setup |
-| `dock_apps.txt` | List of app names to add to the macOS Dock |
+| `dock_apps.txt` | List of full app paths to add/remove from the macOS Dock |
 | `vscode.txt` | List of VS Code extension IDs to install |
+| `lnav_format_python.json` | Custom `lnav` log format definition for the Python `logging` module pattern |
+| `triples.dot` | Graphviz source file for a knowledge-graph diagram |
+| `triples.png` | Rendered PNG output of `triples.dot` |
+| `vscode-info.md` | Prompt templates used to generate VS Code extension documentation |
+| `notes.md` | Reference notes covering Linux/macOS shell commands and concepts |
+| `DETAILS.md` | Extended documentation: script details, Git aliases, package management tips |
 
 ## Coding Conventions
 
 ### Shell Scripts
 
 - All scripts target **zsh** (`#!/bin/zsh`) except where Bash compatibility is required for Homebrew.
-- Source `colors.sh` at the top of every script that needs colored output: `source colors.sh`.
-- Use the ANSI color variables defined in `colors.sh` for all terminal output:
+- `colors.sh` defines ANSI escape code variables for use with `echo -e` / `printf`. Source it when needed: `source colors.sh`.
+- Some scripts (e.g. `vscode_setup.sh`, `dock_setup.sh`) define their own inline color variables instead of sourcing `colors.sh`. Use `$NC` (No Color) as the reset variable when defining colors inline in that style.
+- Color semantics used across scripts:
   - `$RED` — errors
-  - `$GOLD` / `$YELLOW` — warnings
+  - `$GOLD` / `$YELLOW` — warnings / skipped items
   - `$GREEN` — success
-  - `$CYAN` / `$BLUE` — informational steps
-  - `$UMAGENTA` — section headers / important steps
-  - `$RESET` — reset color after each message
+  - `$CYAN` / `$BLUE` — informational steps / commands being run
+  - `$MAGENTA` / `$UMAGENTA` — section headers / important steps
+  - `$RESET` / `$NC` — reset color after each message
 - Print messages with `echo -e` or `printf`. **Do not** embed variables directly in `printf` format strings — use `printf '..%s..' "$foo"` instead.
-- Prefix every log line with `===>` for consistency with the existing scripts.
-- Wrap tool availability checks in a `command_exists()` helper (`command -v "$1" >/dev/null 2>&1`).
-- Skip empty lines and comment lines (prefixed with `#`) when reading list files such as `vscode.txt` or `dock_apps.txt`.
+- Prefix every log line with `===>` or `==>` for consistency with the existing scripts.
+- Wrap tool availability checks in a `command_exists()` helper (`command -v "$1" >/dev/null 2>&1`) or use `command -v tool &>/dev/null` inline.
+- Skip empty lines and comment lines when reading list files such as `vscode.txt` or `dock_apps.txt`.
 - Keep scripts idempotent where possible (check before install/configure).
+- Provide a rollback mechanism for destructive operations (see `dock_setup.sh` for an example using a plist backup).
 
 ### Configuration Files
 
-- `vscode.txt`: one extension ID per line; inline comments are allowed after a `#`.
-- `dock_apps.txt`: one application name per line; comment lines start with `--`; use `SPACER` for Dock spacers.
+- `vscode.txt`: one VS Code extension ID per line; inline comments after `#` are stripped by `vscode_setup.sh` at install time.
+- `dock_apps.txt`: one **full application path** per line (e.g. `/Applications/Google\ Chrome.app`); lines prefixed with `--` instruct `dock_setup.sh` to **remove** that app from the Dock; use `SPACER` (case-insensitive) to insert a Dock spacer; blank lines are ignored.
 
 ## Platform
 
