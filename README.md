@@ -21,6 +21,8 @@ Setting up a new machine is tedious. Hunting down the right tools, configuring s
 
 ## Setup Instructions
 
+### macOS (Apple Silicon M1/M2/M3/M4)
+
 > ***Warning***
 > 1. The script is tested on Apple M2/M3/M4 Pro (should also work on M1) and zsh shell.
 > 2. Type `bash` and hit enter. If you see the error "Bash is required to interpret this script", change to `bash` shell
@@ -46,7 +48,7 @@ Check the output below to see if the Command Line Tools are installed:
     Done with Command Line Tools for Xcode
 ```
 
-### Steps
+#### Steps
 
 1. If your Mac is **managed (work or school)** then try to get an admin account and switch user. For e.g. if the admin
    account is `Koadmin` then `su Koadmin` and enter the password for that account with higher privileges
@@ -70,18 +72,49 @@ Check the output below to see if the Command Line Tools are installed:
 
 ---
 
+### Windows (10/11)
+
+> ***Requirements***
+> - Windows 10 (version 1809 or later) or Windows 11
+> - [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/) (App Installer) — pre-installed on
+>   Windows 11; available from the [Microsoft Store](https://www.microsoft.com/store/productId/9NBLGGH4NNS1) on
+>   Windows 10
+> - PowerShell 5.1 or later (PowerShell 7+ recommended)
+
+#### Steps
+
+1. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
+2. Open **PowerShell as Administrator**
+3. Allow script execution for this session: <kbd>Set-ExecutionPolicy Bypass -Scope Process -Force</kbd>
+4. cd <kbd>dev-tools</kbd>
+5. Run: <kbd>.\scripts\setup_env.ps1</kbd>
+6. Restart your terminal to apply PATH and environment variable changes
+7. Run <kbd>.\git_setup.sh</kbd> (in Git Bash) or configure Git credentials manually:
+   ```powershell
+   git config --global user.name "Your Name"
+   git config --global user.email "you@example.com"
+   ```
+
+> ***Note on unavailable tools***
+>
+> Some tools from `setup_env.sh` have no Windows equivalent (e.g. `htop`, `lnav`, `dockutil`, `jenv`, `thefuck`).
+> These are documented with alternatives inside `scripts/setup_env.ps1`.
+
+---
+
 ## Scripts
 
-| Script Name | Description |
-|---|---|
-| `setup_env.sh` | Primary bootstrap script — installs and configures 30+ developer tools (JDK, Python, Rust, fonts, IDEs, shell utils) on macOS Apple Silicon |
-| `git_setup.sh` | Configures global Git user credentials (name and email) |
-| `jenv_setup.sh` | Discovers all installed JVMs and registers them with the `jenv` version manager |
-| `dock_setup.sh` | Customizes the macOS Dock — sets icon size, removes defaults, and adds preferred apps from `dock_apps.txt` |
-| `gen_dock_apps.sh` | Generates `dock_apps.txt` by reading the current Dock configuration |
-| `vscode_setup.sh` | Installs VS Code extensions listed in `vscode.txt` |
-| `conv-dot-to-png.sh` | Converts `triples.dot` to a PNG image using Graphviz |
-| `colors.sh` | Defines ANSI color code variables (sourced by other scripts) |
+| Script Name | Platform | Description |
+|---|---|---|
+| `setup_env.sh` | macOS | Primary bootstrap script — installs and configures 30+ developer tools (JDK, Python, Rust, fonts, IDEs, shell utils) on macOS Apple Silicon |
+| `scripts/setup_env.ps1` | Windows | Windows equivalent of `setup_env.sh` — installs the same toolset using `winget`; documents tools unavailable on Windows |
+| `git_setup.sh` | macOS/Linux | Configures global Git user credentials (name and email) |
+| `jenv_setup.sh` | macOS | Discovers all installed JVMs and registers them with the `jenv` version manager |
+| `dock_setup.sh` | macOS | Customizes the macOS Dock — sets icon size, removes defaults, and adds preferred apps from `dock_apps.txt` |
+| `gen_dock_apps.sh` | macOS | Generates `dock_apps.txt` by reading the current Dock configuration |
+| `vscode_setup.sh` | macOS/Linux | Installs VS Code extensions listed in `vscode.txt` |
+| `conv-dot-to-png.sh` | macOS/Linux | Converts `triples.dot` to a PNG image using Graphviz |
+| `colors.sh` | macOS/Linux | Defines ANSI color code variables (sourced by other scripts) |
 
 ---
 
