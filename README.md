@@ -1,12 +1,23 @@
-# 1. Developer Tools
+# Developer Tools
 
-I have been consistently using a series of commands for some time to reproduce a development environment across
-various machines. For the most part, these commands were kept as gists. Recently, I managed to compile them all
-into a primary shell script (along with optional secondary scripts) and a runcom (rc) file. I hope this proves helpful
-to others!
+> **One command to bootstrap a productive macOS environment for software and data engineers — from a fresh machine to fully equipped in minutes.**
+
+Setting up a new machine is tedious. Hunting down the right tools, configuring shells, managing Java versions, wiring up your IDE — it takes hours and rarely produces consistent results. This project captures battle-tested scripts and configs so you can reproduce a complete, opinionated developer environment on Apple Silicon (M1/M2/M3/M4) in one run.
+
+## Why use it?
+
+| Benefit | Detail |
+|---|---|
+| ⚡ **Fast bootstrap** | Install and configure 30+ tools with a single command |
+| 🔁 **Reproducible** | Identical setup across every machine, every time |
+| 🧰 **Curated toolset** | Hand-picked CLI utilities, JVM toolchain, Python/Rust, LLM tools, and modern IDEs |
+| 🔧 **Shell-ready** | Pre-wired `.zshrc` with aliases, helpers, and prompt tweaks that survive reboots |
+| 📊 **Data & ML friendly** | Includes `uv`, `mamba`, `conda`, Python, and cloud CLIs out of the box |
 
 > “On a UNIX system, everything is a file; if something is not a file, it is a process.” ― Machtelt Garrels,
 > Introduction To Linux: A Hands-On Guide
+
+---
 
 ## 1.1. Table of Contents
 
