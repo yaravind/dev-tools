@@ -1,4 +1,4 @@
-﻿# setup_env.ps1 — Windows equivalent of setup_env.sh
+# setup_env.ps1 - Windows equivalent of setup_env.sh
 #
 # This script automates the installation and configuration of commonly used
 # developer tools on modern Windows (Windows 10/11) using winget.
@@ -13,7 +13,7 @@
 #   - Run PowerShell as Administrator for system-wide installations
 
 # ============================================================
-# CLI Tools — winget equivalents of brew formulae
+# CLI Tools - winget equivalents of brew formulae
 # ============================================================
 $cliTools = @(
     @{ Id = "Python.Python.3.13";    Description = "Python 3.13" },
@@ -51,7 +51,7 @@ $cliTools = @(
 # - tree:     Built-in Windows command (`tree /F`). No installation required.
 
 # ============================================================
-# GUI Apps — winget equivalents of brew casks
+# GUI Apps - winget equivalents of brew casks
 # ============================================================
 $guiApps = @(
     @{ Id = "Microsoft.OpenJDK.11";              Description = "Microsoft OpenJDK 11 (for Fabric Runtime 1.3)" },
@@ -62,8 +62,8 @@ $guiApps = @(
     @{ Id = "JetBrains.PyCharm.Professional";    Description = "PyCharm Professional (use JetBrains.PyCharm.Community for free edition)" },
     @{ Id = "Microsoft.VisualStudioCode";        Description = "Visual Studio Code" },
     @{ Id = "Microsoft.AzureStorageExplorer";    Description = "Microsoft Azure Storage Explorer" },
-    @{ Id = "JGraph.Draw";                       Description = "Draw.io — online diagram software" },
-    @{ Id = "Zed.Zed";                           Description = "Zed — multiplayer code editor" },
+    @{ Id = "JGraph.Draw";                       Description = "Draw.io - online diagram software" },
+    @{ Id = "Zed.Zed";                           Description = "Zed - multiplayer code editor" },
     @{ Id = "Ollama.Ollama";                     Description = "Manage local LLMs" },
     @{ Id = "Logitech.LogiOptionsPlus";          Description = "Software for Logitech devices" },
     @{ Id = "Microsoft.PowerShell";              Description = "PowerShell (latest stable version)" },
@@ -119,7 +119,7 @@ function Assert-Winget {
     }
 }
 
-# Install a package via winget (idempotent — skips if already installed)
+# Install a package via winget (idempotent - skips if already installed)
 function Install-WingetApp {
     param(
         [string]$Id,
@@ -131,7 +131,7 @@ function Install-WingetApp {
         Write-Ok "Installed: $Description"
     } elseif ($LASTEXITCODE -eq -1978335189) {
         # 0x8A150023 = APPINSTALLER_CLI_ERROR_PACKAGE_ALREADY_INSTALLED
-        Write-Warn "Already installed: $Description — skipping."
+        Write-Warn "Already installed: $Description - skipping."
     } else {
         Write-Warn "Could not install $Description ($Id). Exit code: $LASTEXITCODE"
     }
@@ -193,7 +193,7 @@ function Set-JavaHome {
 function Install-Git {
     Write-Step "Checking for Git..."
     if (Test-CommandExists "git") {
-        Write-Warn "git is already installed — skipping."
+        Write-Warn "git is already installed - skipping."
     } else {
         Write-Info "git not found. Installing Git for Windows..."
         Install-WingetApp -Id "Git.Git" -Description "Git for Windows"
@@ -205,7 +205,7 @@ function Install-Git {
 function Install-JEnv {
     Write-Step "Installing JEnv-for-Windows..."
     if ($null -ne (Get-Command "jenv" -ErrorAction SilentlyContinue)) {
-        Write-Warn "jenv is already installed — skipping."
+        Write-Warn "jenv is already installed - skipping."
     } else {
         # NOTE: Review the installer script before running in sensitive environments:
         # https://raw.githubusercontent.com/FelixSelter/JEnv-for-Windows/main/jenv.ps1
@@ -276,4 +276,4 @@ Set-JavaHome
 
 Invoke-Verify
 
-Write-Host "`n`n👌 Awesome, all set." -ForegroundColor Green
+Write-Host "`n`nAwesome, all set!" -ForegroundColor Green
