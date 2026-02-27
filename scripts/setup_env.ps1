@@ -234,6 +234,10 @@ foreach ($app in $guiApps) {
     Install-WingetApp -Id $app.Id -Description $app.Description
 }
 
+# Refresh PATH in the current session so winget-installed tools (e.g. Python/pip) are visible
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" +
+            [System.Environment]::GetEnvironmentVariable("Path", "User")
+
 Install-PipTools
 
 Set-JavaHome
