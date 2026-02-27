@@ -25,7 +25,7 @@ This enables colorized viewer for the following python log format:
 
 ```console
 % mkdir -p ~/.lnav/formats/ 
-% cp lnav_format_python.json ~/.lnav/formats/
+% cp config/lnav_format_python.json ~/.lnav/formats/
 % lnav -i ~/.lnav/formats/lnav_format_python.json
 ✔ installed -- /Users/O60774/.lnav/formats/installed/pythonlogger.json
 %    

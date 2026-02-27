@@ -182,10 +182,10 @@ the script does:
     4. Trash
 5. Restarts the Dock to apply the changes immediately.
 
-The Application names to be added to the Dock are read from `dock_apps.txt` file. It can be generated using the
+The Application names to be added to the Dock are read from `config/dock_apps.txt` file. It can be generated using the
 <kbd>gen_dock_apps.sh</kbd> script. You can also manually create and edit the file by following the guidelines:
 
-1. Create a new text file named `dock_apps.txt` in the same directory as the `dock_setup.sh` script.
+1. Create a new text file named `dock_apps.txt` in the `config` directory of the repo.
 2. Open the `dock_apps.txt` file in a text editor.
 3. List the names of the applications you want to add to the Dock, one per line.
     1. Ensure that the names match the application names as they appear in the `/Applications` folder. You can
@@ -330,7 +330,7 @@ upgrade to latest
 Configure IntelliJ to use GitHub Issues as a task manager. This allows you to create, view, and manage GitHub issues
 directly.
 
-![Configure Servers](intellij-tasks.png)
+![Configure Servers](assets/intellij-tasks.png)
 
 ---
 
@@ -359,7 +359,7 @@ nested folders
 
 ## Reference
 
-- [Notes](notes.md)
+- [Notes](docs/notes.md)
 - [The Linux Documentation Project](http://www.tldp.org/guides.html)
 - [Stackoverflow](https://stackoverflow.com)
 - [Git Gist](https://gist.github.com/eyecatchup/3fb7ef0c0cbdb72412fc)
