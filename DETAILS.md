@@ -4,11 +4,12 @@
 
 1. [Script Details](#script-details)
     1. [setup_env.sh](#setup_envsh)
-    2. [Developer Folder](#developer-folder)
-    3. [git_setup.sh](#git_setupsh)
-    4. [jenv_setup.sh](#jenv_setupsh)
-    5. [dock_setup.sh](#dock_setupsh)
-    6. [vscode_setup.sh](#vscode_setupsh)
+    2. [setup_env.ps1 (Windows)](#setup_envps1-windows)
+    3. [Developer Folder](#developer-folder)
+    4. [git_setup.sh](#git_setupsh)
+    5. [jenv_setup.sh](#jenv_setupsh)
+    6. [dock_setup.sh](#dock_setupsh)
+    7. [vscode_setup.sh](#vscode_setupsh)
 2. [Git](#git)
     1. [Pretty print all commits](#pretty-print-all-commits)
     2. [List repository contributors by author name](#list-repository-contributors-by-author-name)
@@ -62,6 +63,71 @@ developer tools for Apple M1/M2 Pro. At a high level it will
 > Highly recommend this course if you are beginning your career as a software engineer:
 > [Unix Tools: Data, Software and Production Engineering](https://www.edx.org/course/unix-tools-data-software-and-production-engineering)
 > by Prof. Diomidis Spinellis.
+
+### setup_env.ps1 (Windows)
+
+`scripts/setup_env.ps1` is the Windows equivalent of `setup_env.sh`. It uses
+[winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/) (Windows Package Manager) to install the
+same set of developer tools on Windows 10/11.
+
+Run it from an **Administrator PowerShell** session:
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+.\scripts\setup_env.ps1
+```
+
+**Windows equivalents for brew formulae**
+
+| macOS (brew)   | Windows (winget ID)          | Notes                                 |
+|----------------|------------------------------|---------------------------------------|
+| python@3.13    | Python.Python.3.13           |                                       |
+| rust           | Rustlang.Rustup              |                                       |
+| uv             | astral-sh.uv                 |                                       |
+| jq             | jqlang.jq                    |                                       |
+| gh             | GitHub.cli                   |                                       |
+| azure-cli      | Microsoft.AzureCLI           |                                       |
+| tldr           | tldr-pages.tldr              |                                       |
+| eza            | eza-community.eza            |                                       |
+| bat            | sharkdp.bat                  |                                       |
+| node           | OpenJS.NodeJS                |                                       |
+| pandoc         | JohnMacFarlane.Pandoc        |                                       |
+| graphviz       | Graphviz.Graphviz            |                                       |
+| maven          | Apache.Maven                 |                                       |
+
+**Windows equivalents for brew casks**
+
+| macOS (brew cask)                  | Windows (winget ID)                 | Notes                              |
+|------------------------------------|-------------------------------------|------------------------------------|
+| microsoft-openjdk@11               | Microsoft.OpenJDK.11                |                                    |
+| microsoft-openjdk@17               | Microsoft.OpenJDK.17                |                                    |
+| dotnet-sdk                         | Microsoft.DotNet.SDK.9              |                                    |
+| git-credential-manager             | Microsoft.GitCredentialManager      |                                    |
+| intellij-idea                      | JetBrains.IntelliJIDEA.Ultimate     | Community: `JetBrains.IntelliJIDEA.Community` |
+| pycharm                            | JetBrains.PyCharm.Professional      | Community: `JetBrains.PyCharm.Community`      |
+| visual-studio-code                 | Microsoft.VisualStudioCode          |                                    |
+| microsoft-azure-storage-explorer   | Microsoft.AzureStorageExplorer      |                                    |
+| drawio                             | JGraph.Draw                         |                                    |
+| Zed                                | Zed.Zed                             |                                    |
+| ollama                             | Ollama.Ollama                       |                                    |
+| logi-options+                      | Logitech.LogiOptionsPlus            |                                    |
+| powershell                         | Microsoft.PowerShell                | Pre-installed on Windows 11        |
+| fsnotes                            | Obsidian.Obsidian                   | Cross-platform alternative         |
+
+**Tools not available on Windows**
+
+| macOS tool | Reason / Windows alternative                                                               |
+|------------|--------------------------------------------------------------------------------------------|
+| htop       | Use Task Manager or `Get-Process \| Sort-Object CPU -Descending` in PowerShell             |
+| pipx       | Install via pip: `pip install pipx`                                                        |
+| trash      | Use the built-in Recycle Bin or the RecycleBin PowerShell module                           |
+| jenv       | Manage `JAVA_HOME` manually; the script sets it automatically after JDK install            |
+| thefuck    | Not fully supported on Windows                                                             |
+| lnav       | Use [BareTail](https://www.baremetalsoft.com/baretail/) or run lnav inside WSL             |
+| llm        | Install via pip: `pip install llm`                                                         |
+| dockutil   | macOS Dock-specific; no equivalent needed on Windows                                       |
+| appcleaner | Use Windows built-in Programs and Features or [Revo Uninstaller](https://www.revouninstaller.com/) |
+| go2shell   | Windows 11 provides "Open in Terminal" natively in File Explorer                           |
 
 ### Developer Folder
 

@@ -21,6 +21,8 @@ Setting up a new machine is tedious. Hunting down the right tools, configuring s
 
 ## Setup Instructions
 
+### macOS (Apple Silicon M1/M2/M3/M4)
+
 > ***Warning***
 > 1. The script is tested on Apple M2/M3/M4 Pro (should also work on M1) and zsh shell.
 > 2. Type `bash` and hit enter. If you see the error "Bash is required to interpret this script", change to `bash` shell
@@ -46,7 +48,7 @@ Check the output below to see if the Command Line Tools are installed:
     Done with Command Line Tools for Xcode
 ```
 
-### Steps
+#### Steps
 
 1. If your Mac is **managed (work or school)** then try to get an admin account and switch user. For e.g. if the admin
    account is `Koadmin` then `su Koadmin` and enter the password for that account with higher privileges
@@ -67,6 +69,36 @@ Check the output below to see if the Command Line Tools are installed:
 > Your terminal does not have App Management permissions, so Homebrew will delete and reinstall the app.
 > This may result in some configurations (like notification settings or location in the Dock/Launchpad) being lost.
 > To fix this, go to System Settings > Privacy & Security > App Management and add or enable your terminal.
+
+---
+
+### Windows (10/11)
+
+> ***Requirements***
+> - Windows 10 (version 1809 or later) or Windows 11
+> - [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/) (App Installer) — pre-installed on
+>   Windows 11; available from the [Microsoft Store](https://www.microsoft.com/store/productId/9NBLGGH4NNS1) on
+>   Windows 10
+> - PowerShell 5.1 or later (PowerShell 7+ recommended)
+
+#### Steps
+
+1. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
+2. Open **PowerShell as Administrator**
+3. Allow script execution for this session: <kbd>Set-ExecutionPolicy Bypass -Scope Process -Force</kbd>
+4. cd <kbd>dev-tools</kbd>
+5. Run: <kbd>.\scripts\setup_env.ps1</kbd>
+6. Restart your terminal to apply PATH and environment variable changes
+7. Run <kbd>.\git_setup.sh</kbd> (in Git Bash) or configure Git credentials manually:
+   ```powershell
+   git config --global user.name "Your Name"
+   git config --global user.email "you@example.com"
+   ```
+
+> ***Note on unavailable tools***
+>
+> Some tools from `setup_env.sh` have no Windows equivalent (e.g. `htop`, `lnav`, `dockutil`, `jenv`, `thefuck`).
+> These are documented with alternatives inside `scripts/setup_env.ps1`.
 
 ---
 
