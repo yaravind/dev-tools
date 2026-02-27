@@ -8,8 +8,9 @@
     3. [Developer Folder](#developer-folder)
     4. [git_setup.sh](#git_setupsh)
     5. [jenv_setup.sh](#jenv_setupsh)
-    6. [dock_setup.sh](#dock_setupsh)
-    7. [vscode_setup.sh](#vscode_setupsh)
+    6. [jenv_setup.ps1 (Windows)](#jenv_setupps1-windows)
+    7. [dock_setup.sh](#dock_setupsh)
+    8. [vscode_setup.sh](#vscode_setupsh)
 2. [Git](#git)
     1. [Pretty print all commits](#pretty-print-all-commits)
     2. [List repository contributors by author name](#list-repository-contributors-by-author-name)
@@ -121,7 +122,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 | htop       | Use Task Manager or `Get-Process \| Sort-Object CPU -Descending` in PowerShell             |
 | pipx       | Install via pip: `pip install pipx`                                                        |
 | trash      | Use the built-in Recycle Bin or the RecycleBin PowerShell module                           |
-| jenv       | Manage `JAVA_HOME` manually; the script sets it automatically after JDK install            |
+| jenv       | Use [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows) — installed by `setup_env.ps1`; run `jenv_setup.ps1` to register JDKs |
 | thefuck    | Not fully supported on Windows                                                             |
 | lnav       | Use [BareTail](https://www.baremetalsoft.com/baretail/) or run lnav inside WSL             |
 | llm        | Install via pip: `pip install llm`                                                         |
@@ -165,6 +166,35 @@ You can use the following commands to then enable specific JDK versions:
 - Set Global version: <kbd>jenv global xx</kbd>
 - Set Local version: <kbd>jenv local xx</kbd>. Local Java version for the current working directory. This will create a
   `.java-version` file we can check into Git for your projects
+
+### jenv_setup.ps1 (Windows)
+
+`jenv_setup.ps1` is the Windows equivalent of `jenv_setup.sh`. It uses
+[JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows) to manage multiple Java versions on Windows.
+
+Run it from **PowerShell** after running `setup_env.ps1`:
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+.\scripts\jenv_setup.ps1
+```
+
+Here is an overview of what the script does:
+
+1. Installs JEnv-for-Windows automatically if it is not already present.
+2. Searches common installation directories for JDKs (Microsoft, Eclipse Adoptium, Oracle, BellSoft Liberica).
+3. Registers each discovered JDK with `jenv add`.
+4. Lists all managed versions with `jenv list`.
+5. Prompts you to choose a global default version and applies it with `jenv use`.
+
+**Key JEnv-for-Windows commands**
+
+| Command | Description |
+|---|---|
+| `jenv add <path>` | Register a JDK installation |
+| `jenv remove <name>` | Unregister a JDK |
+| `jenv list` | List all registered JDK versions |
+| `jenv use <version>` | Switch the active global Java version |
 
 ### dock_setup.sh
 
