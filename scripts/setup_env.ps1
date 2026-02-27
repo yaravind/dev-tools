@@ -1,4 +1,4 @@
-# setup_env.ps1 — Windows equivalent of setup_env.sh
+﻿# setup_env.ps1 — Windows equivalent of setup_env.sh
 #
 # This script automates the installation and configuration of commonly used
 # developer tools on modern Windows (Windows 10/11) using winget.
