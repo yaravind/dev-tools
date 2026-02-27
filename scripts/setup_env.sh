@@ -4,7 +4,7 @@
 # commonly used developer tools on macOS M1/M2 chip
 
 # Import colors codes for text
-source colors.sh
+source "${0:A:h}/colors.sh"
 
 # List of apps to be installed
 apps=(

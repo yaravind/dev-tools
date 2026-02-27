@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-APPLIST_FILE="dock_apps.txt"
+APPLIST_FILE="${0:A:h}/../config/dock_apps.txt"
 
 printf "\nGenerating %s from current Dock...\n" "$APPLIST_FILE"
 dockutil --list | awk -F '\t' '{print $2}' | \
@@ -9,4 +9,4 @@ dockutil --list | awk -F '\t' '{print $2}' | \
   sed 's|file://||;s|/$||' > "$APPLIST_FILE"
 printf "\n%s created.\n" "$APPLIST_FILE"
 
-printf "\n\n👌 Awesome, all set. Now run the doc_setup.sh\n"
+printf "\n\n👌 Awesome, all set. Now run the dock_setup.sh\n"
