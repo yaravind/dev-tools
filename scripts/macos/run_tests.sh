@@ -4,6 +4,8 @@
 SCRIPT_DIR="${0:A:h}"
 REPO_ROOT="${SCRIPT_DIR}/../.."
 
+command_exists() { command -v "$1" >/dev/null 2>&1; }
+
 log_step() {
   printf '===> %s\n' "$1"
 }
@@ -48,6 +50,22 @@ for script in "${scripts[@]}"; do
   fi
 done
 
+shellcheck_ok=0
+shellcheck_fail=0
+if command_exists shellcheck; then
+  for script in "${scripts[@]}"; do
+    if [ -f "$script" ] && shellcheck -x "$script"; then
+      log_ok "ShellCheck OK: $(basename "$script")"
+      ((shellcheck_ok++))
+    elif [ -f "$script" ]; then
+      log_warn "ShellCheck FAILED: $(basename "$script")"
+      ((shellcheck_fail++))
+    fi
+  done
+else
+  log_warn "ShellCheck not found; skipping lint"
+fi
+
 # Config file sanity checks
 config_files=(
   "${REPO_ROOT}/config/dock_apps.txt"
@@ -73,5 +91,9 @@ log_warn "Scripts failed: $fail_count"
 log_warn "Scripts missing: $missing_count"
 log_ok "Configs OK: $config_ok"
 log_warn "Configs missing: $config_missing"
+if command_exists shellcheck; then
+  log_ok "ShellCheck OK: $shellcheck_ok"
+  log_warn "ShellCheck failed: $shellcheck_fail"
+fi
 
 log_step "macOS dry-run checks complete"

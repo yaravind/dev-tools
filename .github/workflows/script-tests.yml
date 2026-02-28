@@ -15,6 +15,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install ShellCheck
+        run: brew install shellcheck
+
+      - name: Run ShellCheck on scripts/macos/*.sh
+        run: shellcheck -x scripts/macos/*.sh
+
       - name: Run macOS dry-run harness
         shell: bash
         run: |
@@ -27,6 +33,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        run: pwsh -c 'Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser'
+
+      - name: Run PSScriptAnalyzer on scripts/windows/*.ps1
+        run: pwsh -c 'Import-Module PSScriptAnalyzer; Invoke-ScriptAnalyzer -Path scripts/windows/*.ps1'
 
       - name: Run Windows dry-run harness
         shell: pwsh
