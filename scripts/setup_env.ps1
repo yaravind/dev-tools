@@ -259,7 +259,17 @@ function Install-WingetApp {
 }
 
 function Install-Maven {
-    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $scriptDir = if ($PSScriptRoot) {
+        $PSScriptRoot
+    } elseif ($MyInvocation.MyCommand.Path) {
+        Split-Path -Parent $MyInvocation.MyCommand.Path
+    } else {
+        Split-Path -Parent $PSCommandPath
+    }
+    if (-not $scriptDir) {
+        Write-Warn "Could not resolve script directory for Maven installer lookup."
+        return
+    }
     $mavenScript = Join-Path $scriptDir "maven_setup.ps1"
     if (-not (Test-Path $mavenScript)) {
         Write-Warn "Maven installer not found at $mavenScript"
@@ -281,6 +291,12 @@ function Install-PipTools {
         Write-Warn "pip not found. winget-installed Python may require a terminal restart."
         Write-Warn "After restarting, run: pip install pipx llm"
     }
+}
+
+function Refresh-SessionPath {
+    $machinePath = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+    $userPath = [System.Environment]::GetEnvironmentVariable("Path", "User")
+    $env:Path = "$machinePath;$userPath"
 }
 
 # Set JAVA_HOME to the most recent JDK found on the system
@@ -414,12 +430,13 @@ foreach ($app in $guiApps) {
 }
 
 # Refresh PATH in the current session so winget-installed tools (e.g. Python/pip) are visible
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" +
-            [System.Environment]::GetEnvironmentVariable("Path", "User")
+Refresh-SessionPath
 
 Install-PipTools
 
 Install-Maven
+
+Refresh-SessionPath
 
 Install-Git
 
