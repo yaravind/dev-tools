@@ -24,7 +24,12 @@ function Write-Warn {
 }
 
 $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $PSCommandPath }
-$repoRoot = Resolve-Path (Join-Path $scriptDir "..\..")
+$resolvedRoot = Resolve-Path (Join-Path $scriptDir "..\..") -ErrorAction SilentlyContinue
+if ($resolvedRoot) {
+    $repoRoot = $resolvedRoot.Path
+} else {
+    $repoRoot = Split-Path -Parent (Split-Path -Parent $scriptDir)
+}
 
 Write-Step "Starting Windows script dry-run checks"
 
@@ -55,14 +60,20 @@ foreach ($script in $scripts) {
 
 # Dry-run execution for safe scripts
 try {
-    $configPath = Join-Path $repoRoot "config"
-    $configPath = Join-Path $configPath "taskbar_apps.txt"
-    if (Test-Path $configPath) {
-        Write-Info "DryRun: taskbar_setup.ps1"
-        & (Join-Path $scriptDir "taskbar_setup.ps1") -DryRun -Yes -ConfigPath $configPath | Out-Null
-        Write-Ok "DryRun OK: taskbar_setup.ps1"
+    if (-not $IsWindows) {
+        Write-Warn "Skipping taskbar_setup.ps1 DryRun on non-Windows host."
     } else {
-        Write-Warn "Config missing for taskbar_setup.ps1: $configPath"
+        $configPath = Join-Path $repoRoot "config"
+        $configPath = Join-Path $configPath "taskbar_apps.txt"
+        if ([string]::IsNullOrWhiteSpace($configPath)) {
+            Write-Warn "Config path is empty for taskbar_setup.ps1"
+        } elseif (Test-Path $configPath) {
+            Write-Info "DryRun: taskbar_setup.ps1"
+            & (Join-Path $scriptDir "taskbar_setup.ps1") -DryRun -Yes -ConfigPath $configPath | Out-Null
+            Write-Ok "DryRun OK: taskbar_setup.ps1"
+        } else {
+            Write-Warn "Config missing for taskbar_setup.ps1: $configPath"
+        }
     }
 } catch {
     Write-Warn "DryRun FAILED: taskbar_setup.ps1 - $_"
@@ -71,7 +82,9 @@ try {
 try {
     $configPath = Join-Path $repoRoot "config"
     $configPath = Join-Path $configPath "vscode.txt"
-    if (Test-Path $configPath) {
+    if ([string]::IsNullOrWhiteSpace($configPath)) {
+        Write-Warn "Config path is empty for vscode_setup.ps1"
+    } elseif (Test-Path $configPath) {
         Write-Info "DryRun: vscode_setup.ps1"
         & (Join-Path $scriptDir "vscode_setup.ps1") -DryRun -Yes -ConfigPath $configPath | Out-Null
         Write-Ok "DryRun OK: vscode_setup.ps1"
