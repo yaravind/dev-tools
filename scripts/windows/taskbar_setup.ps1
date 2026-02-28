@@ -2,12 +2,14 @@
 #
 # Usage (run as Administrator):
 #   Set-ExecutionPolicy Bypass -Scope Process -Force
-#   .\scripts\taskbar_setup.ps1
-#   .\scripts\taskbar_setup.ps1 -ConfigPath .\config\taskbar_apps.txt -Yes
+#   .\scripts\windows\taskbar_setup.ps1
+#   .\scripts\windows\taskbar_setup.ps1 -ConfigPath .\config\taskbar_apps.txt -Yes
+#   .\scripts\windows\taskbar_setup.ps1 -DryRun
 
 param(
     [string]$ConfigPath,
-    [switch]$Yes
+    [switch]$Yes,
+    [switch]$DryRun
 )
 
 $scriptDir = if ($PSScriptRoot) {
@@ -24,15 +26,19 @@ if (-not $scriptDir) {
 }
 
 if (-not $ConfigPath) {
-    $ConfigPath = Join-Path $scriptDir "..\config\taskbar_apps.txt"
+    $ConfigPath = Join-Path $scriptDir ".."
+    $ConfigPath = Join-Path $ConfigPath ".."
+    $ConfigPath = Join-Path $ConfigPath "config"
+    $ConfigPath = Join-Path $ConfigPath "taskbar_apps.txt"
 }
 
-$ConfigPath = (Resolve-Path -Path $ConfigPath -ErrorAction SilentlyContinue)
-if (-not $ConfigPath) {
+$resolvedConfig = Resolve-Path -Path $ConfigPath -ErrorAction SilentlyContinue
+if ($resolvedConfig) {
+    $ConfigPath = $resolvedConfig.Path
+} elseif (-not (Test-Path -LiteralPath $ConfigPath)) {
     Write-Host "ERROR: Config file not found." -ForegroundColor Red
     exit 1
 }
-$ConfigPath = $ConfigPath.Path
 
 $TaskbarPinnedDir = Join-Path $env:APPDATA "Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"
 $BackupDir = Join-Path $env:TEMP ("taskbar_backup_{0}" -f (Get-Date -Format "yyyyMMddHHmmss"))
@@ -98,7 +104,7 @@ function Restore-TaskbarPins {
 function Normalize-Entry {
     param([string]$Line)
     $value = $Line.Trim()
-    if ($value.StartsWith("\"") -and $value.EndsWith("\"")) {
+    if ($value.StartsWith('"') -and $value.EndsWith('"')) {
         $value = $value.Trim('"')
     }
     return [Environment]::ExpandEnvironmentVariables($value)
@@ -252,8 +258,6 @@ function Parse-Config {
 # ==========================
 # Main
 # ==========================
-Assert-Admin
-
 Write-Step "Starting Taskbar setup (Windows)"
 Write-Info "Reading config: $ConfigPath"
 
@@ -262,13 +266,19 @@ $parsed = Parse-Config -Path $ConfigPath
 Write-Info "Items to add: $($parsed.Add.Count)"
 Write-Info "Items to remove: $($parsed.Remove.Count)"
 
-if (-not $Yes) {
-    $proceed = Read-Host "Proceed? (y/n)"
-    if ($proceed -notmatch "^[yY]$") {
-        Write-Warn "Aborted by user. No changes made."
-        exit 0
+if ($DryRun) {
+    Write-Warn "DryRun enabled. No changes will be made."
+    Write-Step "DryRun preview"
+    foreach ($entry in $parsed.Remove) {
+        Write-Info "Would remove: $entry"
     }
+    foreach ($entry in $parsed.Add) {
+        Write-Info "Would add: $entry"
+    }
+    exit 0
 }
+
+Assert-Admin
 
 Backup-TaskbarPins
 

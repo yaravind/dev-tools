@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-APPLIST_FILE="${0:A:h}/../config/dock_apps.txt"
+APPLIST_FILE="${0:A:h}/../../config/dock_apps.txt"
 
 printf "\nGenerating %s from current Dock...\n" "$APPLIST_FILE"
 dockutil --list | awk -F '\t' '{print $2}' | \

@@ -1,5 +1,7 @@
 # Developer Tools
 
+[![Script Tests](https://github.com/yaravind/dev-tools/actions/workflows/script-tests.yml/badge.svg)](https://github.com/yaravind/dev-tools/actions/workflows/script-tests.yml)
+
 > **One command to bootstrap a productive macOS environment for software and data engineers — from a fresh machine to fully equipped in minutes.**
 
 Setting up a new machine is tedious. Hunting down the right tools, configuring shells, managing Java versions, wiring up your IDE — it takes hours and rarely produces consistent results. This project captures battle-tested scripts and configs so you can reproduce a complete, opinionated developer environment on Apple Silicon (M1/M2/M3/M4) in one run.
@@ -55,14 +57,14 @@ Check the output below to see if the Command Line Tools are installed:
 2. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
 3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
 4. cd <kbd>dev-tools</kbd>
-5. Make `setup_env.sh` executable: <kbd>chmod +x scripts/setup_env.sh scripts/jenv_setup.sh scripts/git_setup.sh scripts/gen_dock_apps.sh
-   scripts/dock_setup.sh</kbd>
-6. Run: <kbd>./scripts/setup_env.sh</kbd>
+5. Make `setup_env.sh` executable: <kbd>chmod +x scripts/macos/setup_env.sh scripts/macos/jenv_setup.sh scripts/macos/git_setup.sh scripts/macos/gen_dock_apps.sh
+   scripts/macos/dock_setup.sh</kbd>
+6. Run: <kbd>./scripts/macos/setup_env.sh</kbd>
 7. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: <kbd>cp config/.zshrc ~/</kbd> and run <kbd>source ~
    /.zshrc</kbd>
-8. Run <kbd>./scripts/jenv_setup.sh</kbd> to add JDK
-9. Run <kbd>./scripts/git_setup.sh</kbd> to setup Git Credentials
-10. Run <kbd>./scripts/dock_setup.sh</kbd> to setup macOS Dock
+8. Run <kbd>./scripts/macos/jenv_setup.sh</kbd> to add JDK
+9. Run <kbd>./scripts/macos/git_setup.sh</kbd> to setup Git Credentials
+10. Run <kbd>./scripts/macos/dock_setup.sh</kbd> to setup macOS Dock
 
 > ***Warning (on macOS)***
 >
@@ -87,10 +89,10 @@ Check the output below to see if the Command Line Tools are installed:
 2. Open **PowerShell as Administrator**
 3. Allow script execution for this session: <kbd>Set-ExecutionPolicy Bypass -Scope Process -Force</kbd>
 4. cd <kbd>dev-tools</kbd>
-5. Run: <kbd>.\scripts\setup_env.ps1</kbd>
+5. Run: <kbd>.\scripts\windows\setup_env.ps1</kbd>
 6. Restart your terminal to apply PATH and environment variable changes
-7. Run <kbd>.\scripts\jenv_setup.ps1</kbd> to register installed JDKs with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows)
-8. Run <kbd>.\git_setup.sh</kbd> (in Git Bash) or configure Git credentials manually:
+7. Run <kbd>.\scripts\windows\jenv_setup.ps1</kbd> to register installed JDKs with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows)
+8. Run <kbd>.\scripts\macos\git_setup.sh</kbd> (in Git Bash) or configure Git credentials manually:
    ```powershell
    git config --global user.name "Your Name"
    git config --global user.email "you@example.com"
@@ -99,7 +101,23 @@ Check the output below to see if the Command Line Tools are installed:
 > ***Note on unavailable tools***
 >
 > Some tools from `setup_env.sh` have no Windows equivalent (e.g. `htop`, `lnav`, `dockutil`, `thefuck`).
-> These are documented with alternatives inside `scripts/setup_env.ps1`.
+> These are documented with alternatives inside `scripts/windows/setup_env.ps1`.
+
+---
+
+## Tests
+
+Run the OS-specific dry-run checks:
+
+```zsh
+./scripts/macos/run_tests.sh
+```
+
+```powershell
+.\scripts\windows\run_tests.ps1
+```
+
+See `docs/tests/README.md` for details.
 
 ---
 
@@ -107,15 +125,19 @@ Check the output below to see if the Command Line Tools are installed:
 
 | Script Name | Description |
 |---|---|
-| `setup_env.sh` | Primary bootstrap script — installs and configures 30+ developer tools (JDK, Python, Rust, fonts, IDEs, shell utils) on macOS Apple Silicon |
-| `git_setup.sh` | Configures global Git user credentials (name and email) |
-| `jenv_setup.sh` | Discovers all installed JVMs and registers them with the `jenv` version manager |
-| `jenv_setup.ps1` | Discovers all installed JDKs and registers them with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows) |
-| `dock_setup.sh` | Customizes the macOS Dock — sets icon size, removes defaults, and adds preferred apps from `config/dock_apps.txt` |
-| `gen_dock_apps.sh` | Generates `config/dock_apps.txt` by reading the current Dock configuration |
-| `vscode_setup.sh` | Installs VS Code extensions listed in `config/vscode.txt` |
-| `conv-dot-to-png.sh` | Converts `triples.dot` to a PNG image using Graphviz |
-| `colors.sh` | Defines ANSI color code variables (sourced by other scripts) |
+| `scripts/macos/setup_env.sh` | Primary bootstrap script — installs and configures 30+ developer tools (JDK, Python, Rust, fonts, IDEs, shell utils) on macOS Apple Silicon |
+| `scripts/macos/git_setup.sh` | Configures global Git user credentials (name and email) |
+| `scripts/macos/jenv_setup.sh` | Discovers all installed JVMs and registers them with the `jenv` version manager |
+| `scripts/windows/jenv_setup.ps1` | Discovers all installed JDKs and registers them with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows) |
+| `scripts/macos/dock_setup.sh` | Customizes the macOS Dock — sets icon size, removes defaults, and adds preferred apps from `config/dock_apps.txt` |
+| `scripts/macos/gen_dock_apps.sh` | Generates `config/dock_apps.txt` by reading the current Dock configuration |
+| `scripts/macos/vscode_setup.sh` | Installs VS Code extensions listed in `config/vscode.txt` |
+| `scripts/macos/conv-dot-to-png.sh` | Converts `triples.dot` to a PNG image using Graphviz |
+| `scripts/macos/colors.sh` | Defines ANSI color code variables (sourced by other scripts) |
+| `scripts/windows/setup_env.ps1` | Primary bootstrap script — installs and configures tools using winget on Windows |
+| `scripts/windows/setup_env_min.ps1` | Minimal Windows bootstrap script for Git, JDK, Maven, VS Code, and IntelliJ IDEA |
+| `scripts/windows/vscode_setup.ps1` | Installs VS Code extensions listed in `config/vscode.txt` |
+| `scripts/windows/taskbar_setup.ps1` | Pins/unpins Windows Taskbar apps from `config/taskbar_apps.txt` |
 
 ---
 

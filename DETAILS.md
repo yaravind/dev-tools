@@ -67,7 +67,7 @@ developer tools for Apple M1/M2 Pro. At a high level it will
 
 ### setup_env.ps1 (Windows)
 
-`scripts/setup_env.ps1` is the Windows equivalent of `setup_env.sh`. It uses
+`scripts/windows/setup_env.ps1` is the Windows equivalent of `setup_env.sh`. It uses
 [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/) (Windows Package Manager) to install the
 same set of developer tools on Windows 10/11.
 
@@ -75,7 +75,7 @@ Run it from an **Administrator PowerShell** session:
 
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force
-.\scripts\setup_env.ps1
+.\scripts\windows\setup_env.ps1
 ```
 
 **Windows equivalents for brew formulae**
@@ -176,7 +176,7 @@ Run it from **PowerShell** after running `setup_env.ps1`:
 
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force
-.\scripts\jenv_setup.ps1
+.\scripts\windows\jenv_setup.ps1
 ```
 
 Here is an overview of what the script does:

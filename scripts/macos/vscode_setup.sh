@@ -14,7 +14,7 @@ run_cmd() {
   "$@"
 }
 
-VSCODE_EXT_FILE="${0:A:h}/../config/vscode.txt"
+VSCODE_EXT_FILE="${0:A:h}/../../config/vscode.txt"
 
 # Check if code CLI is available
 if ! command -v code &>/dev/null; then

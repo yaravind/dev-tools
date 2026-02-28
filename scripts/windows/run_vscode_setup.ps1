@@ -2,4 +2,3 @@
 
 Set-ExecutionPolicy Bypass -Scope Process -Force
 & "$PSScriptRoot\vscode_setup.ps1" -Yes
-
