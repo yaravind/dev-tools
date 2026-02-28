@@ -27,8 +27,7 @@ $cliTools = @(
     @{ Id = "sharkdp.bat";           Description = "Clone of cat(1) with syntax highlighting and Git integration" },
     @{ Id = "OpenJS.NodeJS";         Description = "Cross-platform JavaScript runtime environment" },
     @{ Id = "JohnMacFarlane.Pandoc"; Description = "Swiss-army knife of markup format conversion" },
-    @{ Id = "Graphviz.Graphviz";     Description = "Convert dot files to images" },
-    @{ Id = "Apache.Maven";          Description = "Project management and comprehension tool"; FallbackName = "Apache Maven" }
+    @{ Id = "Graphviz.Graphviz";     Description = "Convert dot files to images" }
 )
 
 # ============================================================
@@ -59,9 +58,9 @@ $guiApps = @(
     @{ Id = "Microsoft.DotNet.SDK.9";            Description = ".NET SDK (for VS Code plugins related to Fabric and Synapse)" },
     @{ Id = "Git.GCM";                           Description = "Git Credential Manager (cross-platform Git credential storage)" },
     @{ Id = "JetBrains.IntelliJIDEA.Ultimate";   Description = "IntelliJ IDEA Ultimate" },
-    @{ Id = "JetBrains.IntelliJIDEA.Community";  Description = "IntelliJ IDEA Community" },
+    @{ Id = "JetBrains.IntelliJIDEA.Community";  Description = "IntelliJ IDEA Community"; NoSilent = $true },
     @{ Id = "JetBrains.PyCharm.Professional";    Description = "PyCharm Professional" },
-    @{ Id = "JetBrains.PyCharm.Community";       Description = "PyCharm Community" },
+    @{ Id = "JetBrains.PyCharm.Community";       Description = "PyCharm Community"; NoSilent = $true },
     @{ Id = "Microsoft.VisualStudioCode";        Description = "Visual Studio Code" },
     @{ Id = "Microsoft.Azure.StorageExplorer";   Description = "Microsoft Azure Storage Explorer" },
     @{ Id = "JGraph.Draw";                       Description = "Draw.io - online diagram software" },
@@ -207,7 +206,23 @@ function Install-WingetApp {
         return
     }
 
+    $listOutput = & $script:WingetExe list --id $Id --exact 2>$null
+    if ($listOutput -and ($listOutput | Select-String -SimpleMatch $Id)) {
+        Write-Ok "Installed: $Description (verified by winget list)"
+        return
+    }
+
     Write-Warn "Could not install $Description ($Id). Exit code: $exitCode"
+}
+
+function Install-Maven {
+    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $mavenScript = Join-Path $scriptDir "maven_setup.ps1"
+    if (-not (Test-Path $mavenScript)) {
+        Write-Warn "Maven installer not found at $mavenScript"
+        return
+    }
+    & $mavenScript
 }
 
 # Install pip-based tools that have no winget package (pipx and llm)
@@ -360,6 +375,8 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";
             [System.Environment]::GetEnvironmentVariable("Path", "User")
 
 Install-PipTools
+
+Install-Maven
 
 Install-Git
 
