@@ -46,7 +46,10 @@ $version = "3.9.11"
 $installRoot = Join-Path $env:LOCALAPPDATA "Programs\Apache"
 $mavenDir = Join-Path $installRoot "apache-maven-$version"
 $mavenBin = Join-Path $mavenDir "bin"
-$downloadUrl = "https://dlcdn.apache.org/maven/maven-3/$version/binaries/apache-maven-$version-bin.zip"
+$downloadUrls = @(
+    "https://dlcdn.apache.org/maven/maven-3/$version/binaries/apache-maven-$version-bin.zip",
+    "https://archive.apache.org/dist/maven/maven-3/$version/binaries/apache-maven-$version-bin.zip"
+)
 
 $existingMavenHome = [Environment]::GetEnvironmentVariable("MAVEN_HOME", "User")
 if (Test-CommandExists "mvn" -and $existingMavenHome -and (Test-Path $existingMavenHome)) {
@@ -69,7 +72,24 @@ if (-not (Test-Path $mavenDir)) {
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $zipPath = Join-Path $env:TEMP "apache-maven-$version-bin.zip"
-    Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath
+    $downloaded = $false
+
+    foreach ($url in $downloadUrls) {
+        try {
+            Write-Info "Fetching: $url"
+            Invoke-WebRequest -Uri $url -OutFile $zipPath -ErrorAction Stop
+            $downloaded = $true
+            break
+        } catch {
+            Write-Warn "Download failed: $url"
+        }
+    }
+
+    if (-not $downloaded) {
+        Write-Host "ERROR: Could not download Maven $version from Apache mirrors." -ForegroundColor Red
+        Write-Host "ERROR: Check network access or update the version in scripts/maven_setup.ps1." -ForegroundColor Red
+        exit 1
+    }
 
     Write-Info "Extracting Maven..."
     Expand-Archive -Path $zipPath -DestinationPath $installRoot -Force

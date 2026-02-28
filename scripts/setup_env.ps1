@@ -37,6 +37,7 @@ $cliTools = @(
 #             Use Task Manager or `Get-Process | Sort-Object CPU -Descending` in PowerShell.
 # - pipx:     Not in winget. Install via pip after Python is set up:
 #             `pip install pipx`
+# - maven:    Installed via .\scripts\maven_setup.ps1 (winget ID not reliable).
 # - trash:    No direct equivalent.
 #             Use the built-in Recycle Bin or the RecycleBin PowerShell module.
 # - jenv:     Use JEnv-for-Windows (https://github.com/FelixSelter/JEnv-for-Windows).
@@ -110,6 +111,29 @@ function Test-CommandExists {
     return $null -ne (Get-Command $Command -ErrorAction SilentlyContinue)
 }
 
+# Verify a winget install by querying the package list (with short retries)
+function Test-WingetInstalled {
+    param(
+        [string]$Id,
+        [string]$Name
+    )
+    $maxAttempts = 3
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        $listOutput = & $script:WingetExe list --id $Id --exact 2>$null
+        if ($listOutput -and ($listOutput | Select-String -SimpleMatch $Id)) {
+            return $true
+        }
+        if ($Name) {
+            $listOutput = & $script:WingetExe list --name $Name 2>$null
+            if ($listOutput -and ($listOutput | Select-String -SimpleMatch $Name)) {
+                return $true
+            }
+        }
+        Start-Sleep -Seconds 5
+    }
+    return $false
+}
+
 # Verify winget is available before proceeding
 function Assert-Winget {
     if (-not (Test-CommandExists "winget")) {
@@ -175,6 +199,10 @@ function Install-WingetApp {
         Write-Warn "Already installed: $Description - skipping."
         return
     }
+    if ($exitCode -eq 3010 -or $exitCode -eq 1641) {
+        Write-Warn "Installed: $Description (reboot required)."
+        return
+    }
 
     if ($exitCode -eq -1978335212 -and $FallbackName) {
         Write-Warn "Package not found for ID $Id. Trying by name: $FallbackName"
@@ -185,6 +213,14 @@ function Install-WingetApp {
         }
         if ($fallbackExit -eq -1978335189) {
             Write-Warn "Already installed: $Description - skipping."
+            return
+        }
+        if ($fallbackExit -eq 3010 -or $fallbackExit -eq 1641) {
+            Write-Warn "Installed: $Description (reboot required)."
+            return
+        }
+        if (Test-WingetInstalled -Id $Id -Name $FallbackName) {
+            Write-Ok "Installed: $Description (verified by winget list)"
             return
         }
         Write-Warn "Could not install $Description (name: $FallbackName). Exit code: $fallbackExit"
@@ -202,12 +238,19 @@ function Install-WingetApp {
             Write-Warn "Already installed: $Description - skipping."
             return
         }
+        if ($retryExit -eq 3010 -or $retryExit -eq 1641) {
+            Write-Warn "Installed: $Description (reboot required)."
+            return
+        }
+        if (Test-WingetInstalled -Id $Id -Name $FallbackName) {
+            Write-Ok "Installed: $Description (verified by winget list)"
+            return
+        }
         Write-Warn "Could not install $Description ($Id). Exit code: $retryExit"
         return
     }
 
-    $listOutput = & $script:WingetExe list --id $Id --exact 2>$null
-    if ($listOutput -and ($listOutput | Select-String -SimpleMatch $Id)) {
+    if (Test-WingetInstalled -Id $Id -Name $FallbackName) {
         Write-Ok "Installed: $Description (verified by winget list)"
         return
     }
