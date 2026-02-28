@@ -22,13 +22,13 @@ $cliTools = @(
     @{ Id = "jqlang.jq";             Description = "Lightweight and flexible command-line JSON processor" },
     @{ Id = "GitHub.cli";            Description = "GitHub command-line tool" },
     @{ Id = "Microsoft.AzureCLI";    Description = "Azure CLI" },
-    @{ Id = "tldr-pages.tldr";       Description = "Simplified and community-driven man pages" },
+    @{ Id = "dbrgn.tealdeer";        Description = "tldr client (tealdeer)" },
     @{ Id = "eza-community.eza";     Description = "Modern replacement for the ls command" },
     @{ Id = "sharkdp.bat";           Description = "Clone of cat(1) with syntax highlighting and Git integration" },
     @{ Id = "OpenJS.NodeJS";         Description = "Cross-platform JavaScript runtime environment" },
     @{ Id = "JohnMacFarlane.Pandoc"; Description = "Swiss-army knife of markup format conversion" },
     @{ Id = "Graphviz.Graphviz";     Description = "Convert dot files to images" },
-    @{ Id = "Apache.Maven";          Description = "Project management and comprehension tool" }
+    @{ Id = "Apache.Maven";          Description = "Project management and comprehension tool"; FallbackName = "Apache Maven" }
 )
 
 # ============================================================
@@ -57,16 +57,17 @@ $guiApps = @(
     @{ Id = "Microsoft.OpenJDK.11";              Description = "Microsoft OpenJDK 11 (for Fabric Runtime 1.3)" },
     @{ Id = "Microsoft.OpenJDK.17";              Description = "Microsoft OpenJDK 17 (for Apache Jena 5.4.x)" },
     @{ Id = "Microsoft.DotNet.SDK.9";            Description = ".NET SDK (for VS Code plugins related to Fabric and Synapse)" },
-    @{ Id = "Microsoft.GitCredentialManager";    Description = "Cross-platform Git credential storage for multiple hosting providers" },
-    @{ Id = "JetBrains.IntelliJIDEA.Ultimate";   Description = "IntelliJ IDEA Ultimate (use JetBrains.IntelliJIDEA.Community for free edition)" },
-    @{ Id = "JetBrains.PyCharm.Professional";    Description = "PyCharm Professional (use JetBrains.PyCharm.Community for free edition)" },
+    @{ Id = "Git.GCM";                           Description = "Git Credential Manager (cross-platform Git credential storage)" },
+    @{ Id = "JetBrains.IntelliJIDEA.Ultimate";   Description = "IntelliJ IDEA Ultimate" },
+    @{ Id = "JetBrains.IntelliJIDEA.Community";  Description = "IntelliJ IDEA Community" },
+    @{ Id = "JetBrains.PyCharm.Professional";    Description = "PyCharm Professional" },
+    @{ Id = "JetBrains.PyCharm.Community";       Description = "PyCharm Community" },
     @{ Id = "Microsoft.VisualStudioCode";        Description = "Visual Studio Code" },
-    @{ Id = "Microsoft.AzureStorageExplorer";    Description = "Microsoft Azure Storage Explorer" },
+    @{ Id = "Microsoft.Azure.StorageExplorer";   Description = "Microsoft Azure Storage Explorer" },
     @{ Id = "JGraph.Draw";                       Description = "Draw.io - online diagram software" },
-    @{ Id = "Zed.Zed";                           Description = "Zed - multiplayer code editor" },
+    @{ Id = "ZedIndustries.Zed";                 Description = "Zed - multiplayer code editor" },
     @{ Id = "Ollama.Ollama";                     Description = "Manage local LLMs" },
-    @{ Id = "Logitech.LogiOptionsPlus";          Description = "Software for Logitech devices" },
-    @{ Id = "Microsoft.PowerShell";              Description = "PowerShell (latest stable version)" },
+    @{ Id = "Microsoft.PowerShell";              Description = "PowerShell (latest stable version)"; SkipCommand = "pwsh" },
     @{ Id = "Obsidian.Obsidian";                 Description = "Note-taking app with Markdown support (fsnotes equivalent)" }
 )
 
@@ -78,6 +79,7 @@ $guiApps = @(
 # - fsnotes:    macOS-specific. Obsidian (included above) is a cross-platform alternative.
 # - go2shell:   macOS-specific. Windows 11 has "Open in Terminal" natively
 #               in File Explorer (right-click context menu).
+# - zed:        Zed is now available via winget (ZedIndustries.Zed).
 
 # ============================================================
 # Helper Functions
@@ -117,24 +119,95 @@ function Assert-Winget {
         Write-Host "  https://www.microsoft.com/store/productId/9NBLGGH4NNS1" -ForegroundColor Yellow
         exit 1
     }
+
+    $script:WingetExe = (Get-Command winget -ErrorAction Stop).Source
+}
+
+# Run winget install with consistent arguments
+function Invoke-WingetInstall {
+    param(
+        [string]$Id,
+        [string]$Source,
+        [switch]$NoSilent,
+        [switch]$UseName
+    )
+
+    $args = @("install")
+    if ($UseName) {
+        $args += @("--name", $Id)
+    } else {
+        $args += @("--id", $Id, "--exact")
+    }
+    if ($Source) {
+        $args += @("--source", $Source)
+    }
+    $args += @("--accept-source-agreements", "--accept-package-agreements")
+    if (-not $NoSilent) {
+        $args += "--silent"
+    }
+
+    & $script:WingetExe @args
+    return $LASTEXITCODE
 }
 
 # Install a package via winget (idempotent - skips if already installed)
 function Install-WingetApp {
     param(
         [string]$Id,
-        [string]$Description
+        [string]$Description,
+        [string]$Source,
+        [string]$FallbackName,
+        [string]$SkipCommand,
+        [switch]$NoSilent
     )
+    if ($SkipCommand -and (Test-CommandExists $SkipCommand)) {
+        Write-Warn "$SkipCommand already available. Skipping $Description."
+        return
+    }
     Write-Info "Installing: $Description ($Id)..."
-    winget install --id "$Id" --exact --accept-source-agreements --accept-package-agreements --silent
-    if ($LASTEXITCODE -eq 0) {
+
+    $exitCode = Invoke-WingetInstall -Id $Id -Source $Source -NoSilent:$NoSilent
+    if ($exitCode -eq 0) {
         Write-Ok "Installed: $Description"
-    } elseif ($LASTEXITCODE -eq -1978335189) {
+        return
+    }
+    if ($exitCode -eq -1978335189) {
         # 0x8A150023 = APPINSTALLER_CLI_ERROR_PACKAGE_ALREADY_INSTALLED
         Write-Warn "Already installed: $Description - skipping."
-    } else {
-        Write-Warn "Could not install $Description ($Id). Exit code: $LASTEXITCODE"
+        return
     }
+
+    if ($exitCode -eq -1978335212 -and $FallbackName) {
+        Write-Warn "Package not found for ID $Id. Trying by name: $FallbackName"
+        $fallbackExit = Invoke-WingetInstall -Id $FallbackName -Source $Source -NoSilent:$NoSilent -UseName
+        if ($fallbackExit -eq 0) {
+            Write-Ok "Installed: $Description"
+            return
+        }
+        if ($fallbackExit -eq -1978335189) {
+            Write-Warn "Already installed: $Description - skipping."
+            return
+        }
+        Write-Warn "Could not install $Description (name: $FallbackName). Exit code: $fallbackExit"
+        return
+    }
+
+    if ($exitCode -eq -1978335230 -and -not $NoSilent) {
+        Write-Warn "Install failed with --silent. Retrying without --silent..."
+        $retryExit = Invoke-WingetInstall -Id $Id -Source $Source -NoSilent -UseName:$false
+        if ($retryExit -eq 0) {
+            Write-Ok "Installed: $Description"
+            return
+        }
+        if ($retryExit -eq -1978335189) {
+            Write-Warn "Already installed: $Description - skipping."
+            return
+        }
+        Write-Warn "Could not install $Description ($Id). Exit code: $retryExit"
+        return
+    }
+
+    Write-Warn "Could not install $Description ($Id). Exit code: $exitCode"
 }
 
 # Install pip-based tools that have no winget package (pipx and llm)
@@ -208,9 +281,29 @@ function Install-JEnv {
         Write-Warn "jenv is already installed - skipping."
     } else {
         # NOTE: Review the installer script before running in sensitive environments:
-        # https://raw.githubusercontent.com/FelixSelter/JEnv-for-Windows/main/jenv.ps1
-        iwr -useb "https://raw.githubusercontent.com/FelixSelter/JEnv-for-Windows/main/jenv.ps1" | iex
-        Write-Ok "JEnv-for-Windows installed. Run .\scripts\jenv_setup.ps1 to register your JDKs."
+        $installerUrls = @(
+            "https://raw.githubusercontent.com/FelixSelter/JEnv-for-Windows/main/jenv.ps1",
+            "https://raw.githubusercontent.com/FelixSelter/JEnv-for-Windows/main/bin/jenv.ps1"
+        )
+
+        $installed = $false
+        foreach ($url in $installerUrls) {
+            try {
+                Write-Info "Fetching installer: $url"
+                iwr -useb $url | iex
+                $installed = $true
+                break
+            } catch {
+                Write-Warn "Could not download installer from $url"
+            }
+        }
+
+        if ($installed) {
+            Write-Ok "JEnv-for-Windows installed. Run .\scripts\jenv_setup.ps1 to register your JDKs."
+        } else {
+            Write-Warn "JEnv-for-Windows installer could not be downloaded."
+            Write-Warn "Install manually: https://github.com/FelixSelter/JEnv-for-Windows"
+        }
     }
 }
 
@@ -219,7 +312,7 @@ function Invoke-Verify {
     Write-Step "Start verification"
 
     Write-Info "All installed packages (via winget list)..."
-    winget list
+    & $script:WingetExe list
 
     Write-Info "Verify Git..."
     if (Test-CommandExists "git") { git --version } else { Write-Warn "git not found in PATH. Restart your terminal." }
@@ -238,8 +331,8 @@ function Invoke-Verify {
     Write-Info "Verify Node.js..."
     if (Test-CommandExists "node") { node --version } else { Write-Warn "node not found in PATH. Restart your terminal." }
 
-    Write-Warn "*** Add `Set-Alias cat bat` to your PowerShell profile for bat-as-cat ***"
-    Write-Warn "*** Run `notepad `$PROFILE` to open your PowerShell profile for editing ***"
+    Write-Warn '*** Add `Set-Alias cat bat` to your PowerShell profile for bat-as-cat ***'
+    Write-Warn '*** Run `notepad $PROFILE` to open your PowerShell profile for editing ***'
 }
 
 # ============================================================
@@ -250,16 +343,16 @@ Write-Step "Starting Windows developer environment setup..."
 Assert-Winget
 
 Write-Info "Updating winget sources..."
-winget source update
+& $script:WingetExe source update
 
 Write-Step "Installing CLI tools..."
 foreach ($tool in $cliTools) {
-    Install-WingetApp -Id $tool.Id -Description $tool.Description
+    Install-WingetApp -Id $tool.Id -Description $tool.Description -Source $tool.Source -FallbackName $tool.FallbackName -SkipCommand $tool.SkipCommand -NoSilent:$tool.NoSilent
 }
 
 Write-Step "Installing GUI applications..."
 foreach ($app in $guiApps) {
-    Install-WingetApp -Id $app.Id -Description $app.Description
+    Install-WingetApp -Id $app.Id -Description $app.Description -Source $app.Source -FallbackName $app.FallbackName -SkipCommand $app.SkipCommand -NoSilent:$app.NoSilent
 }
 
 # Refresh PATH in the current session so winget-installed tools (e.g. Python/pip) are visible
