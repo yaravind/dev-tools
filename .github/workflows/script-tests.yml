@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run macOS dry-run harness
-        shell: zsh
+        shell: bash
         run: |
           chmod +x ./scripts/macos/run_tests.sh
           ./scripts/macos/run_tests.sh
