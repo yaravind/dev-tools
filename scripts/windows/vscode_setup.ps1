@@ -106,6 +106,7 @@ if (-not $scriptDir) {
 
 if (-not $ConfigPath) {
     $ConfigPath = Join-Path $scriptDir ".."
+    $ConfigPath = Join-Path $ConfigPath ".."
     $ConfigPath = Join-Path $ConfigPath "config"
     $ConfigPath = Join-Path $ConfigPath "vscode.txt"
 }

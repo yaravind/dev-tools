@@ -4,8 +4,8 @@ This folder contains a minimal Windows Taskbar setup script that pins and unpins
 
 ## Files
 
-- `scripts/taskbar_setup.ps1`: main Taskbar setup script
-- `scripts/run_taskbar_setup.ps1`: tiny runner that bypasses the execution policy and runs the setup
+- `scripts/windows/taskbar_setup.ps1`: main Taskbar setup script
+- `scripts/windows/run_taskbar_setup.ps1`: tiny runner that bypasses the execution policy and runs the setup
 - `config/taskbar_apps.txt`: list of apps to pin/unpin
 
 ## Usage
@@ -14,13 +14,19 @@ Open PowerShell as Administrator, then run:
 
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force
-.\scripts\taskbar_setup.ps1
+.\scripts\windows\taskbar_setup.ps1
 ```
 
 Or use the runner:
 
 ```powershell
-.\scripts\run_taskbar_setup.ps1
+.\scripts\windows\run_taskbar_setup.ps1
+```
+
+## Dry run
+
+```powershell
+.\scripts\windows\taskbar_setup.ps1 -DryRun
 ```
 
 ## Config format (`config/taskbar_apps.txt`)
@@ -44,4 +50,3 @@ AUMID:Microsoft.WindowsTerminal_8wekyb3d8bbwe!App
 - The script backs up existing Taskbar pins before applying changes.
 - Explorer is restarted at the end to apply updates.
 - Pinning behavior can vary between Windows versions; adjust paths as needed.
-

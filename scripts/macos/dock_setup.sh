@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 SCRIPT_DIR="${0:A:h}"
-DOCK_FILE="${SCRIPT_DIR}/../config/dock_apps.txt"
+DOCK_FILE="${SCRIPT_DIR}/../../config/dock_apps.txt"
 DOCK_PLIST="$HOME/Library/Preferences/com.apple.dock.plist"
 DOCK_PLIST_BAK="$HOME/Library/Preferences/com.apple.dock.plist.bak.$(date +%Y%m%d%H%M%S)"
 
