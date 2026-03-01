@@ -91,6 +91,18 @@ Check the output below to see if the Command Line Tools are installed:
 7. Run <kbd>./scripts/windows/jenv_setup.ps1</kbd> to register installed JDKs with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows)
 8. Run <kbd>./scripts/windows/git_setup.ps1</kbd> to set up Git credentials (name and email)
 
+#### Minimal setup for Spark/Scala/Java development
+
+A lightweight bootstrap script (`scripts/windows/setup_env_min.ps1`) is available for getting a Spark/Scala/Java development environment up and running quickly, without the full suite of tools installed by `setup_env.ps1`. It installs Git, a JDK, Maven, VS Code, and IntelliJ IDEA.
+
+1. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
+2. Open **PowerShell as Administrator**
+3. Allow script execution for this session: <kbd>Set-ExecutionPolicy Bypass -Scope Process -Force</kbd>
+4. cd <kbd>dev-tools</kbd>
+5. Run: <kbd>.\scripts\windows\setup_env_min.ps1</kbd>
+6. Restart your terminal to apply PATH and `JAVA_HOME` changes
+7. *(Optional)* Launch IntelliJ IDEA once to complete its first-run setup
+
 ## Scripts
 
 | Script Name | Description |
