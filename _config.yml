@@ -1,0 +1,30 @@
+title: Developer Tools
+description: >-
+  One command to bootstrap a productive macOS and Windows environment for
+  software and data engineers — from a fresh machine to fully equipped in minutes.
+url: "https://yaravind.github.io"
+baseurl: "/dev-tools"
+
+theme: jekyll-theme-cayman
+
+# Navigation pages
+header_pages:
+  - DETAILS.md
+  - CONTRIBUTING.md
+
+# Markdown settings
+markdown: kramdown
+kramdown:
+  input: GFM
+
+# Exclude files not needed in the built site
+exclude:
+  - scripts/
+  - config/
+  - assets/triples.dot
+  - docs/
+  - "*.sh"
+  - "*.ps1"
+  - .github/
+  - "Gemfile"
+  - "Gemfile.lock"
