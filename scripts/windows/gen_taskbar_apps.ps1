@@ -9,6 +9,9 @@ function Write-Info($msg) {
 function Write-Ok($msg) {
     Write-Host "===> $msg" -ForegroundColor Green
 }
+function Write-Warn($msg) {
+    Write-Host "===> $msg" -ForegroundColor Yellow
+}
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $configPath = Join-Path $scriptDir '../../config/taskbar_apps.txt'
@@ -24,12 +27,27 @@ if ($taskbarFolder) {
         $pinnedItems += $item.Path
     }
 } else {
-    Write-Info "Could not access Taskbar pinned folder via Shell.Application. Falling back to StartLayout export."
-    # Export StartLayout XML and parse for taskbar pins
-    $layoutFile = Join-Path $env:TEMP "StartLayout.xml"
-    Export-StartLayout -Path $layoutFile -As XML
-    $xml = [xml](Get-Content $layoutFile)
-    $pinnedItems = $xml.LayoutModificationTemplate.DefaultLayoutOverride.LayoutOptions.Group.Group | Where-Object { $_.Type -eq 'Taskbar' } | ForEach-Object { $_.DesktopApplicationID }
+    Write-Info "Could not access Taskbar pinned folder via Shell.Application. Falling back to TaskBar shortcuts directory."
+    # Read pinned items directly from the TaskBar shortcuts directory
+    $taskbarDir = Join-Path $env:APPDATA "Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"
+    if (Test-Path $taskbarDir) {
+        $wshShell = New-Object -ComObject WScript.Shell
+        foreach ($shortcut in (Get-ChildItem -Path $taskbarDir -Filter "*.lnk" -ErrorAction SilentlyContinue)) {
+            try {
+                $lnk = $wshShell.CreateShortcut($shortcut.FullName)
+                if ($lnk.TargetPath) {
+                    $pinnedItems += $lnk.TargetPath
+                } else {
+                    $pinnedItems += $shortcut.BaseName
+                }
+            } catch {
+                $pinnedItems += $shortcut.BaseName
+            }
+        }
+        [System.Runtime.InteropServices.Marshal]::ReleaseComObject($wshShell) | Out-Null
+    } else {
+        Write-Warn "Could not find TaskBar shortcuts directory: $taskbarDir"
+    }
 }
 
 Write-Step "Writing pinned apps to $configPath ..."
