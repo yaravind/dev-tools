@@ -6,7 +6,7 @@
 
 > **One command to bootstrap a productive macOS environment for software and data engineers — from a fresh machine to fully equipped in minutes.** ✨ Several scripts and configurations in this repository were meticulously crafted through vibe coding powered by GitHub Copilot and Google Gemini.
 
-Setting up a new machine is tedious. Hunting down the right tools, configuring shells, managing Java versions, wiring up your IDE — it takes hours and rarely produces consistent results. This project captures battle-tested scripts and configs so you can reproduce a complete, opinionated developer environment on Apple Silicon (M1/M2/M3/M4) in one run.
+Setting up a new machine is tedious. Hunting down the right tools, configuring shells, managing Java versions, wiring up your IDE; it takes hours and rarely produces consistent results. This project captures battle-tested scripts and configs so you can reproduce a complete, opinionated developer environment on Apple Silicon (M1/M2/M3/M4) in one run.
 
 ## Features
 
