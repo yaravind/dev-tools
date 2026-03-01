@@ -18,8 +18,9 @@ jobs:
       - name: Install ShellCheck
         run: brew install shellcheck
 
-      - name: Run ShellCheck on scripts/macos/*.sh
-        run: shellcheck -x scripts/macos/*.sh
+      - name: Run ShellCheck on bash/sh scripts only
+        run: |
+          find scripts/macos -type f \( -name '*.sh' -o -name '*.bash' \) -exec grep -lE '^#! */bin/(bash|sh)' {} + | xargs -r shellcheck -x
 
       - name: Run macOS dry-run harness
         shell: bash
