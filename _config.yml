@@ -4,6 +4,9 @@ description: >-
 url: "https://yaravind.github.io"
 baseurl: "/dev-tools"
 
+# Google Analytics
+google_analytics: G-GP9XY5FJBH
+
 # SEO and social
 plugins:
   - jekyll-seo-tag

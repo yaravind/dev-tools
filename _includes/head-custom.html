@@ -1,2 +1,13 @@
 <!-- Favicon -->
 <link rel="icon" type="image/png" href="{{ '/assets/favicon.png' | relative_url }}">
+
+<!-- Google Analytics -->
+{% if site.google_analytics %}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ site.google_analytics }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '{{ site.google_analytics }}');
+</script>
+{% endif %}
