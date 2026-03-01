@@ -117,6 +117,6 @@ For Git aliases, package management tips, IntelliJ integration, and more, see [D
 ---
 
 <div role="alert" style="border-left: 4px solid #d1242f; background-color: #fff5f5; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
-  <strong>🔴 CAUTION</strong><br>
+  <strong>CAUTION</strong><br>
   <strong>Use at Your Own Risk.</strong> This project is provided as-is, without warranty of any kind, express or implied. By using these scripts and configurations, you accept full responsibility for any changes made to your system, including but not limited to software installation, configuration modifications, and system settings. The repository owner(s) and contributors shall not be held liable for any damage, data loss, security vulnerabilities, or other consequences arising from the use of this project. Always review scripts before executing them on your machine.
 </div>
