@@ -5,6 +5,8 @@
 📖 **Documentation:** [https://yaravind.github.io/dev-tools/](https://yaravind.github.io/dev-tools/)
 
 > **One command to bootstrap a productive macOS environment for software and data engineers — from a fresh machine to fully equipped in minutes.**
+>
+> ✨ Several scripts and configurations in this repository were meticulously crafted through vibe coding powered by GitHub Copilot and Google Gemini.
 
 > [!CAUTION]
 > **Use at Your Own Risk.** This project is provided as-is, without warranty of any kind, express or implied. By using these scripts and configurations, you accept full responsibility for any changes made to your system, including but not limited to software installation, configuration modifications, and system settings. The repository owner(s) and contributors shall not be held liable for any damage, data loss, security vulnerabilities, or other consequences arising from the use of this project. Always review scripts before executing them on your machine.
