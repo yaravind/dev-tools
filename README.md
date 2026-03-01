@@ -16,11 +16,6 @@ Setting up a new machine is tedious. Hunting down the right tools, configuring s
 | 🔧 **Shell-ready** | Pre-wired `.zshrc` with aliases, helpers, and prompt tweaks that survive reboots |
 | 📊 **Data & ML friendly** | Includes `uv`, `mamba`, `conda`, Python, cloud CLIs, and `ollama` for local LLMs out of the box |
 
-> "On a UNIX system, everything is a file; if something is not a file, it is a process." ― Machtelt Garrels,
-> Introduction To Linux: A Hands-On Guide
-
----
-
 ## Setup Instructions
 
 ### macOS (Apple Silicon M1/M2/M3/M4)
@@ -93,34 +88,6 @@ Check the output below to see if the Command Line Tools are installed:
 6. Restart your terminal to apply PATH and environment variable changes
 7. Run <kbd>./scripts/windows/jenv_setup.ps1</kbd> to register installed JDKs with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows)
 8. Run <kbd>./scripts/windows/git_setup.ps1</kbd> to set up Git credentials (name and email)
-   - Alternatively, configure Git credentials manually:
-     ```powershell
-     git config --global user.name "Your Name"
-     git config --global user.email "you@example.com"
-     ```
-
-> ***Note on unavailable tools***
->
-> Some tools from `setup_env.sh` have no Windows equivalent (e.g. `htop`, `lnav`, `dockutil`, `thefuck`).
-> These are documented with alternatives inside `scripts/windows/setup_env.ps1`.
-
----
-
-## Tests
-
-Run the OS-specific dry-run checks:
-
-```zsh
-./scripts/macos/run_tests.sh
-```
-
-```powershell
-.\scripts\windows\run_tests.ps1
-```
-
-See `docs/tests/README.md` for details.
-
----
 
 ## Scripts
 
