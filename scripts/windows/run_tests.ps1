@@ -34,6 +34,7 @@ if ($resolvedRoot) {
 Write-Step "Starting Windows script dry-run checks"
 
 $scripts = @(
+    "gen_taskbar_apps.ps1",
     "setup_env.ps1",
     "setup_env_min.ps1",
     "jenv_setup.ps1",
