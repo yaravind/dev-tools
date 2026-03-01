@@ -33,6 +33,7 @@ scripts=(
 
 ok_count=0
 fail_count=0
+shellcheck_fail=0
 missing_count=0
 
 for script in "${scripts[@]}"; do
@@ -43,23 +44,22 @@ for script in "${scripts[@]}"; do
   fi
   if zsh -n "$script"; then
     log_ok "Syntax OK: $(basename "$script")"
-    ((ok_count++))
   else
     log_warn "Syntax FAILED: $(basename "$script")"
     ((fail_count++))
   fi
 done
 
-shellcheck_ok=0
-shellcheck_fail=0
 if command_exists shellcheck; then
   for script in "${scripts[@]}"; do
-    if [ -f "$script" ] && shellcheck -x "$script"; then
-      log_ok "ShellCheck OK: $(basename "$script")"
-      ((shellcheck_ok++))
-    elif [ -f "$script" ]; then
-      log_warn "ShellCheck FAILED: $(basename "$script")"
-      ((shellcheck_fail++))
+    # Only lint bash/sh scripts
+    if [ -f "$script" ] && grep -qE '^#! */bin/(bash|sh)' "$script"; then
+      if shellcheck -x "$script"; then
+        log_ok "ShellCheck OK: $(basename "$script")"
+      else
+        log_warn "ShellCheck FAILED: $(basename "$script")"
+        ((shellcheck_fail++))
+      fi
     fi
   done
 else
@@ -86,14 +86,14 @@ for cfg in "${config_files[@]}"; do
 done
 
 log_step "Summary"
-log_ok "Scripts OK: $ok_count"
+log_ok "Scripts OK: $(( ${#scripts[@]} - fail_count - missing_count ))"
 log_warn "Scripts failed: $fail_count"
 log_warn "Scripts missing: $missing_count"
 log_ok "Configs OK: $config_ok"
 log_warn "Configs missing: $config_missing"
-if command_exists shellcheck; then
-  log_ok "ShellCheck OK: $shellcheck_ok"
-  log_warn "ShellCheck failed: $shellcheck_fail"
-fi
-
+log_ok "ShellCheck OK: $(( ${#scripts[@]} - shellcheck_fail ))"
+log_warn "ShellCheck failed: $shellcheck_fail"
 log_step "macOS dry-run checks complete"
+if ((fail_count > 0 || shellcheck_fail > 0)); then
+  exit 1
+fi
