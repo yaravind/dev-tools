@@ -89,14 +89,15 @@ Check the output below to see if the Command Line Tools are installed:
 2. Open **PowerShell as Administrator**
 3. Allow script execution for this session: <kbd>Set-ExecutionPolicy Bypass -Scope Process -Force</kbd>
 4. cd <kbd>dev-tools</kbd>
-5. Run: <kbd>.\scripts\windows\setup_env.ps1</kbd>
+5. Run: <kbd>./scripts/windows/setup_env.ps1</kbd>
 6. Restart your terminal to apply PATH and environment variable changes
-7. Run <kbd>.\scripts\windows\jenv_setup.ps1</kbd> to register installed JDKs with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows)
-8. Run <kbd>.\scripts\macos\git_setup.sh</kbd> (in Git Bash) or configure Git credentials manually:
-   ```powershell
-   git config --global user.name "Your Name"
-   git config --global user.email "you@example.com"
-   ```
+7. Run <kbd>./scripts/windows/jenv_setup.ps1</kbd> to register installed JDKs with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows)
+8. Run <kbd>./scripts/windows/git_setup.ps1</kbd> to set up Git credentials (name and email)
+   - Alternatively, configure Git credentials manually:
+     ```powershell
+     git config --global user.name "Your Name"
+     git config --global user.email "you@example.com"
+     ```
 
 > ***Note on unavailable tools***
 >
@@ -128,6 +129,7 @@ See `docs/tests/README.md` for details.
 | `scripts/macos/setup_env.sh` | Primary bootstrap script — installs and configures 30+ developer tools (JDK, Python, Rust, fonts, IDEs, shell utils) on macOS Apple Silicon |
 | `scripts/macos/git_setup.sh` | Configures global Git user credentials (name and email) |
 | `scripts/macos/jenv_setup.sh` | Discovers all installed JVMs and registers them with the `jenv` version manager |
+| `scripts/windows/git_setup.ps1` | Configures global Git user credentials (name and email) on Windows |
 | `scripts/windows/jenv_setup.ps1` | Discovers all installed JDKs and registers them with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows) |
 | `scripts/macos/dock_setup.sh` | Customizes the macOS Dock — sets icon size, removes defaults, and adds preferred apps from `config/dock_apps.txt` |
 | `scripts/macos/gen_dock_apps.sh` | Generates `config/dock_apps.txt` by reading the current Dock configuration |
