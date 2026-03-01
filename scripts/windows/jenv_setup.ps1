@@ -106,7 +106,7 @@ Write-Step "Adding discovered JDKs to jenv..."
 foreach ($jdk in $jdks) {
     $jdkPath = $jdk.FullName
     Write-Info "Processing JDK: $jdkPath"
-    jenv add "$jdkPath"
+    jenv add -path "$jdkPath"
     if ($LASTEXITCODE -eq 0) {
         Write-Ok "Successfully added: $jdkPath"
     } else {
