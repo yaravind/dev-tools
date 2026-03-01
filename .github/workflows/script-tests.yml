@@ -20,7 +20,7 @@ jobs:
 
       - name: Run ShellCheck on bash/sh scripts only
         run: |
-          find scripts/macos -type f \( -name '*.sh' -o -name '*.bash' \) -exec grep -lE '^#! */bin/(bash|sh)' {} + | xargs -r shellcheck -x
+          grep -lE '^#! */bin/(bash|sh)' scripts/macos/*.sh | xargs -r shellcheck -x
 
       - name: Run macOS dry-run harness
         shell: bash
