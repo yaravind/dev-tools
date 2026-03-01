@@ -26,8 +26,10 @@ if (-not $scriptDir) {
 }
 
 if (-not $ConfigPath) {
-    Write-Host "ERROR: Config path is empty." -ForegroundColor Red
-    exit 1
+    $ConfigPath = Join-Path $scriptDir ".."
+    $ConfigPath = Join-Path $ConfigPath ".."
+    $ConfigPath = Join-Path $ConfigPath "config"
+    $ConfigPath = Join-Path $ConfigPath "taskbar_apps.txt"
 }
 
 $resolvedConfig = Resolve-Path -Path $ConfigPath -ErrorAction SilentlyContinue
