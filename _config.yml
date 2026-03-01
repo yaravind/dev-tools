@@ -1,9 +1,22 @@
 title: Developer Tools
 description: >-
-  One command to bootstrap a productive macOS and Windows environment for
-  software and data engineers — from a fresh machine to fully equipped in minutes.
+  One command to bootstrap scripts for software and data engineers. Quickly set up Apple Silicon macOS and Windows 11 with 30+ curated tools.
 url: "https://yaravind.github.io"
 baseurl: "/dev-tools"
+
+# SEO and social
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+author:
+  name: Aravind Yarram
+  url: https://github.com/yaravind
+  twitter: yaravind
+social:
+  github: yaravind/dev-tools
+  twitter: yaravind
+  linkedin: aravindyarram
 
 theme: jekyll-theme-cayman
 

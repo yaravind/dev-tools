@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Sitemap: https://yaravind.github.io/dev-tools/sitemap.xml
+
