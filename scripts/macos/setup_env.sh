@@ -145,11 +145,6 @@ install_homebrew
 echo -e "${BLUE}===> Updating Homebrew...${RESET}"
 brew update
 
-echo -e "${BLUE}===> Allowing brew to lookup versions...${RESET}"
-brew tap homebrew/cask-versions
-
-echo -e "${BLUE}===> Allowing brew to find nerd fonts...${RESET}"
-brew tap homebrew/cask-fonts
 
 echo -e "${RED}===> Installing maven without java dependency...${RESET}"
 brew install --ignore-dependencies maven
