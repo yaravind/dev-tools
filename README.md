@@ -99,9 +99,10 @@ A lightweight bootstrap script (`scripts/windows/setup_env_min.ps1`) is availabl
 2. Open **PowerShell as Administrator**
 3. Allow script execution for this session: <kbd>Set-ExecutionPolicy Bypass -Scope Process -Force</kbd>
 4. cd <kbd>dev-tools</kbd>
-5. Run: <kbd>.\scripts\windows\setup_env_min.ps1</kbd>
+5. Run: <kbd>\.\scripts\windows\setup_env_min.ps1</kbd>
 6. Restart your terminal to apply PATH and `JAVA_HOME` changes
-7. *(Optional)* Launch IntelliJ IDEA once to complete its first-run setup
+7. Run <kbd>\.\scripts\windows\run_vscode_setup.ps1</kbd> to install VS Code extensions listed in `config/vscode.txt` (this runs `vscode_setup.ps1` with `-Yes`)
+8. *(Optional)* Launch IntelliJ IDEA once to complete its first-run setup
 
 ## Scripts
 
@@ -119,8 +120,8 @@ A lightweight bootstrap script (`scripts/windows/setup_env_min.ps1`) is availabl
 | `scripts/macos/colors.sh` | Defines ANSI color code variables (sourced by other scripts) |
 | `scripts/windows/setup_env.ps1` | Primary bootstrap script — installs and configures tools using winget on Windows |
 | `scripts/windows/setup_env_min.ps1` | Minimal Windows bootstrap script for Git, JDK, Maven, VS Code, and IntelliJ IDEA |
-| `scripts/windows/vscode_setup.ps1` | Installs VS Code extensions listed in `config/vscode.txt` |
-| `scripts/windows/taskbar_setup.ps1` | Pins/unpins Windows Taskbar apps from `config/taskbar_apps.txt` |
+| `scripts/windows/run_vscode_setup.ps1` | Installs VS Code extensions listed in `config/vscode.txt` (runs `vscode_setup.ps1` with `-Yes`) |
+| `scripts/windows/run_taskbar_setup.ps1` | Pins/unpins Windows Taskbar apps from `config/taskbar_apps.txt` |
 
 ---
 
