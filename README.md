@@ -122,8 +122,24 @@ A lightweight bootstrap script (`scripts/windows/setup_env_min.ps1`) is availabl
 > Running the above script might open a popup like below for your approval. Select **Yes**.
 > ![Windows approval notification](assets/win-ask-approval.png)
 
-## Scripts
+## Rollback Instructions
 
+If you need to revert the changes made by the minimal setup scripts, you can use the provided rollback scripts. These scripts will uninstall the applications and remove the configuration files created by the setup scripts.
+
+### macOS
+
+1. Open your terminal
+2. cd <kbd>dev-tools</kbd>
+3. Make the script executable: <kbd>chmod +x scripts/macos/setup_env_min_rollback.sh</kbd>
+4. Run: <kbd>./scripts/macos/setup_env_min_rollback.sh</kbd>
+
+### Windows
+
+1. Open **PowerShell as Administrator**
+2. cd <kbd>dev-tools</kbd>
+3. Run: <kbd>.\scripts\windows\setup_env_min_rollback.ps1</kbd>
+
+## Scripts
 
 | Script Name                             | Description                                                                                                                                  |
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
