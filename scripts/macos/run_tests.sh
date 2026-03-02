@@ -29,6 +29,7 @@ scripts=(
   "${SCRIPT_DIR}/jenv_setup.sh"
   "${SCRIPT_DIR}/setup_env.sh"
   "${SCRIPT_DIR}/setup_env_min.sh"
+  "${SCRIPT_DIR}/setup_env_min_rollback.sh"
   "${SCRIPT_DIR}/vscode_setup.sh"
 )
 

@@ -37,6 +37,7 @@ $scripts = @(
     "gen_taskbar_apps.ps1",
     "setup_env.ps1",
     "setup_env_min.ps1",
+    "setup_env_min_rollback.ps1",
     "jenv_setup.ps1",
     "maven_setup.ps1",
     "taskbar_setup.ps1",
