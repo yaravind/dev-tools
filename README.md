@@ -65,6 +65,18 @@ Check the output below to see if the Command Line Tools are installed:
 9. Run <kbd>./scripts/macos/git_setup.sh</kbd> to setup Git Credentials
 10. Run <kbd>./scripts/macos/dock_setup.sh</kbd> to setup macOS Dock
 
+#### Minimal setup for Spark/Scala/Java development
+
+A lightweight bootstrap script (`scripts/macos/setup_env_min.sh`) is available for getting a Spark/Scala/Java development environment up and running quickly, without the full suite of tools installed by `setup_env.sh`. It installs Git, a JDK, Maven, VS Code, and IntelliJ IDEA.
+
+1. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
+2. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
+3. cd <kbd>dev-tools</kbd>
+4. Make the script executable: <kbd>chmod +x scripts/macos/setup_env_min.sh</kbd>
+5. Run: <kbd>./scripts/macos/setup_env_min.sh</kbd>
+6. Run <kbd>./scripts/macos/vscode_setup.sh</kbd> to install required (and some optional) VS Code extensions. The list is in `config/vscode.txt` if you prefer to add or remove extensions.
+7. *(Optional)* Launch IntelliJ IDEA once to complete its first-run setup
+
 > ***Warning (on macOS)***
 >
 > Your terminal does not have App Management permissions, so Homebrew will delete and reinstall the app.
@@ -113,6 +125,7 @@ A lightweight bootstrap script (`scripts/windows/setup_env_min.ps1`) is availabl
 | Script Name                             | Description                                                                                                                                  |
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scripts/macos/setup_env.sh`            | Primary bootstrap script — installs and configures 30+ developer tools (JDK, Python, Rust, fonts, IDEs, shell utils) on macOS Apple Silicon |
+| `scripts/macos/setup_env_min.sh`        | Minimal macOS bootstrap script for Git, JDK, Maven, VS Code, and IntelliJ IDEA                                                               |
 | `scripts/macos/git_setup.sh`            | Configures global Git user credentials (name and email)                                                                                      |
 | `scripts/macos/jenv_setup.sh`           | Discovers all installed JVMs and registers them with the`jenv` version manager                                                               |
 | `scripts/windows/git_setup.ps1`         | Configures global Git user credentials (name and email) on Windows                                                                           |

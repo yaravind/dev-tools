@@ -28,13 +28,15 @@ scripts=(
   "${SCRIPT_DIR}/git_setup.sh"
   "${SCRIPT_DIR}/jenv_setup.sh"
   "${SCRIPT_DIR}/setup_env.sh"
+  "${SCRIPT_DIR}/setup_env_min.sh"
   "${SCRIPT_DIR}/vscode_setup.sh"
 )
 
-ok_count=0
 fail_count=0
 shellcheck_fail=0
 missing_count=0
+
+# ok_count was unused; keep counts derived from arrays and fail/missing totals.
 
 for script in "${scripts[@]}"; do
   if [ ! -f "$script" ]; then
