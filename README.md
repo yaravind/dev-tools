@@ -10,24 +10,26 @@ Setting up a new machine is tedious. Hunting down the right tools, configuring s
 
 ## Features
 
-| Benefit | Detail |
-|---|---|
-| ⚡ **Fast bootstrap** | Install and configure 30+ tools with a single command |
-| 🔁 **Reproducible** | Identical setup across every machine, every time |
-| 🧰 **Curated toolset** | Hand-picked CLI utilities, JVM toolchain, Python/Rust, LLM tools, and modern IDEs |
-| 🔧 **Shell-ready** | Pre-wired `.zshrc` with aliases, helpers, and prompt tweaks that survive reboots |
-| 📊 **Data & ML friendly** | Includes `uv`, `mamba`, `conda`, Python, cloud CLIs, and `ollama` for local LLMs out of the box |
+
+| Benefit                  | Detail                                                                                         |
+| ------------------------ | ---------------------------------------------------------------------------------------------- |
+| ⚡**Fast bootstrap**     | Install and configure 30+ tools with a single command                                          |
+| 🔁**Reproducible**       | Identical setup across every machine, every time                                               |
+| 🧰**Curated toolset**    | Hand-picked CLI utilities, JVM toolchain, Python/Rust, LLM tools, and modern IDEs              |
+| 🔧**Shell-ready**        | Pre-wired`.zshrc` with aliases, helpers, and prompt tweaks that survive reboots                |
+| 📊**Data & ML friendly** | Includes`uv`, `mamba`, `conda`, Python, cloud CLIs, and `ollama` for local LLMs out of the box |
 
 ## Setup Instructions
 
 ### macOS (Apple Silicon M1/M2/M3/M4)
 
 > ***Warning***
+>
 > 1. The script is tested on Apple M2/M3/M4 Pro (should also work on M1) and zsh shell.
 > 2. Type `bash` and hit enter. If you see the error "Bash is required to interpret this script", change to `bash` shell
-     as Homebrew install script uses bash.
+>    as Homebrew install script uses bash.
 > 3. If you haven't already installed Xcode Command Line Tools, you'll see a message that **The Xcode Command Line Tools
-     will be installed.**
+>    will be installed.**
 
 Check the output below to see if the Command Line Tools are installed:
 
@@ -74,6 +76,7 @@ Check the output below to see if the Command Line Tools are installed:
 ### Windows (10/11)
 
 > ***Requirements***
+>
 > - Windows 10 (version 1809 or later) or Windows 11
 > - [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/) (App Installer) — pre-installed on
 >   Windows 11; available from the [Microsoft Store](https://www.microsoft.com/store/productId/9NBLGGH4NNS1) on
@@ -101,27 +104,28 @@ A lightweight bootstrap script (`scripts/windows/setup_env_min.ps1`) is availabl
 4. cd <kbd>dev-tools</kbd>
 5. Run: <kbd>\.\scripts\windows\setup_env_min.ps1</kbd>
 6. Restart your terminal to apply PATH and `JAVA_HOME` changes
-7. Run <kbd>\.\scripts\windows\run_vscode_setup.ps1</kbd> to install VS Code extensions listed in `config/vscode.txt` (this runs `vscode_setup.ps1` with `-Yes`)
+7. Run <kbd>\.\scripts\windows\run_vscode_setup.ps1</kbd> to install required (and some optional) VS Code extensions. The list is in `config/vscode.txt` if you prefer to add or remove extensions.
 8. *(Optional)* Launch IntelliJ IDEA once to complete its first-run setup
 
 ## Scripts
 
-| Script Name | Description |
-|---|---|
-| `scripts/macos/setup_env.sh` | Primary bootstrap script — installs and configures 30+ developer tools (JDK, Python, Rust, fonts, IDEs, shell utils) on macOS Apple Silicon |
-| `scripts/macos/git_setup.sh` | Configures global Git user credentials (name and email) |
-| `scripts/macos/jenv_setup.sh` | Discovers all installed JVMs and registers them with the `jenv` version manager |
-| `scripts/windows/git_setup.ps1` | Configures global Git user credentials (name and email) on Windows |
-| `scripts/windows/jenv_setup.ps1` | Discovers all installed JDKs and registers them with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows) |
-| `scripts/macos/dock_setup.sh` | Customizes the macOS Dock — sets icon size, removes defaults, and adds preferred apps from `config/dock_apps.txt` |
-| `scripts/macos/gen_dock_apps.sh` | Generates `config/dock_apps.txt` by reading the current Dock configuration |
-| `scripts/macos/vscode_setup.sh` | Installs VS Code extensions listed in `config/vscode.txt` |
-| `scripts/macos/conv-dot-to-png.sh` | Converts `triples.dot` to a PNG image using Graphviz |
-| `scripts/macos/colors.sh` | Defines ANSI color code variables (sourced by other scripts) |
-| `scripts/windows/setup_env.ps1` | Primary bootstrap script — installs and configures tools using winget on Windows |
-| `scripts/windows/setup_env_min.ps1` | Minimal Windows bootstrap script for Git, JDK, Maven, VS Code, and IntelliJ IDEA |
-| `scripts/windows/run_vscode_setup.ps1` | Installs VS Code extensions listed in `config/vscode.txt` (runs `vscode_setup.ps1` with `-Yes`) |
-| `scripts/windows/run_taskbar_setup.ps1` | Pins/unpins Windows Taskbar apps from `config/taskbar_apps.txt` |
+
+| Script Name                             | Description                                                                                                                                  |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/macos/setup_env.sh`            | Primary bootstrap script — installs and configures 30+ developer tools (JDK, Python, Rust, fonts, IDEs, shell utils) on macOS Apple Silicon |
+| `scripts/macos/git_setup.sh`            | Configures global Git user credentials (name and email)                                                                                      |
+| `scripts/macos/jenv_setup.sh`           | Discovers all installed JVMs and registers them with the`jenv` version manager                                                               |
+| `scripts/windows/git_setup.ps1`         | Configures global Git user credentials (name and email) on Windows                                                                           |
+| `scripts/windows/jenv_setup.ps1`        | Discovers all installed JDKs and registers them with[JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows)                      |
+| `scripts/macos/dock_setup.sh`           | Customizes the macOS Dock — sets icon size, removes defaults, and adds preferred apps from`config/dock_apps.txt`                            |
+| `scripts/macos/gen_dock_apps.sh`        | Generates`config/dock_apps.txt` by reading the current Dock configuration                                                                    |
+| `scripts/macos/vscode_setup.sh`         | Installs VS Code extensions listed in`config/vscode.txt`                                                                                     |
+| `scripts/macos/conv-dot-to-png.sh`      | Converts`triples.dot` to a PNG image using Graphviz                                                                                          |
+| `scripts/macos/colors.sh`               | Defines ANSI color code variables (sourced by other scripts)                                                                                 |
+| `scripts/windows/setup_env.ps1`         | Primary bootstrap script — installs and configures tools using winget on Windows                                                            |
+| `scripts/windows/setup_env_min.ps1`     | Minimal Windows bootstrap script for Git, JDK, Maven, VS Code, and IntelliJ IDEA                                                             |
+| `scripts/windows/run_vscode_setup.ps1`  | Installs VS Code extensions listed in`config/vscode.txt` (runs `vscode_setup.ps1` with `-Yes`)                                               |
+| `scripts/windows/run_taskbar_setup.ps1` | Pins/unpins Windows Taskbar apps from`config/taskbar_apps.txt`                                                                               |
 
 ---
 
