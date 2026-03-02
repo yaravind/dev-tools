@@ -147,7 +147,7 @@ Optional modes:
 
 ## FAQ
 
-See [FAQ.md](assets/FAQ.md).
+See [FAQ.md](docs/FAQ.md).
 
 ## Scripts
 
