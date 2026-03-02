@@ -119,6 +119,9 @@ A lightweight bootstrap script (`scripts/windows/setup_env_min.ps1`) is availabl
 7. Run <kbd>\.\scripts\windows\run_vscode_setup.ps1</kbd> to install required (and some optional) VS Code extensions. The list is in `config/vscode.txt` if you prefer to add or remove extensions.
 8. *(Optional)* Launch IntelliJ IDEA once to complete its first-run setup
 
+> Running the above script might open a popup like below for your approval. Select **Yes**.
+> ![Windows approval notification](assets/win-ask-approval.png)
+
 ## Scripts
 
 
