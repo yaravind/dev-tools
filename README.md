@@ -137,7 +137,17 @@ If you need to revert the changes made by the minimal setup scripts, you can use
 
 1. Open **PowerShell as Administrator**
 2. cd <kbd>dev-tools</kbd>
-3. Run: <kbd>.\scripts\windows\setup_env_min_rollback.ps1</kbd>
+3. Run rollback (silent by default): <kbd>.\scripts\windows\setup_env_min_rollback.ps1</kbd>
+
+Optional modes:
+
+- Preview what would be removed (no changes): <kbd>.\scripts\windows\setup_env_min_rollback.ps1 -DryRun</kbd>
+- Interactive mode (prompts you to select which tools to uninstall first): <kbd>.\scripts\windows\setup_env_min_rollback.ps1 -Interactive</kbd>
+- Explicit silent mode: <kbd>.\scripts\windows\setup_env_min_rollback.ps1 -Silent</kbd>
+
+## FAQ
+
+See [FAQ.md](assets/FAQ.md).
 
 ## Scripts
 

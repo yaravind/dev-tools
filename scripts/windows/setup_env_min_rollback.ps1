@@ -11,6 +11,18 @@
 #   Set-ExecutionPolicy Bypass -Scope Process -Force
 #   .\scripts\setup_env_min_rollback.ps1
 
+[CmdletBinding()]
+param(
+    # Shows what would happen without making changes.
+    [switch]$DryRun,
+
+    # If set, uses winget interactive mode and prompts which components to uninstall.
+    [switch]$Interactive,
+
+    # If set, uses winget silent mode (default). Ignored when -Interactive is used.
+    [switch]$Silent
+)
+
 # ============================================================
 # Helper Functions
 # ============================================================
@@ -42,6 +54,11 @@ function Test-CommandExists {
 
 function Assert-Winget {
     if (-not (Test-CommandExists "winget")) {
+        if ($DryRun) {
+            Write-Warn "DryRun: winget is not installed on this host; winget uninstalls will be skipped."
+            $script:WingetExe = $null
+            return
+        }
         Write-Host "ERROR: winget (App Installer) is not installed." -ForegroundColor Red
         Write-Host "Install it from the Microsoft Store:" -ForegroundColor Red
         Write-Host "  https://www.microsoft.com/store/productId/9NBLGGH4NNS1" -ForegroundColor Yellow
@@ -53,10 +70,39 @@ function Assert-Winget {
 
 function Invoke-WingetUninstall {
     param(
-        [string]$Id
+        [string]$Id,
+        [switch]$UseInteractive,
+        [switch]$UseSilent
     )
 
-    $args = @("uninstall", "--id", $Id, "--exact", "--accept-source-agreements", "--accept-package-agreements", "--silent")
+    if ($DryRun) {
+        Write-Info "DryRun: would run winget uninstall for $Id"
+        return 0
+    }
+
+    if (-not $script:WingetExe) {
+        Write-Warn "winget executable not available; cannot uninstall $Id"
+        return 1
+    }
+
+    # NOTE: winget uninstall does not support --accept-package-agreements on some versions.
+    # Keep args compatible with winget v1.12+ (per log) and PowerShell 5.1.
+    $args = @(
+        "uninstall",
+        "--id", $Id,
+        "--exact",
+        "--accept-source-agreements",
+        "--disable-interactivity",
+        "--force"
+    )
+
+    if ($UseInteractive) {
+        # Allow prompts/UX from the installer/uninstaller.
+        $args += "--interactive"
+    } elseif ($UseSilent) {
+        $args += "--silent"
+    }
+
     & $script:WingetExe @args
     return $LASTEXITCODE
 }
@@ -64,14 +110,20 @@ function Invoke-WingetUninstall {
 function Uninstall-WingetApp {
     param(
         [string]$Id,
-        [string]$Description
+        [string]$Description,
+        [switch]$UseInteractive,
+        [switch]$UseSilent
     )
 
     Write-Info "Uninstalling: $Description ($Id)..."
-    $exitCode = Invoke-WingetUninstall -Id $Id
+    $exitCode = Invoke-WingetUninstall -Id $Id -UseInteractive:$UseInteractive -UseSilent:$UseSilent
 
     if ($exitCode -eq 0) {
-        Write-Ok "Uninstalled: $Description"
+        if ($DryRun) {
+            Write-Ok "DryRun OK: $Description"
+        } else {
+            Write-Ok "Uninstalled: $Description"
+        }
         return
     }
     if ($exitCode -eq -1978335189) { # Not found
@@ -97,6 +149,10 @@ function Remove-EnvironmentVar {
     )
     $currentValue = [Environment]::GetEnvironmentVariable($Name, $Scope)
     if ($currentValue) {
+        if ($DryRun) {
+            Write-Info "DryRun: would remove environment variable $Name ($Scope)"
+            return
+        }
         Write-Info "Removing environment variable $Name..."
         [Environment]::SetEnvironmentVariable($Name, $null, $Scope)
         Write-Ok "$Name removed."
@@ -112,8 +168,20 @@ function Remove-FromPath {
     )
     $currentPath = [Environment]::GetEnvironmentVariable("Path", $Scope)
     if ($currentPath -and ($currentPath -like "*$PathFragment*")) {
+        if ($DryRun) {
+            Write-Info "DryRun: would remove $PathFragment from PATH ($Scope)"
+            return
+        }
+
         Write-Info "Removing $PathFragment from PATH..."
-        $newPath = ($currentPath -split ';') | Where-Object { $_ -and ($_ -notlike "*$PathFragment*") } | Join-String -Separator ';'
+
+        $parts = $currentPath -split ';' |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { $_ -and ($_ -notlike "*$PathFragment*") }
+
+        # PowerShell 5.1 compatible join (Join-String is PS7+)
+        $newPath = [string]::Join(';', $parts)
+
         [Environment]::SetEnvironmentVariable("Path", $newPath, $Scope)
         Write-Ok "PATH updated."
     } else {
@@ -126,10 +194,20 @@ function Uninstall-Maven {
     Remove-EnvironmentVar -Name "MAVEN_HOME"
     Remove-EnvironmentVar -Name "M2_HOME"
 
-    $installRoot = Join-Path $env:LOCALAPPDATA "Programs\Apache"
     Remove-FromPath -PathFragment "apache-maven"
 
+    if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) {
+        Write-Warn "LOCALAPPDATA is not set; skipping Maven directory cleanup."
+        return
+    }
+
+    $installRoot = Join-Path $env:LOCALAPPDATA "Programs\Apache"
+
     if (Test-Path $installRoot) {
+        if ($DryRun) {
+            Write-Info "DryRun: would delete Maven directory: $installRoot"
+            return
+        }
         Write-Info "Deleting Maven directory: $installRoot"
         Remove-Item -Recurse -Force $installRoot
         Write-Ok "Maven directory deleted."
@@ -147,6 +225,28 @@ function Unset-JavaHome {
     Remove-EnvironmentVar -Name "JAVA_HOME"
 }
 
+function Read-YesNo {
+    param(
+        [string]$Prompt,
+        [bool]$DefaultYes = $true
+    )
+
+    $suffix = if ($DefaultYes) { "[Y/n]" } else { "[y/N]" }
+    while ($true) {
+        $answer = Read-Host "$Prompt $suffix"
+        if ([string]::IsNullOrWhiteSpace($answer)) {
+            return $DefaultYes
+        }
+        switch ($answer.Trim().ToLowerInvariant()) {
+            'y' { return $true }
+            'yes' { return $true }
+            'n' { return $false }
+            'no' { return $false }
+        }
+        Write-Warn "Please answer y or n."
+    }
+}
+
 # ============================================================
 # Main script execution
 # ============================================================
@@ -154,15 +254,62 @@ Write-Step "Starting rollback of minimal Windows developer environment..."
 
 Assert-Winget
 
-Write-Step "Uninstalling applications..."
-Uninstall-WingetApp -Id "Git.Git" -Description "Git for Windows"
-Uninstall-WingetApp -Id "Microsoft.OpenJDK.17" -Description "Microsoft OpenJDK 17"
-Uninstall-WingetApp -Id "Microsoft.VisualStudioCode" -Description "Visual Studio Code"
-Uninstall-WingetApp -Id "JetBrains.IntelliJIDEA.Community" -Description "IntelliJ IDEA Community"
+# Default behavior: silent unless explicitly interactive
+$useInteractive = $false
+$useSilent = $true
+if ($Interactive) {
+    $useInteractive = $true
+    $useSilent = $false
+} elseif ($Silent) {
+    $useInteractive = $false
+    $useSilent = $true
+}
 
-Uninstall-Maven
+$components = @(
+    [pscustomobject]@{ Key = 'Git';        Description = 'Git for Windows';        Kind = 'Winget'; Id = 'Git.Git' },
+    [pscustomobject]@{ Key = 'JDK';        Description = 'Microsoft OpenJDK 17';   Kind = 'Winget'; Id = 'Microsoft.OpenJDK.17' },
+    [pscustomobject]@{ Key = 'VSCode';     Description = 'Visual Studio Code';    Kind = 'Winget'; Id = 'Microsoft.VisualStudioCode' },
+    [pscustomobject]@{ Key = 'IntelliJ';   Description = 'IntelliJ IDEA Community'; Kind = 'Winget'; Id = 'JetBrains.IntelliJIDEA.Community' },
+    [pscustomobject]@{ Key = 'Maven';      Description = 'Maven + env vars';       Kind = 'Maven' },
+    [pscustomobject]@{ Key = 'JAVA_HOME';  Description = 'JAVA_HOME + PATH entry'; Kind = 'JavaHome' }
+)
 
-Unset-JavaHome
+$selected = @()
+if ($Interactive) {
+    Write-Step "Interactive mode: choose what to uninstall"
+    foreach ($c in $components) {
+        $doIt = Read-YesNo -Prompt ("Uninstall {0}?" -f $c.Description) -DefaultYes:$true
+        if ($doIt) {
+            $selected += $c
+        }
+    }
+
+    if (-not $selected -or $selected.Count -eq 0) {
+        Write-Warn "Nothing selected. Exiting."
+        exit 0
+    }
+} else {
+    $selected = $components
+}
+
+Write-Step "Uninstalling selected components..."
+
+foreach ($c in $selected) {
+    switch ($c.Kind) {
+        'Winget' {
+            Uninstall-WingetApp -Id $c.Id -Description $c.Description -UseInteractive:$useInteractive -UseSilent:$useSilent
+        }
+        'Maven' {
+            Uninstall-Maven
+        }
+        'JavaHome' {
+            Unset-JavaHome
+        }
+        default {
+            Write-Warn "Unknown component kind: $($c.Kind)"
+        }
+    }
+}
 
 Write-Warn "Restart your terminal to apply the environment changes."
 Write-Host "`n`nRollback complete!" -ForegroundColor Green
