@@ -1,7 +1,9 @@
 ---
-title: VS Code Extension Catalog
+title: VS Code Setup
 permalink: /docs/vscode-info/
 ---
+
+## Extension Catalog
 
 The following extensions are installed by `scripts/macos/vscode_setup.sh` and `scripts/windows/run_vscode_setup.ps1` scripts.
 

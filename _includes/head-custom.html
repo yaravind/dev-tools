@@ -175,3 +175,70 @@
     pageHeader.appendChild(zipButton);
   });
 </script>
+
+<!-- Fork ribbon styles + injector -->
+<style>
+  /* Ribbon container positioned near top-left to avoid colliding with the site menu */
+  .fork-ribbon {
+    position: fixed;
+    top: 12px;
+    left: -52px;
+    z-index: 10000;
+    pointer-events: none; /* let underlying controls receive clicks except the link */
+  }
+
+  .fork-ribbon a {
+    pointer-events: auto;
+    display: block;
+    width: 220px;
+    background: #151513; /* GitHub-like dark ribbon */
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1.4;
+    padding: 6px 0;
+    text-align: center;
+    transform: rotate(-45deg);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .fork-ribbon a:hover,
+  .fork-ribbon a:focus {
+    background: #0b0b0b;
+  }
+
+  /* Hide ribbon on small screens where it can obstruct content */
+  @media (max-width: 640px) {
+    .fork-ribbon { display: none; }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Avoid inserting multiple times
+    if (document.querySelector('.fork-ribbon')) return;
+
+    // Prefer site.social.github (format: owner/repo), fall back to site.github if present
+    var repo = "{{ site.social.github | default: site.github | escape }}";
+    if (!repo) return;
+
+    var url = 'https://github.com/' + repo;
+
+    var container = document.createElement('div');
+    container.className = 'fork-ribbon';
+
+    var anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    anchor.setAttribute('aria-label', 'Fork me on GitHub');
+    anchor.textContent = 'Fork me on GitHub';
+
+    container.appendChild(anchor);
+    document.body.appendChild(container);
+  });
+</script>
+
