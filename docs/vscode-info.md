@@ -1,3 +1,8 @@
+---
+title: VS Code Extension Catalog
+permalink: /docs/vscode-info/
+---
+
 | Name                                      | Description                                                                                                          |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
 | vscjava.vscode-java-pack                  | Java Extension Pack: Popular extensions for Java development.                                                        |

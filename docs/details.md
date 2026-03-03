@@ -1,3 +1,8 @@
+---
+title: Details
+permalink: /details/
+---
+
 # Details
 
 ## Table of Contents
@@ -359,7 +364,7 @@ upgrade to latest
 Configure IntelliJ to use GitHub Issues as a task manager. This allows you to create, view, and manage GitHub issues
 directly.
 
-![Configure Servers](assets/intellij-tasks.png)
+![Configure Servers]({{ '/assets/intellij-tasks.png' | relative_url }})
 
 ---
 
@@ -388,7 +393,7 @@ nested folders
 
 ## Reference
 
-- [Notes](docs/notes.md)
+- [Notes]({{ '/docs/notes/' | relative_url }})
 - [The Linux Documentation Project](http://www.tldp.org/guides.html)
 - [Stackoverflow](https://stackoverflow.com)
 - [Git Gist](https://gist.github.com/eyecatchup/3fb7ef0c0cbdb72412fc)

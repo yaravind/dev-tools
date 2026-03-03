@@ -1,3 +1,8 @@
+---
+title: Dry-Run Tests
+permalink: /docs/tests/
+---
+
 # Dry-Run Tests
 
 This repo includes lightweight dry-run tests for both macOS and Windows scripts.
@@ -25,4 +30,3 @@ Run the Windows script checks from PowerShell:
 The Windows dry-run checks:
 - Parse each PowerShell script for syntax errors.
 - Run safe `-DryRun` checks for Taskbar and VS Code setup.
-

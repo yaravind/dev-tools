@@ -1,3 +1,8 @@
+---
+title: Windows VS Code Extension Setup
+permalink: /docs/windows-vscode-setup/
+---
+
 # Windows VS Code Extension Setup
 
 This script installs VS Code extensions listed in `config/vscode.txt`.

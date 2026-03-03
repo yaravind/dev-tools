@@ -25,22 +25,30 @@ theme: jekyll-theme-cayman
 
 # Navigation pages
 header_pages:
-  - faq.md
-  - details.md
-  - scripts.md
+  - docs/faq.md
+  - docs/details.md
+  - docs/scripts.md
   - CONTRIBUTING.md
+  - docs/index.md
 
 # Markdown settings
 markdown: kramdown
 kramdown:
   input: GFM
 
+# Ensure docs pages are rendered with the theme layout
+defaults:
+  - scope:
+      path: "docs"
+      type: "pages"
+    values:
+      layout: default
+
 # Exclude files not needed in the built site
 exclude:
   - scripts/
   - config/
   - assets/triples.dot
-  - docs/
   - "*.sh"
   - "*.ps1"
   - .github/

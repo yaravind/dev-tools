@@ -1,3 +1,8 @@
+---
+title: Scripts
+permalink: /scripts/
+---
+
 # Scripts
 
 This file documents the repository's helper scripts and what they do. For usage details, run the individual scripts with `-Help` (Windows PowerShell scripts) or check the comments at the top of each script.
@@ -20,4 +25,3 @@ This file documents the repository's helper scripts and what they do. For usage 
 
 
 > Tip: For Windows PowerShell scripts, run them from an elevated PowerShell session and use `-Help` to see runtime options such as `-DryRun`, `-Interactive`, and `-Silent`.
-

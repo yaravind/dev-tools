@@ -1,3 +1,8 @@
+---
+title: Windows Taskbar Setup
+permalink: /docs/windows-taskbar-setup/
+---
+
 # Windows Taskbar Setup
 
 This folder contains a minimal Windows Taskbar setup script that pins and unpins apps based on a config file.

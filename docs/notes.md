@@ -1,3 +1,8 @@
+---
+title: Notes
+permalink: /docs/notes/
+---
+
 # 1. Notes
 
 ## 1.1. Table of Contents

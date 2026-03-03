@@ -1,10 +1,15 @@
+---
+title: FAQ
+permalink: /faq/
+---
+
 ## Frequently Asked Questions
 
 ## Question 1
 
 ERROR: winget (App Installer) is not installed (Screenshot below).
 
-![winget not installed](assets/issue-winget-not-installed.png)
+![winget not installed]({{ '/assets/issue-winget-not-installed.png' | relative_url }})
 
 ### Solution
 
@@ -174,4 +179,3 @@ x64
 
 
 Awesome, all set!
-```

@@ -176,19 +176,19 @@ Optional modes:
 
 ## FAQ
 
-See [faq.md](faq.md).
+See [faq](docs/faq.md).
 
 ---
 
 ## Scripts
 
-See [scripts.md](scripts.md) for a complete table of scripts and descriptions.
+See [scripts](docs/scripts.md) for a complete table of scripts and descriptions.
 
 ---
 
 ## Other
 
-For Git aliases, package management tips, IntelliJ integration, and more, see [details.md](details.md).
+For Git aliases, package management tips, IntelliJ integration, and more, see [details](docs/details.md).
 
 ---
 
