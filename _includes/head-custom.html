@@ -11,3 +11,172 @@
   gtag('config', '{{ site.google_analytics }}');
 </script>
 {% endif %}
+
+<!-- Floating hamburger menu for quick site navigation -->
+<style>
+  .site-menu-toggle {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 9999;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 10px;
+    background: #ffffff;
+    color: #1f2937;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .site-menu-panel {
+    position: fixed;
+    top: 64px;
+    right: 14px;
+    z-index: 9998;
+    min-width: 220px;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    padding: 8px;
+  }
+
+  .site-menu-panel[hidden] {
+    display: none;
+  }
+
+  .site-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .site-menu-list li {
+    margin: 0;
+    padding: 0;
+  }
+
+  .site-menu-list a {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #111827;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .site-menu-list a:hover,
+  .site-menu-list a:focus {
+    background: #f3f4f6;
+    outline: none;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (document.querySelector('[data-site-menu="toggle"]')) {
+      return;
+    }
+
+    var links = [
+      { label: 'Home', href: '{{ "/" | relative_url }}' },
+      { label: 'FAQ', href: '{{ "/faq/" | relative_url }}' },
+      { label: 'Scripts', href: '{{ "/scripts/" | relative_url }}' },
+      { label: 'Details', href: '{{ "/details/" | relative_url }}' },
+      { label: 'VS Code Info', href: '{{ "/docs/vscode-info/" | relative_url }}' }
+    ];
+
+    var toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'site-menu-toggle';
+    toggle.setAttribute('aria-label', 'Open navigation menu');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('data-site-menu', 'toggle');
+    toggle.textContent = '\u2630';
+
+    var panel = document.createElement('nav');
+    panel.className = 'site-menu-panel';
+    panel.setAttribute('aria-label', 'Site navigation');
+    panel.setAttribute('data-site-menu', 'panel');
+    panel.hidden = true;
+
+    var list = document.createElement('ul');
+    list.className = 'site-menu-list';
+
+    links.forEach(function (item) {
+      var listItem = document.createElement('li');
+      var anchor = document.createElement('a');
+      anchor.href = item.href;
+      anchor.textContent = item.label;
+      listItem.appendChild(anchor);
+      list.appendChild(listItem);
+    });
+
+    panel.appendChild(list);
+    document.body.appendChild(toggle);
+    document.body.appendChild(panel);
+
+    function closeMenu() {
+      panel.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    function openMenu() {
+      panel.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+
+    toggle.addEventListener('click', function (event) {
+      event.stopPropagation();
+      if (panel.hidden) {
+        openMenu();
+      } else {
+        closeMenu();
+      }
+    });
+
+    panel.addEventListener('click', function (event) {
+      event.stopPropagation();
+    });
+
+    document.addEventListener('click', function () {
+      closeMenu();
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        closeMenu();
+      }
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var pageHeader = document.querySelector('.page-header');
+    if (!pageHeader || pageHeader.querySelector('[data-site-download-zip="true"]')) {
+      return;
+    }
+
+    var zipButton = document.createElement('a');
+    zipButton.className = 'btn';
+    zipButton.href = 'https://github.com/yaravind/dev-tools/archive/refs/heads/main.zip';
+    zipButton.textContent = 'Download .zip';
+    zipButton.setAttribute('data-site-download-zip', 'true');
+
+    // Insert before Cayman's optional GitHub project button when present.
+    var firstBtn = pageHeader.querySelector('.btn');
+    if (firstBtn) {
+      pageHeader.insertBefore(zipButton, firstBtn);
+    } else {
+      pageHeader.appendChild(zipButton);
+    }
+  });
+</script>
