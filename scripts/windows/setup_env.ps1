@@ -27,6 +27,7 @@ $cliTools = @(
     @{ Id = "sharkdp.bat";           Description = "Clone of cat(1) with syntax highlighting and Git integration" },
     @{ Id = "OpenJS.NodeJS";         Description = "Cross-platform JavaScript runtime environment" },
     @{ Id = "JohnMacFarlane.Pandoc"; Description = "Swiss-army knife of markup format conversion" },
+    @{ Id = "GitHub.Copilot.CLI";    Description = "GitHub Copilot CLI - AI pair-programmer in the terminal" },
     @{ Id = "Graphviz.Graphviz";     Description = "Convert dot files to images" }
 )
 
@@ -404,6 +405,17 @@ function Invoke-Verify {
 
     Write-Info "Verify Node.js..."
     if (Test-CommandExists "node") { node --version } else { Write-Warn "node not found in PATH. Restart your terminal." }
+
+    Write-Info "Verify GitHub Copilot CLI..."
+    if (Test-CommandExists "copilot") {
+        try {
+            copilot --version
+        } catch {
+            Write-Warn "copilot found but '--version' failed: $_"
+        }
+    } else {
+        Write-Warn "copilot not found in PATH. To use Copilot CLI, install GitHub Copilot CLI or run the corresponding installer."
+    }
 
     Write-Warn '*** Add `Set-Alias cat bat` to your PowerShell profile for bat-as-cat ***'
     Write-Warn '*** Run `notepad $PROFILE` to open your PowerShell profile for editing ***'

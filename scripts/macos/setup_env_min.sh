@@ -16,6 +16,28 @@
 # Import colors codes for text
 source "${0:A:h}/colors.sh"
 
+# Parse args
+DRY_RUN=0
+for arg in "$@"; do
+  case "$arg" in
+    --dryRun|--dryrun|--dry-run|-n)
+      DRY_RUN=1
+      ;;
+  esac
+done
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  log_step "DryRun: Planned actions (no changes will be made)"
+  log_info "  - Ensure Homebrew is installed and updated"
+  log_info "  - Install formula: git"
+  log_info "  - Install cask: microsoft-openjdk@17"
+  log_info "  - Install maven (no java dep)"
+  log_info "  - Install cask: visual-studio-code"
+  log_info "  - Install cask: intellij-idea-ce"
+  log_info "  - Verify (git, java, mvn, code, intellij)"
+  exit 0
+fi
+
 # Function to check if a command exists
 command_exists() {
   command -v "$1" >/dev/null 2>&1
@@ -154,4 +176,3 @@ main() {
 }
 
 main "$@"
-

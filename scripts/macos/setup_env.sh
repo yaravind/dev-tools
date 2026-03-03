@@ -6,6 +6,26 @@
 # Import colors codes for text
 source "${0:A:h}/colors.sh"
 
+# Parse args
+DRY_RUN=0
+for arg in "$@"; do
+  case "$arg" in
+    --dryRun|--dryrun|--dry-run|-n)
+      DRY_RUN=1
+      ;;
+  esac
+done
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  printf '===> DryRun: Planned actions (no changes will be made)\n'
+  printf '  - Ensure Homebrew is installed and updated\n'
+  printf '  - Install formulae: %s\n' "${apps[*]}"
+  printf '  - Install casks: %s\n' "${casks[*]}"
+  printf '  - Configure environment variables (JAVA_HOME, jenv)\n'
+  printf '  - Verify installations (git, java, mvn, code, intellij)\n'
+  exit 0
+fi
+
 # List of apps to be installed
 apps=(
   "python@3.13"
@@ -42,6 +62,7 @@ casks=(
   "intellij-idea"             # Use intellij-idea for Ultimate Edition
   "pycharm"                   # Use pycharm for Ultimate Edition
   "visual-studio-code"        # VS Code
+  "copilot-cli"               # Brings the power of Copilot coding agent directly to your terminal
   #"font-3270-nerd-font"       # Modern fonts to show icons etc
   #"font-anonymice-nerd-font"
   #"font-code-new-roman-nerd-font"

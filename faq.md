@@ -62,6 +62,8 @@ How does a successful installation log looks like?
 
 ### Log
 
+Installation of some tools was skipped because they are already present on the user's machine. For example, Git: `git already available. Skipping Git for Windows.`.
+
 ```powershell
 PS C:\Users\UserHomeDir> cd \github\dev-tools
 PS C:\github\dev-tools> .\scripts\windows\setup_env_min.ps1

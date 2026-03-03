@@ -28,6 +28,12 @@ jobs:
           chmod +x ./scripts/macos/run_tests.sh
           ./scripts/macos/run_tests.sh
 
+      - name: Run macOS minimal setup verifier
+        shell: bash
+        run: |
+          chmod +x ./scripts/macos/test_setup_env_min.sh
+          ./scripts/macos/test_setup_env_min.sh
+
   windows-tests:
     name: Windows Script Tests
     runs-on: windows-latest
@@ -45,3 +51,8 @@ jobs:
         shell: pwsh
         run: |
           ./scripts/windows/run_tests.ps1
+
+      - name: Run Windows minimal setup verifier
+        shell: pwsh
+        run: |
+          ./scripts/windows/test_setup_env_min.ps1

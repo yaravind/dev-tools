@@ -96,6 +96,19 @@ log_ok "Configs OK: $config_ok"
 log_warn "Configs missing: $config_missing"
 log_ok "ShellCheck OK: $(( ${#scripts[@]} - shellcheck_fail ))"
 log_warn "ShellCheck failed: $shellcheck_fail"
+
+# Run the safe minimal setup verification for macOS (does not install anything)
+TEST_MIN="${SCRIPT_DIR}/test_setup_env_min.sh"
+if [ -f "$TEST_MIN" ]; then
+  if zsh "$TEST_MIN"; then
+    log_ok "DryRun OK: $(basename "$TEST_MIN")"
+  else
+    log_warn "DryRun FAILED: $(basename "$TEST_MIN")"
+  fi
+else
+  log_warn "Missing: $TEST_MIN"
+fi
+
 log_step "macOS dry-run checks complete"
 if ((fail_count > 0 || shellcheck_fail > 0)); then
   exit 1

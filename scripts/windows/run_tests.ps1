@@ -99,13 +99,21 @@ try {
 
 # Run setup_env_min.ps1 in DryRun to ensure runtime paths and banner don't error
 try {
-    $minScript = Join-Path $scriptDir "setup_env_min.ps1"
-    if (Test-Path $minScript) {
-        Write-Info "DryRun: setup_env_min.ps1"
-        & $minScript -DryRun | Out-Null
-        Write-Ok "DryRun OK: setup_env_min.ps1"
+    $testScript = Join-Path $scriptDir "test_setup_env_min.ps1"
+    if (Test-Path $testScript) {
+        Write-Info "DryRun: setup_env_min.ps1 (via test harness)"
+        & $testScript | Out-Null
+        if ($LASTEXITCODE -eq 0) { Write-Ok "DryRun OK: setup_env_min.ps1" } else { Write-Warn "DryRun FAILED: setup_env_min.ps1 (exit code $LASTEXITCODE)" }
     } else {
-        Write-Warn "Missing: $minScript"
+        # Fallback to direct DryRun invocation
+        $minScript = Join-Path $scriptDir "setup_env_min.ps1"
+        if (Test-Path $minScript) {
+            Write-Info "DryRun: setup_env_min.ps1"
+            & $minScript -DryRun | Out-Null
+            Write-Ok "DryRun OK: setup_env_min.ps1"
+        } else {
+            Write-Warn "Missing: $minScript"
+        }
     }
 } catch {
     Write-Warn "DryRun FAILED: setup_env_min.ps1 - $_"

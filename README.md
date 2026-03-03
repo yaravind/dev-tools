@@ -10,7 +10,6 @@ Setting up a new machine is tedious. Hunting down the right tools, configuring s
 
 ## Features
 
-
 | Benefit                  | Detail                                                                                         |
 | ------------------------ | ---------------------------------------------------------------------------------------------- |
 | ⚡**Fast bootstrap**     | Install and configure 30+ tools with a single command                                          |
@@ -20,6 +19,13 @@ Setting up a new machine is tedious. Hunting down the right tools, configuring s
 | 📊**Data & ML friendly** | Includes`uv`, `mamba`, `conda`, Python, cloud CLIs, and `ollama` for local LLMs out of the box |
 
 ## Setup Instructions
+
+- [macOS (Apple Silicon M1/M2/M3/M4)](#macos-apple-silicon-m1m2m3m4)
+  - [Steps](#steps)
+  - [Minimal setup for Spark/Scala/Java development](#minimal-setup-for-sparkscalajava-development)
+- [Windows (10/11)](#windows-1011)
+  - [Steps](#steps-1)
+  - [Minimal setup for Spark/Scala/Java development](#minimal-setup-for-sparkscalajava-development-1)
 
 ### macOS (Apple Silicon M1/M2/M3/M4)
 

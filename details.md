@@ -2,27 +2,33 @@
 
 ## Table of Contents
 
-1. [Script Details](#script-details)
-    1. [setup_env.sh](#setup_envsh)
-    2. [setup_env.ps1 (Windows)](#setup_envps1-windows)
-    3. [Developer Folder](#developer-folder)
-    4. [git_setup.sh](#git_setupsh)
-    5. [jenv_setup.sh](#jenv_setupsh)
-    6. [jenv_setup.ps1 (Windows)](#jenv_setupps1-windows)
-    7. [dock_setup.sh](#dock_setupsh)
-    8. [vscode_setup.sh](#vscode_setupsh)
-2. [Git](#git)
-    1. [Pretty print all commits](#pretty-print-all-commits)
-    2. [List repository contributors by author name](#list-repository-contributors-by-author-name)
-    3. [List total commits by author](#list-total-commits-by-author)
-    4. [What changed since given date?](#what-changed-since-given-date)
-    5. [List file change stats by author](#list-file-change-stats-by-author)
-3. [Packages](#packages)
-4. [IntelliJ Tasks - GitHub Issue Integration](#intellij-tasks---github-issue-integration)
-5. [TODO](#todo)
-6. [Reference](#reference)
+1. [Developer Folder (macOS only)](#developer-folder-macos-only)
+2. [Script Details](#script-details)
+   1. [setup_env.sh](#setup_envsh)
+   2. [macOS (tools installed by `scripts/macos/setup_env.sh`)](#macos-tools-installed-by-scriptsmacossetup_envsh)
+   3. [Windows (tools installed by `scripts/windows/setup_env.ps1`)](#windows-tools-installed-by-scriptswindowssetup_envps1)
+   4. [setup_env.ps1 (Windows)](#setup_envps1-windows)
+   5. [git_setup.sh](#git_setupsh)
+   6. [jenv_setup.sh](#jenv_setupsh)
+   7. [jenv_setup.ps1 (Windows)](#jenv_setupps1-windows)
+   8. [dock_setup.sh](#dock_setupsh)
+   9. [vscode_setup.sh](#vscode_setupsh)
+3. [Git](#git)
+   1. [Pretty print all commits](#pretty-print-all-commits)
+   2. [List repository contributors by author name](#list-repository-contributors-by-author-name)
+   3. [List total commits by author](#list-total-commits-by-author)
+   4. [What changed since given date?](#what-changed-since-given-date)
+   5. [List file change stats by author](#list-file-change-stats-by-author)
+4. [Packages](#packages)
+5. [IntelliJ Tasks - GitHub Issue Integration](#intellij-tasks---github-issue-integration)
+6. [TODO](#todo)
+7. [Reference](#reference)
 
 ---
+
+### Developer Folder (macOS only)
+
+<kbd>mkdir ~/Developer</kbd>: It has a fancy icon in Finder!
 
 ## Script Details
 
@@ -42,28 +48,77 @@ developer tools for Apple M1/M2 Pro. At a high level it will
 
 **Installed productivity shell utils**
 
+### macOS (tools installed by `scripts/macos/setup_env.sh`)
+
 | Utility    | Usage                                                             |
 |------------|-------------------------------------------------------------------|
+| python@3.13| Python 3.13 runtime                                                |
+| rust       | Rust toolchain (rustup)                                           |
+| pipx       | Install and run Python CLI applications in isolated environments   |
+| uv         | Extremely fast Python package installer and resolver (Rust-based) |
 | htop       | Improved top (interactive process viewer)                         |
 | tree       | Display directories as trees (with optional color/HTML output)    |
 | jq         | Lightweight and flexible command-line JSON processor              |
 | gh         | GitHub command-line tool                                          |
-| azure-cli  |                                                                   |
+| azure-cli  | Microsoft Azure command-line interface                            |
 | tldr       | Simplified and community-driven man pages                         |
 | graphviz   | Convert dot files to images                                       |
 | eza        | A modern alternative to `ls`                                      |
-| trash      | Moves files to the trash, which is safer because it is reversible |
+| trash      | Moves files to the trash (safer than rm)                          |
 | jenv       | Manage multiple versions of Java                                  |
 | bat        | Clone of cat(1) with syntax highlighting and Git integration      |
 | thefuck    | Programmatically correct last mistyped console command            |
 | pandoc     | Swiss-army knife of markup format conversion                      |
-| lnav       | tool for viewing and analyzing log files                          |
+| lnav       | Tool for viewing and analyzing log files                          |
 | node       | JavaScript runtime environment                                    |
-| llm        | Access large language models from the command-line                |
+| llm        | CLI for interacting with Large Language Models                    |
+| dockutil   | Command-line utility for manipulating the macOS Dock              |
+| copilot-cli| GitHub Copilot CLI — brings Copilot to the terminal              |
 
 > Highly recommend this course if you are beginning your career as a software engineer:
 > [Unix Tools: Data, Software and Production Engineering](https://www.edx.org/course/unix-tools-data-software-and-production-engineering)
 > by Prof. Diomidis Spinellis.
+
+### Windows (tools installed by `scripts/windows/setup_env.ps1`)
+
+The following tables list the CLI tools and GUI applications that `scripts/windows/setup_env.ps1` installs via winget (Windows Package Manager). The IDs and descriptions are taken from the script.
+
+**CLI tools (winget package IDs)**
+
+| Winget ID                     | Description                                                                 |
+|-------------------------------|-----------------------------------------------------------------------------|
+| Python.Python.3.13            | Python 3.13                                                                 |
+| Rustlang.Rustup               | Rust toolchain manager (rustup)                                             |
+| astral-sh.uv                  | Extremely fast Python package installer and resolver (Rust-based)          |
+| jqlang.jq                     | Lightweight, flexible command-line JSON processor                          |
+| GitHub.cli                    | GitHub command-line tool                                                    |
+| Microsoft.AzureCLI            | Azure CLI                                                                   |
+| dbrgn.tealdeer                | tldr client (tealdeer)                                                      |
+| eza-community.eza             | Modern replacement for the ls command                                       |
+| sharkdp.bat                   | Clone of cat(1) with syntax highlighting and Git integration                |
+| OpenJS.NodeJS                 | Node.js runtime                                                             |
+| JohnMacFarlane.Pandoc         | Pandoc — document conversion tool                                           |
+| Graphviz.Graphviz             | Graphviz — dot-to-image conversion                                          |
+
+**GUI applications (winget package IDs)**
+
+| Winget ID                            | Description                                                      |
+|--------------------------------------|------------------------------------------------------------------|
+| Microsoft.OpenJDK.11                 | Microsoft OpenJDK 11                                             |
+| Microsoft.OpenJDK.17                 | Microsoft OpenJDK 17                                             |
+| Microsoft.DotNet.SDK.9               | .NET SDK                                                         |
+| Git.GCM                              | Git Credential Manager                                            |
+| JetBrains.IntelliJIDEA.Ultimate      | IntelliJ IDEA Ultimate                                            |
+| JetBrains.IntelliJIDEA.Community     | IntelliJ IDEA Community                                           |
+| JetBrains.PyCharm.Professional       | PyCharm Professional                                               |
+| JetBrains.PyCharm.Community          | PyCharm Community                                                  |
+| Microsoft.VisualStudioCode           | Visual Studio Code                                                 |
+| Microsoft.Azure.StorageExplorer      | Microsoft Azure Storage Explorer                                   |
+| JGraph.Draw                          | Draw.io (diagram editor)                                           |
+| ZedIndustries.Zed                    | Zed editor                                                          |
+| Ollama.Ollama                        | Ollama (local LLM manager)                                         |
+| Microsoft.PowerShell                 | PowerShell (latest stable)                                         |
+| Obsidian.Obsidian                    | Obsidian (note-taking app)                                         |
 
 ### setup_env.ps1 (Windows)
 
@@ -77,62 +132,6 @@ Run it from an **Administrator PowerShell** session:
 Set-ExecutionPolicy Bypass -Scope Process -Force
 .\scripts\windows\setup_env.ps1
 ```
-
-**Windows equivalents for brew formulae**
-
-| macOS (brew)   | Windows (winget ID)          | Notes                                 |
-|----------------|------------------------------|---------------------------------------|
-| python@3.13    | Python.Python.3.13           |                                       |
-| rust           | Rustlang.Rustup              |                                       |
-| uv             | astral-sh.uv                 |                                       |
-| jq             | jqlang.jq                    |                                       |
-| gh             | GitHub.cli                   |                                       |
-| azure-cli      | Microsoft.AzureCLI           |                                       |
-| tldr           | tldr-pages.tldr              |                                       |
-| eza            | eza-community.eza            |                                       |
-| bat            | sharkdp.bat                  |                                       |
-| node           | OpenJS.NodeJS                |                                       |
-| pandoc         | JohnMacFarlane.Pandoc        |                                       |
-| graphviz       | Graphviz.Graphviz            |                                       |
-| maven          | Apache.Maven                 |                                       |
-
-**Windows equivalents for brew casks**
-
-| macOS (brew cask)                  | Windows (winget ID)                 | Notes                              |
-|------------------------------------|-------------------------------------|------------------------------------|
-| microsoft-openjdk@11               | Microsoft.OpenJDK.11                |                                    |
-| microsoft-openjdk@17               | Microsoft.OpenJDK.17                |                                    |
-| dotnet-sdk                         | Microsoft.DotNet.SDK.9              |                                    |
-| git-credential-manager             | Microsoft.GitCredentialManager      |                                    |
-| intellij-idea                      | JetBrains.IntelliJIDEA.Ultimate     | Community: `JetBrains.IntelliJIDEA.Community` |
-| pycharm                            | JetBrains.PyCharm.Professional      | Community: `JetBrains.PyCharm.Community`      |
-| visual-studio-code                 | Microsoft.VisualStudioCode          |                                    |
-| microsoft-azure-storage-explorer   | Microsoft.AzureStorageExplorer      |                                    |
-| drawio                             | JGraph.Draw                         |                                    |
-| Zed                                | Zed.Zed                             |                                    |
-| ollama                             | Ollama.Ollama                       |                                    |
-| logi-options+                      | Logitech.LogiOptionsPlus            |                                    |
-| powershell                         | Microsoft.PowerShell                | Pre-installed on Windows 11        |
-| fsnotes                            | Obsidian.Obsidian                   | Cross-platform alternative         |
-
-**Tools not available on Windows**
-
-| macOS tool | Reason / Windows alternative                                                               |
-|------------|--------------------------------------------------------------------------------------------|
-| htop       | Use Task Manager or `Get-Process \| Sort-Object CPU -Descending` in PowerShell             |
-| pipx       | Install via pip: `pip install pipx`                                                        |
-| trash      | Use the built-in Recycle Bin or the RecycleBin PowerShell module                           |
-| jenv       | Use [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows) — installed by `setup_env.ps1`; run `jenv_setup.ps1` to register JDKs |
-| thefuck    | Not fully supported on Windows                                                             |
-| lnav       | Use [BareTail](https://www.baremetalsoft.com/baretail/) or run lnav inside WSL             |
-| llm        | Install via pip: `pip install llm`                                                         |
-| dockutil   | macOS Dock-specific; no equivalent needed on Windows                                       |
-| appcleaner | Use Windows built-in Programs and Features or [Revo Uninstaller](https://www.revouninstaller.com/) |
-| go2shell   | Windows 11 provides "Open in Terminal" natively in File Explorer                           |
-
-### Developer Folder
-
-<kbd>mkdir ~/Developer</kbd>: It has a fancy icon in Finder!
 
 ### git_setup.sh
 
