@@ -20,7 +20,10 @@ param(
     [switch]$Interactive,
 
     # If set, uses winget silent mode (default). Ignored when -Interactive is used.
-    [switch]$Silent
+    [switch]$Silent,
+
+    # Print help and exit
+    [switch]$Help
 )
 
 # ============================================================
@@ -251,6 +254,17 @@ function Read-YesNo {
 # Main script execution
 # ============================================================
 Write-Step "Starting rollback of minimal Windows developer environment..."
+
+if ($Help) {
+    Write-Host "" -ForegroundColor Cyan
+    Write-Host "Usage: .\scripts\windows\setup_env_min_rollback.ps1 [ -DryRun ] [ -Interactive ] [ -Silent ] [ -Help ]" -ForegroundColor Cyan
+    Write-Host "" -ForegroundColor Cyan
+    Write-Host "Examples:" -ForegroundColor Cyan
+    Write-Host "  .\scripts\windows\setup_env_min_rollback.ps1          # Silent (default)" -ForegroundColor Cyan
+    Write-Host "  .\scripts\windows\setup_env_min_rollback.ps1 -Interactive  # Choose what to uninstall" -ForegroundColor Cyan
+    Write-Host "  .\scripts\windows\setup_env_min_rollback.ps1 -DryRun       # Preview actions, no changes" -ForegroundColor Cyan
+    exit 0
+}
 
 Assert-Winget
 

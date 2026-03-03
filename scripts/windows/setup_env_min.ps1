@@ -11,6 +11,21 @@
 #   Set-ExecutionPolicy Bypass -Scope Process -Force
 #   .\scripts\setup_env_min.ps1
 
+[CmdletBinding()]
+param(
+    # Shows what would happen without making changes.
+    [switch]$DryRun,
+
+    # If set, uses winget interactive mode and prompts which components to install.
+    [switch]$Interactive,
+
+    # If set, uses winget silent mode (default). Ignored when -Interactive is used.
+    [switch]$Silent,
+
+    # Print help and exit
+    [switch]$Help
+)
+
 # ============================================================
 # Helper Functions
 # ============================================================
@@ -60,6 +75,11 @@ function Test-IntelliJInstalled {
 
 function Assert-Winget {
     if (-not (Test-CommandExists "winget")) {
+        if ($DryRun) {
+            Write-Warn "DryRun: winget is not installed on this host; winget installs will be skipped."
+            $script:WingetExe = $null
+            return
+        }
         Write-Host "ERROR: winget (App Installer) is not installed." -ForegroundColor Red
         Write-Host "Install it from the Microsoft Store:" -ForegroundColor Red
         Write-Host "  https://www.microsoft.com/store/productId/9NBLGGH4NNS1" -ForegroundColor Yellow
@@ -72,11 +92,24 @@ function Assert-Winget {
 function Invoke-WingetInstall {
     param(
         [string]$Id,
+        [switch]$UseInteractive,
         [switch]$NoSilent
     )
 
+    if ($DryRun) {
+        Write-Info "DryRun: would run winget install for $Id (interactive=$UseInteractive, silent=$NoSilent)"
+        return 0
+    }
+
+    if (-not $script:WingetExe) {
+        Write-Warn "winget executable not available; cannot install $Id"
+        return 1
+    }
+
     $args = @("install", "--id", $Id, "--exact", "--accept-source-agreements", "--accept-package-agreements")
-    if (-not $NoSilent) {
+    if ($UseInteractive) {
+        $args += "--interactive"
+    } elseif (-not $NoSilent) {
         $args += "--silent"
     }
 
@@ -89,6 +122,7 @@ function Install-WingetApp {
         [string]$Id,
         [string]$Description,
         [string]$SkipCommand,
+        [switch]$UseInteractive,
         [switch]$NoSilent
     )
     if ($SkipCommand -and (Test-CommandExists $SkipCommand)) {
@@ -97,10 +131,14 @@ function Install-WingetApp {
     }
 
     Write-Info "Installing: $Description ($Id)..."
-    $exitCode = Invoke-WingetInstall -Id $Id -NoSilent:$NoSilent
+    $exitCode = Invoke-WingetInstall -Id $Id -UseInteractive:$UseInteractive -NoSilent:$NoSilent
 
     if ($exitCode -eq 0) {
-        Write-Ok "Installed: $Description"
+        if ($DryRun) {
+            Write-Ok "DryRun OK: $Description"
+        } else {
+            Write-Ok "Installed: $Description"
+        }
         return
     }
     if ($exitCode -eq -1978335189) {
@@ -205,30 +243,68 @@ function Invoke-Verify {
 # ============================================================
 Write-Step "Starting minimal Windows developer environment setup..."
 
+# Determine modes early so banner can display them
+$useInteractive = $false
+$useSilent = $true
+if ($Interactive) {
+    $useInteractive = $true
+    $useSilent = $false
+} elseif ($Silent) {
+    $useInteractive = $false
+    $useSilent = $true
+}
+
+# Print a short banner/help at top that prints accepted switches, defaults, and chosen mode
+Write-Host "===> setup_env_min.ps1 - Minimal Windows bootstrap" -ForegroundColor Cyan
+Write-Host "===> Accepted switches: -DryRun (preview), -Interactive (installer UX), -Silent (no prompts), -Help (this message)." -ForegroundColor Cyan
+Write-Host "===> Default behavior: Silent installs (no prompts)." -ForegroundColor Cyan
+if ($DryRun) {
+    Write-Host "===> Mode: DryRun (no changes will be made)." -ForegroundColor Yellow
+} elseif ($useInteractive) {
+    Write-Host "===> Mode: Interactive (installer UX will be shown)." -ForegroundColor Yellow
+} else {
+    Write-Host "===> Mode: Silent (default)." -ForegroundColor Yellow
+}
+
+if ($Help) {
+    Write-Host "" -ForegroundColor Cyan
+    Write-Host "Usage: .\scripts\windows\setup_env_min.ps1 [ -DryRun ] [ -Interactive ] [ -Silent ] [ -Help ]" -ForegroundColor Cyan
+    Write-Host "" -ForegroundColor Cyan
+    Write-Host "Examples:" -ForegroundColor Cyan
+    Write-Host "  .\scripts\windows\setup_env_min.ps1            # Silent (default)" -ForegroundColor Cyan
+    Write-Host "  .\scripts\windows\setup_env_min.ps1 -Interactive  # Show installer UX" -ForegroundColor Cyan
+    Write-Host "  .\scripts\windows\setup_env_min.ps1 -DryRun       # Preview actions, no changes" -ForegroundColor Cyan
+    exit 0
+}
+
 Assert-Winget
 
 Write-Info "Updating winget sources..."
-& $script:WingetExe source update
+if (-not $DryRun -and $script:WingetExe) {
+    & $script:WingetExe source update
+} else {
+    Write-Info "DryRun/No winget: skipping winget source update"
+}
 
 Write-Step "Installing required tools..."
-Install-WingetApp -Id "Git.Git" -Description "Git for Windows" -SkipCommand "git"
+Install-WingetApp -Id "Git.Git" -Description "Git for Windows" -SkipCommand "git" -UseInteractive:$useInteractive -NoSilent:$(! $useSilent)
 
 if (Test-CommandExists "java") {
     Write-Warn "java already available. Skipping JDK install."
 } else {
-    Install-WingetApp -Id "Microsoft.OpenJDK.17" -Description "Microsoft OpenJDK 17"
+    Install-WingetApp -Id "Microsoft.OpenJDK.17" -Description "Microsoft OpenJDK 17" -UseInteractive:$useInteractive -NoSilent:$(! $useSilent)
 }
 
 if (Test-CommandExists "code") {
     Write-Warn "code already available. Skipping Visual Studio Code install."
 } else {
-    Install-WingetApp -Id "Microsoft.VisualStudioCode" -Description "Visual Studio Code"
+    Install-WingetApp -Id "Microsoft.VisualStudioCode" -Description "Visual Studio Code" -UseInteractive:$useInteractive -NoSilent:$(! $useSilent)
 }
 
 if (Test-IntelliJInstalled) {
     Write-Warn "IntelliJ IDEA Community already installed. Skipping install."
 } else {
-    Install-WingetApp -Id "JetBrains.IntelliJIDEA.Community" -Description "IntelliJ IDEA Community" -NoSilent
+    Install-WingetApp -Id "JetBrains.IntelliJIDEA.Community" -Description "IntelliJ IDEA Community" -UseInteractive:$useInteractive -NoSilent:$(! $useSilent)
 }
 
 Refresh-SessionPath

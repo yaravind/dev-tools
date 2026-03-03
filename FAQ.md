@@ -1,6 +1,7 @@
 ## Frequently Asked Questions
 
 **Issue**
+ERROR: winget (App Installer) is not installed.
 ![winget not installed](assets/issue-winget-not-installed.png)
 
 **Solution**

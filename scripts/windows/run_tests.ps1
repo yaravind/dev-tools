@@ -97,4 +97,32 @@ try {
     Write-Warn "DryRun FAILED: vscode_setup.ps1 - $_"
 }
 
+# Run setup_env_min.ps1 in DryRun to ensure runtime paths and banner don't error
+try {
+    $minScript = Join-Path $scriptDir "setup_env_min.ps1"
+    if (Test-Path $minScript) {
+        Write-Info "DryRun: setup_env_min.ps1"
+        & $minScript -DryRun | Out-Null
+        Write-Ok "DryRun OK: setup_env_min.ps1"
+    } else {
+        Write-Warn "Missing: $minScript"
+    }
+} catch {
+    Write-Warn "DryRun FAILED: setup_env_min.ps1 - $_"
+}
+
+# Run setup_env_min_rollback.ps1 in DryRun to ensure rollback DryRun still valid
+try {
+    $rollScript = Join-Path $scriptDir "setup_env_min_rollback.ps1"
+    if (Test-Path $rollScript) {
+        Write-Info "DryRun: setup_env_min_rollback.ps1"
+        & $rollScript -DryRun | Out-Null
+        Write-Ok "DryRun OK: setup_env_min_rollback.ps1"
+    } else {
+        Write-Warn "Missing: $rollScript"
+    }
+} catch {
+    Write-Warn "DryRun FAILED: setup_env_min_rollback.ps1 - $_"
+}
+
 Write-Step "Windows dry-run checks complete"

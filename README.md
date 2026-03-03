@@ -110,13 +110,36 @@ A lightweight bootstrap script (`scripts/macos/setup_env_min.sh`) is available f
 
 A lightweight bootstrap script (`scripts/windows/setup_env_min.ps1`) is available for getting a Spark/Scala/Java development environment up and running quickly, without the full suite of tools installed by `setup_env.ps1`. It installs Git, a JDK, Maven, VS Code, and IntelliJ IDEA.
 
+**You can run the script in Silent (default), Interactive, DryRun, or Help modes:**
+
+- **Silent mode (default):** Installs all tools without prompts.
+  ```powershell
+  .\scripts\windows\setup_env_min.ps1
+  # Or explicitly:
+  .\scripts\windows\setup_env_min.ps1 -Silent
+  ```
+- **Interactive mode:** Prompts for installer UX and confirmations.
+  ```powershell
+  .\scripts\windows\setup_env_min.ps1 -Interactive
+  ```
+- **DryRun mode:** Shows what would be done without making any changes (useful to preview).
+  ```powershell
+  .\scripts\windows\setup_env_min.ps1 -DryRun
+  # Preview interactive mode UX without making changes:
+  .\scripts\windows\setup_env_min.ps1 -DryRun -Interactive
+  ```
+- **Help mode:** Prints a short usage message and exits.
+  ```powershell
+  .\scripts\windows\setup_env_min.ps1 -Help
+  ```
+
 1. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
 2. Open **PowerShell as Administrator**
 3. Allow script execution for this session: <kbd>Set-ExecutionPolicy Bypass -Scope Process -Force</kbd>
 4. cd <kbd>dev-tools</kbd>
-5. Run: <kbd>\.\scripts\windows\setup_env_min.ps1</kbd>
+5. Run the script as shown above
 6. Restart your terminal to apply PATH and `JAVA_HOME` changes
-7. Run <kbd>\.\scripts\windows\run_vscode_setup.ps1</kbd> to install required (and some optional) VS Code extensions. The list is in `config/vscode.txt` if you prefer to add or remove extensions.
+7. Run <kbd>./scripts/windows/run_vscode_setup.ps1</kbd> to install required (and some optional) VS Code extensions. The list is in `config/vscode.txt` if you prefer to add or remove extensions.
 8. *(Optional)* Launch IntelliJ IDEA once to complete its first-run setup
 
 > Running the above script might open a popup like below for your approval. Select **Yes**.
@@ -147,7 +170,7 @@ Optional modes:
 
 ## FAQ
 
-See [FAQ.md](docs/FAQ.md).
+See [FAQ.md](FAQ.md).
 
 ## Scripts
 
