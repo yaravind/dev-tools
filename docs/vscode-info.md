@@ -3,6 +3,8 @@ title: VS Code Extension Catalog
 permalink: /docs/vscode-info/
 ---
 
+The following extensions are installed by `scripts/macos/vscode_setup.sh` and `scripts/windows/run_vscode_setup.ps1` scripts.
+
 | Name                                      | Description                                                                                                          |
 |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
 | vscjava.vscode-java-pack                  | Java Extension Pack: Popular extensions for Java development.                                                        |
