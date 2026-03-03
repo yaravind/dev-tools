@@ -238,16 +238,20 @@
       var hasSiteMenu = !!document.querySelector('[data-site-menu]');
 
       // Build the inner HTML (SVG icon + text)
-      var svg = '<svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;fill:currentColor;">\n  <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.539 2.292 6.532 5.47 7.594.4.073.547-.173.547-.385 0-.19-.007-.693-.01-1.36-2.225.483-2.695-1.073-2.695-1.073-.364-.924-.89-1.171-.89-1.171-.727-.497.055-.487.055-.487.803.056 1.226.825 1.226.825.714 1.223 1.872.87 2.329.665.072-.517.28-.87.508-1.07-1.777-.202-3.644-.888-3.644-3.952 0-.873.312-1.587.824-2.148-.083-.203-.357-1.019.078-2.124 0 0 .672-.215 2.2.82.638-.177 1.322-.266 2.003-.269.68.003 1.365.092 2.004.269 1.527-1.035 2.198-.82 2.198-.82.437 1.105.163 1.92.08 2.124.513.561.823 1.275.823 2.148 0 3.073-1.87 3.748-3.65 3.946.287.247.543.733.543 1.479 0 1.068-.01 1.932-.01 2.196 0 .214.145.462.55.384C13.71 14.53 16 11.538 16 8c0-4.42-3.58-8-8-8z"/></svg>';
-      anchor.innerHTML = svg + '<span class="fork-text">Fork me</span>';
-
-      // Add small icon/text styles
-      anchor.style.display = 'inline-flex';
-      anchor.style.alignItems = 'center';
-      anchor.style.justifyContent = 'center';
-      anchor.style.gap = '8px';
+      anchor.textContent = 'Fork me';
+      // Ensure visuals match the ribbon CSS and prevent clipping
+      anchor.style.display = 'inline-block';
+      anchor.style.width = '140px';
+      anchor.style.textAlign = 'center';
       anchor.style.color = '#fff';
       anchor.style.textDecoration = 'none';
+      anchor.style.fontWeight = '700';
+      anchor.style.fontSize = '13px';
+      anchor.style.padding = '6px 0';
+      anchor.style.background = '#151513';
+      anchor.style.boxShadow = '0 6px 14px rgba(0, 0, 0, 0.2)';
+      anchor.style.borderRadius = '2px';
+      anchor.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
       if (hasSiteMenu) {
         // Place on left and rotate -45deg
@@ -274,7 +278,7 @@
         if (typeof document.write === 'function' && document.readyState === 'loading') {
           var posAttr = hasSiteMenu ? 'left:-44px' : 'right:-44px';
           var rotation = hasSiteMenu ? 'transform:rotate(-45deg);transform-origin:0 0;' : 'transform:rotate(45deg);transform-origin:100% 0;';
-          var html = '<div class="fork-ribbon" style="top:12px;' + posAttr + '"><a style="display:block;width:160px;' + rotation + '" href="' + url + '" target="_blank" rel="noopener noreferrer">' + svg + '<span style="display:inline-block;margin-left:8px;vertical-align:middle;color:#fff">Fork me</span></a></div>';
+          var html = '<div class="fork-ribbon" style="top:12px;' + posAttr + '"><a style="display:block;width:140px;' + rotation + 'background:#151513;color:#fff;text-align:center;" href="' + url + '" target="_blank" rel="noopener noreferrer">Fork me</a></div>';
           document.write(html);
           return;
         }

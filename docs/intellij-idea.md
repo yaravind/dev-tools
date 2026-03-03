@@ -14,12 +14,8 @@ This page contains recommended steps post installation.
 
 ## Recommended Plugins
 
-- .ignore
-- Azure Toolkit for IntelliJ
 - Scala
+- Azure Toolkit for IntelliJ
+- .ignore
 - Markdown
 - Database Tools (if you work with databases)
-
-
-
-
