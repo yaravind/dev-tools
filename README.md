@@ -52,7 +52,7 @@ Check the output below to see if the Command Line Tools are installed:
 #### Steps
 
 1. If your Mac is **managed (work or school)** then try to get an admin account and switch user. For e.g. if the admin
-   account is `Koadmin` then `su Koadmin` and enter the password for that account with higher privileges
+   account is `admin_acct` then `su admin_acct` and enter the password for that account with higher privileges
 2. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
 3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
 4. cd <kbd>dev-tools</kbd>
