@@ -171,12 +171,7 @@
     zipButton.textContent = 'Download .zip';
     zipButton.setAttribute('data-site-download-zip', 'true');
 
-    // Insert before Cayman's optional GitHub project button when present.
-    var firstBtn = pageHeader.querySelector('.btn');
-    if (firstBtn) {
-      pageHeader.insertBefore(zipButton, firstBtn);
-    } else {
-      pageHeader.appendChild(zipButton);
-    }
+    // Preserve Cayman default button order; add custom zip button after existing buttons.
+    pageHeader.appendChild(zipButton);
   });
 </script>
