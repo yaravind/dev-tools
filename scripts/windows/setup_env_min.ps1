@@ -159,6 +159,33 @@ function Refresh-SessionPath {
     $env:Path = "$machinePath;$userPath"
 }
 
+# Print PATH entries one per line for quick verification (scope: Session|Machine|User)
+function Print-PathEntries {
+    param(
+        [ValidateSet("Session","Machine","User")]
+        [string]$Scope = "Session"
+    )
+
+    switch ($Scope) {
+        'Session' { $pathValue = $env:Path }
+        'Machine' { $pathValue = [Environment]::GetEnvironmentVariable('Path', 'Machine') }
+        'User'    { $pathValue = [Environment]::GetEnvironmentVariable('Path', 'User') }
+    }
+
+    if (-not $pathValue) {
+        Write-Warn "PATH ($Scope) is empty or not available."
+        return
+    }
+
+    Write-Info "PATH ($Scope) entries (one per line):"
+    $entries = $pathValue -split ';' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
+    $index = 0
+    foreach ($entry in $entries) {
+        $index++
+        Write-Host ("  {0:D2}: {1}" -f $index, $entry)
+    }
+}
+
 function Install-Maven {
     if (Test-CommandExists "mvn") {
         Write-Warn "mvn already available. Skipping Maven install."
@@ -266,6 +293,11 @@ if ($DryRun) {
     Write-Host "===> Mode: Silent (default)." -ForegroundColor Yellow
 }
 
+# Print PATH before installation for quick verification
+Print-PathEntries -Scope "Session"
+Print-PathEntries -Scope "Machine"
+Print-PathEntries -Scope "User"
+
 if ($Help) {
     Write-Host "" -ForegroundColor Cyan
     Write-Host "Usage: .\scripts\windows\setup_env_min.ps1 [ -DryRun ] [ -Interactive ] [ -Silent ] [ -Help ]" -ForegroundColor Cyan
@@ -314,6 +346,11 @@ Install-Maven
 Refresh-SessionPath
 
 Set-JavaHome
+
+# Rebuild session path after JAVA_HOME changes and print PATH after installation
+Refresh-SessionPath
+Print-PathEntries -Scope "Session"
+Print-PathEntries -Scope "User"
 
 Invoke-Verify
 
