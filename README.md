@@ -170,7 +170,7 @@ Optional modes:
 
 ## FAQ
 
-See [FAQ.md](faq.md).
+See [faq.md](faq.md).
 
 ---
 
@@ -182,7 +182,7 @@ See [scripts.md](scripts.md) for a complete table of scripts and descriptions.
 
 ## Other
 
-For Git aliases, package management tips, IntelliJ integration, and more, see [DETAILS.md](DETAILS.md).
+For Git aliases, package management tips, IntelliJ integration, and more, see [details.md](details.md).
 
 ---
 

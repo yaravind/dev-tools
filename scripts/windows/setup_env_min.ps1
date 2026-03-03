@@ -113,8 +113,37 @@ function Invoke-WingetInstall {
         $args += "--silent"
     }
 
-    & $script:WingetExe @args
-    return $LASTEXITCODE
+    try {
+        # Build a single argument string for ProcessStartInfo (handle quoting if necessary)
+        $argString = ($args | ForEach-Object {
+            if ($_) { '"' + ($_ -replace '"', '\"') + '"' } else { '""' }
+        }) -join ' '
+
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = $script:WingetExe
+        $psi.Arguments = $argString
+        $psi.RedirectStandardOutput = $true
+        $psi.RedirectStandardError = $true
+        $psi.UseShellExecute = $false
+        $psi.CreateNoWindow = $true
+
+        $proc = New-Object System.Diagnostics.Process
+        $proc.StartInfo = $psi
+        $proc.Start() | Out-Null
+
+        $stdout = $proc.StandardOutput.ReadToEnd()
+        $stderr = $proc.StandardError.ReadToEnd()
+        $proc.WaitForExit()
+        $exit = $proc.ExitCode
+
+        if ($stdout) { Write-Host $stdout }
+        if ($stderr) { Write-Host $stderr }
+
+        return $exit
+    } catch {
+        Write-Warn "Error invoking winget: $_"
+        return 1
+    }
 }
 
 function Install-WingetApp {
@@ -291,6 +320,61 @@ if ($DryRun) {
     Write-Host "===> Mode: Interactive (installer UX will be shown)." -ForegroundColor Yellow
 } else {
     Write-Host "===> Mode: Silent (default)." -ForegroundColor Yellow
+}
+
+# If DryRun, short-circuit actual install actions and show planned actions + verification
+if ($DryRun) {
+    Write-Info "DryRun: Planned actions (no changes will be made):"
+
+    # Determine a sensible winget executable name/path for display (don't error if not present)
+    $displayWinget = (Get-Command winget -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -ErrorAction SilentlyContinue)
+    if (-not $displayWinget) { $displayWinget = "winget" }
+
+    # Helper to build the winget install command string for an Id
+    function Build-WingetInstallCmd {
+        param([string]$Id)
+        $args = @("install", "--id", $Id, "--exact", "--accept-source-agreements", "--accept-package-agreements")
+        if ($useInteractive) { $args += "--interactive" }
+        elseif ($useSilent) { $args += "--silent" }
+        $argString = $args -join ' '
+        return "$displayWinget $argString"
+    }
+
+    $updateCmd = "$displayWinget source update"
+    Write-Host "  - Update winget sources: $updateCmd (skipped in DryRun)"
+
+    Write-Host "  - Install: Git for Windows (Git.Git)..."
+    Write-Host "      Command: $(Build-WingetInstallCmd 'Git.Git')"
+
+    if (Test-CommandExists "java") {
+        Write-Host "  - Install: Microsoft OpenJDK 17 (Microsoft.OpenJDK.17) - SKIPPED (java present)"
+    } else {
+        Write-Host "  - Install: Microsoft OpenJDK 17 (Microsoft.OpenJDK.17)..."
+        Write-Host "      Command: $(Build-WingetInstallCmd 'Microsoft.OpenJDK.17')"
+    }
+
+    if (Test-CommandExists "code") {
+        Write-Host "  - Install: Visual Studio Code (Microsoft.VisualStudioCode) - SKIPPED (code present)"
+    } else {
+        Write-Host "  - Install: Visual Studio Code (Microsoft.VisualStudioCode)..."
+        Write-Host "      Command: $(Build-WingetInstallCmd 'Microsoft.VisualStudioCode')"
+    }
+
+    if (Test-IntelliJInstalled) {
+        Write-Host "  - Install: IntelliJ IDEA Community (JetBrains.IntelliJIDEA.Community) - SKIPPED (already installed)"
+    } else {
+        Write-Host "  - Install: IntelliJ IDEA Community (JetBrains.IntelliJIDEA.Community)..."
+        Write-Host "      Command: $(Build-WingetInstallCmd 'JetBrains.IntelliJIDEA.Community')"
+    }
+
+    $mavenScriptPath = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "maven_setup.ps1"
+    Write-Host "  - Install: Apache Maven (via $mavenScriptPath) [skipped in DryRun]"
+
+    Write-Host "\n===> Running verification commands against the current environment..." -ForegroundColor Cyan
+
+    Invoke-Verify
+    Write-Host "\n===> DryRun complete. No changes were made." -ForegroundColor Green
+    exit 0
 }
 
 # Print PATH before installation for quick verification

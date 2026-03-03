@@ -52,16 +52,18 @@ $downloadUrls = @(
 )
 
 $existingMavenHome = [Environment]::GetEnvironmentVariable("MAVEN_HOME", "User")
-if (Test-CommandExists "mvn" -and $existingMavenHome -and (Test-Path $existingMavenHome)) {
-    $existingBin = Join-Path $existingMavenHome "bin"
-    Write-Warn "mvn is already available - skipping download."
-    Write-Info "Ensuring PATH contains $existingBin"
-    $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
-    if (-not $userPath) { $userPath = "" }
-    $userPath = Ensure-PathContains -CurrentPath $userPath -Entry $existingBin
-    [Environment]::SetEnvironmentVariable("Path", $userPath, "User")
-    Write-Warn "Restart your terminal to apply PATH changes."
-    exit 0
+if (Test-CommandExists "mvn") {
+    if ($existingMavenHome -and (Test-Path $existingMavenHome)) {
+        $existingBin = Join-Path $existingMavenHome "bin"
+        Write-Warn "mvn is already available - skipping download."
+        Write-Info "Ensuring PATH contains $existingBin"
+        $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+        if (-not $userPath) { $userPath = "" }
+        $userPath = Ensure-PathContains -CurrentPath $userPath -Entry $existingBin
+        [Environment]::SetEnvironmentVariable("Path", $userPath, "User")
+        Write-Warn "Restart your terminal to apply PATH changes."
+        exit 0
+    }
 }
 
 if (-not (Test-Path $mavenDir)) {
