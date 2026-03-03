@@ -25,7 +25,9 @@ theme: jekyll-theme-cayman
 
 # Navigation pages
 header_pages:
-  - DETAILS.md
+  - faq.md
+  - details.md
+  - scripts.md
   - CONTRIBUTING.md
 
 # Markdown settings

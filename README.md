@@ -170,7 +170,7 @@ Optional modes:
 
 ## FAQ
 
-See [FAQ.md](FAQ.md).
+See [FAQ.md](faq.md).
 
 ---
 
