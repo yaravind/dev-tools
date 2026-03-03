@@ -143,7 +143,7 @@ A lightweight bootstrap script (`scripts/windows/setup_env_min.ps1`) is availabl
 2. Open **PowerShell as Administrator**
 3. Allow script execution for this session: <kbd>Set-ExecutionPolicy Bypass -Scope Process -Force</kbd>
 4. cd <kbd>dev-tools</kbd>
-5. Run the script as shown above
+5. Run the script picking one of the options, Interactive or Silent, as shown above
 6. Restart your terminal to apply PATH and `JAVA_HOME` changes
 7. Run <kbd>./scripts/windows/run_vscode_setup.ps1</kbd> to install required (and some optional) VS Code extensions. The list is in `config/vscode.txt` if you prefer to add or remove extensions.
 8. *(Optional)* Launch IntelliJ IDEA once to complete its first-run setup

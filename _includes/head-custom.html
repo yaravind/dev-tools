@@ -90,6 +90,7 @@
       { label: 'FAQ', href: '{{ "/faq/" | relative_url }}' },
       { label: 'Scripts', href: '{{ "/scripts/" | relative_url }}' },
       { label: 'Details', href: '{{ "/details/" | relative_url }}' },
+      { label: 'IntelliJ IDEA', href: '{{ "/docs/intellij-idea/" | relative_url }}' },
       { label: 'Details - VS Code', href: '{{ "/docs/vscode-info/" | relative_url }}' }
     ];
 
@@ -176,21 +177,22 @@
   });
 </script>
 
+{% if page.fork_ribbon != false %}
 <!-- Fork ribbon styles + injector -->
 <style>
-  /* Ribbon container positioned near top-left to avoid colliding with the site menu */
+  /* Ribbon container positioned near top-left or top-right to avoid colliding with the site menu */
   .fork-ribbon {
     position: fixed;
     top: 12px;
-    left: -52px;
     z-index: 10000;
     pointer-events: none; /* let underlying controls receive clicks except the link */
+    overflow: visible;
   }
 
   .fork-ribbon a {
     pointer-events: auto;
     display: block;
-    width: 220px;
+    width: 160px; /* width tuned for visibility */
     background: #151513; /* GitHub-like dark ribbon */
     color: #fff;
     text-decoration: none;
@@ -199,15 +201,10 @@
     line-height: 1.4;
     padding: 6px 0;
     text-align: center;
-    transform: rotate(-45deg);
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
     border-radius: 2px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  }
-
-  .fork-ribbon a:hover,
-  .fork-ribbon a:focus {
-    background: #0b0b0b;
+    transform-origin: 0 0;
   }
 
   /* Hide ribbon on small screens where it can obstruct content */
@@ -217,28 +214,95 @@
 </style>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    // Avoid inserting multiple times
-    if (document.querySelector('.fork-ribbon')) return;
+  (function () {
+    function injectForkRibbon() {
+      // Avoid inserting multiple times
+      if (document.querySelector('.fork-ribbon')) return;
 
-    // Prefer site.social.github (format: owner/repo), fall back to site.github if present
-    var repo = "{{ site.social.github | default: site.github | escape }}";
-    if (!repo) return;
+      // Prefer site.social.github (format: owner/repo), fall back to site.github if present
+      var repo = "{{ site.social.github | default: site.github | escape }}";
+      if (!repo) return;
 
-    var url = 'https://github.com/' + repo;
+      var url = 'https://github.com/' + repo;
 
-    var container = document.createElement('div');
-    container.className = 'fork-ribbon';
+      var container = document.createElement('div');
+      container.className = 'fork-ribbon';
 
-    var anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.target = '_blank';
-    anchor.rel = 'noopener noreferrer';
-    anchor.setAttribute('aria-label', 'Fork me on GitHub');
-    anchor.textContent = 'Fork me on GitHub';
+      var anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.target = '_blank';
+      anchor.rel = 'noopener noreferrer';
+      anchor.setAttribute('aria-label', 'Fork me on GitHub');
 
-    container.appendChild(anchor);
-    document.body.appendChild(container);
-  });
+      // Detect floating site menu to avoid collision
+      var hasSiteMenu = !!document.querySelector('[data-site-menu]');
+
+      // Build the inner HTML (SVG icon + text)
+      var svg = '<svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;fill:currentColor;">\n  <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.539 2.292 6.532 5.47 7.594.4.073.547-.173.547-.385 0-.19-.007-.693-.01-1.36-2.225.483-2.695-1.073-2.695-1.073-.364-.924-.89-1.171-.89-1.171-.727-.497.055-.487.055-.487.803.056 1.226.825 1.226.825.714 1.223 1.872.87 2.329.665.072-.517.28-.87.508-1.07-1.777-.202-3.644-.888-3.644-3.952 0-.873.312-1.587.824-2.148-.083-.203-.357-1.019.078-2.124 0 0 .672-.215 2.2.82.638-.177 1.322-.266 2.003-.269.68.003 1.365.092 2.004.269 1.527-1.035 2.198-.82 2.198-.82.437 1.105.163 1.92.08 2.124.513.561.823 1.275.823 2.148 0 3.073-1.87 3.748-3.65 3.946.287.247.543.733.543 1.479 0 1.068-.01 1.932-.01 2.196 0 .214.145.462.55.384C13.71 14.53 16 11.538 16 8c0-4.42-3.58-8-8-8z"/></svg>';
+      anchor.innerHTML = svg + '<span class="fork-text">Fork me</span>';
+
+      // Add small icon/text styles
+      anchor.style.display = 'inline-flex';
+      anchor.style.alignItems = 'center';
+      anchor.style.justifyContent = 'center';
+      anchor.style.gap = '8px';
+      anchor.style.color = '#fff';
+      anchor.style.textDecoration = 'none';
+
+      if (hasSiteMenu) {
+        // Place on left and rotate -45deg
+        container.style.left = '-44px';
+        anchor.style.transform = 'rotate(-45deg)';
+        anchor.style.transformOrigin = '0 0';
+      } else {
+        // Place on right and rotate 45deg
+        container.style.right = '-44px';
+        anchor.style.transform = 'rotate(45deg)';
+        anchor.style.transformOrigin = '100% 0';
+      }
+
+      container.appendChild(anchor);
+
+      // If body exists, append normally
+      if (document.body) {
+        document.body.appendChild(container);
+        return;
+      }
+
+      // If document isn't parsed yet, attempt document.write as a fallback so the element ends up in the document
+      try {
+        if (typeof document.write === 'function' && document.readyState === 'loading') {
+          var posAttr = hasSiteMenu ? 'left:-44px' : 'right:-44px';
+          var rotation = hasSiteMenu ? 'transform:rotate(-45deg);transform-origin:0 0;' : 'transform:rotate(45deg);transform-origin:100% 0;';
+          var html = '<div class="fork-ribbon" style="top:12px;' + posAttr + '"><a style="display:block;width:160px;' + rotation + '" href="' + url + '" target="_blank" rel="noopener noreferrer">' + svg + '<span style="display:inline-block;margin-left:8px;vertical-align:middle;color:#fff">Fork me</span></a></div>';
+          document.write(html);
+          return;
+        }
+      } catch (e) {
+        // ignore and continue to last-resort append below
+      }
+
+      // As a last resort, append to documentElement
+      (document.documentElement || document).appendChild(container);
+    }
+
+    // Run immediately if DOM is already available, otherwise wait for DOMContentLoaded.
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () {
+        injectForkRibbon();
+      });
+      // Also run on window.load to catch pages that defer document modifications
+      window.addEventListener('load', function () { injectForkRibbon(); });
+      // Fallback in case DOMContentLoaded doesn't fire for some reason in certain pages
+      setTimeout(function () { injectForkRibbon(); }, 3000);
+    } else {
+      try {
+        injectForkRibbon();
+      } catch (e) {
+        // If anything goes wrong, try again shortly
+        setTimeout(injectForkRibbon, 3000);
+      }
+    }
+  })();
 </script>
-
+{% endif %}

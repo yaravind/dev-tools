@@ -21,6 +21,17 @@
 - config/vscode.txt: one VS Code extension ID per line; ignore blanks/comments.
 - config/dock_apps.txt: full app path per line; `--` prefix removes; `SPACER` inserts spacer; ignore blanks.
 
+## Fork ribbon (site-wide)
+- A small "Fork me" ribbon is injected site-wide from `_includes/head-custom.html`.
+- It uses `site.social.github` (owner/repo) or `site.github` in `_config.yml` to build the GitHub URL.
+- New pages automatically receive the ribbon without editing layouts. To disable the ribbon for a single page, add the following to the page's front matter:
+
+```yaml
+fork_ribbon: false
+```
+
+And then in `_includes/head-custom.html` you can check `page.fork_ribbon` and skip injection if set to `false`.
+
 ## Tests and CI
 - Local: `zsh scripts/macos/run_tests.sh`; `pwsh scripts/windows/run_tests.ps1`.
 - Lint: ShellCheck for `.sh`; PSScriptAnalyzer for `.ps1` (add to CI when available).
