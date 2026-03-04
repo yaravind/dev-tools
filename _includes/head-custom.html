@@ -180,34 +180,35 @@
 {% if page.fork_ribbon != false %}
 <!-- Fork ribbon styles + injector -->
 <style>
-  /* Ribbon container positioned near top-left or top-right to avoid colliding with the site menu */
   .fork-ribbon {
     position: fixed;
-    top: 12px;
+    top: 0;
+    left: 0;
     z-index: 10000;
-    pointer-events: none; /* let underlying controls receive clicks except the link */
-    overflow: visible;
+    pointer-events: none;
   }
 
   .fork-ribbon a {
     pointer-events: auto;
     display: block;
-    width: 160px; /* width tuned for visibility */
-    background: #151513; /* GitHub-like dark ribbon */
+    background: #151513;
     color: #fff;
     text-decoration: none;
     font-weight: 700;
-    font-size: 13px;
-    line-height: 1.4;
-    padding: 6px 0;
-    text-align: center;
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
-    border-radius: 2px;
+    font-size: 12px;
+    line-height: 1;
+    padding: 8px 48px;
+    transform: translate(-34px, 18px) rotate(-45deg);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    transform-origin: 0 0;
+    white-space: nowrap;
   }
 
-  /* Hide ribbon on small screens where it can obstruct content */
+  .fork-ribbon a:hover,
+  .fork-ribbon a:focus {
+    background: #0b0b0b;
+  }
+
   @media (max-width: 640px) {
     .fork-ribbon { display: none; }
   }
@@ -216,96 +217,30 @@
 <script>
   (function () {
     function injectForkRibbon() {
-      // Avoid inserting multiple times
       if (document.querySelector('.fork-ribbon')) return;
 
-      // Prefer site.social.github (format: owner/repo), fall back to site.github if present
       var repo = "{{ site.social.github | default: site.github | escape }}";
       if (!repo) return;
-
-      var url = 'https://github.com/' + repo;
 
       var container = document.createElement('div');
       container.className = 'fork-ribbon';
 
       var anchor = document.createElement('a');
-      anchor.href = url;
+      anchor.href = 'https://github.com/' + repo;
       anchor.target = '_blank';
       anchor.rel = 'noopener noreferrer';
       anchor.setAttribute('aria-label', 'Fork me on GitHub');
-
-      // Detect floating site menu to avoid collision
-      var hasSiteMenu = !!document.querySelector('[data-site-menu]');
-
-      // Build the inner HTML (SVG icon + text)
       anchor.textContent = 'Fork me';
-      // Ensure visuals match the ribbon CSS and prevent clipping
-      anchor.style.display = 'inline-block';
-      anchor.style.width = '140px';
-      anchor.style.textAlign = 'center';
-      anchor.style.color = '#fff';
-      anchor.style.textDecoration = 'none';
-      anchor.style.fontWeight = '700';
-      anchor.style.fontSize = '13px';
-      anchor.style.padding = '6px 0';
-      anchor.style.background = '#151513';
-      anchor.style.boxShadow = '0 6px 14px rgba(0, 0, 0, 0.2)';
-      anchor.style.borderRadius = '2px';
-      anchor.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-
-      if (hasSiteMenu) {
-        // Place on left and rotate -45deg
-        container.style.left = '-44px';
-        anchor.style.transform = 'rotate(-45deg)';
-        anchor.style.transformOrigin = '0 0';
-      } else {
-        // Place on right and rotate 45deg
-        container.style.right = '-44px';
-        anchor.style.transform = 'rotate(45deg)';
-        anchor.style.transformOrigin = '100% 0';
-      }
 
       container.appendChild(anchor);
-
-      // If body exists, append normally
-      if (document.body) {
-        document.body.appendChild(container);
-        return;
-      }
-
-      // If document isn't parsed yet, attempt document.write as a fallback so the element ends up in the document
-      try {
-        if (typeof document.write === 'function' && document.readyState === 'loading') {
-          var posAttr = hasSiteMenu ? 'left:-44px' : 'right:-44px';
-          var rotation = hasSiteMenu ? 'transform:rotate(-45deg);transform-origin:0 0;' : 'transform:rotate(45deg);transform-origin:100% 0;';
-          var html = '<div class="fork-ribbon" style="top:12px;' + posAttr + '"><a style="display:block;width:140px;' + rotation + 'background:#151513;color:#fff;text-align:center;" href="' + url + '" target="_blank" rel="noopener noreferrer">Fork me</a></div>';
-          document.write(html);
-          return;
-        }
-      } catch (e) {
-        // ignore and continue to last-resort append below
-      }
-
-      // As a last resort, append to documentElement
-      (document.documentElement || document).appendChild(container);
+      document.body.appendChild(container);
     }
 
-    // Run immediately if DOM is already available, otherwise wait for DOMContentLoaded.
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () {
-        injectForkRibbon();
-      });
-      // Also run on window.load to catch pages that defer document modifications
-      window.addEventListener('load', function () { injectForkRibbon(); });
-      // Fallback in case DOMContentLoaded doesn't fire for some reason in certain pages
-      setTimeout(function () { injectForkRibbon(); }, 3000);
+      document.addEventListener('DOMContentLoaded', injectForkRibbon);
+      window.addEventListener('load', injectForkRibbon);
     } else {
-      try {
-        injectForkRibbon();
-      } catch (e) {
-        // If anything goes wrong, try again shortly
-        setTimeout(injectForkRibbon, 3000);
-      }
+      injectForkRibbon();
     }
   })();
 </script>
