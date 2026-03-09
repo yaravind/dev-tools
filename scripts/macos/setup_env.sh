@@ -45,6 +45,7 @@ apps=(
   "thefuck"     # Programmatically correct last mistyped console command
   "node"        # cross-platform JavaScript runtime environment that lets developers create servers, web apps, command line tools and scripts
   "pandoc"      # Swiss-army knife of markup format conversion.
+  "typst"       # Required to convert md to pdf using pandoc. https://typst.app/
   "llm"         # A CLI utility and Python library for interacting with Large Language Models. https://llm.datasette.io/en/stable/index.html
   "lnav"        # A robust log colorizer to tail logs:   tail -f your_log_file.log | ccze -A
   #"hugo"        # Configurable fastest static site generator
