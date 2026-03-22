@@ -66,6 +66,7 @@ $guiApps = @(
     @{ Id = "Microsoft.VisualStudioCode";        Description = "Visual Studio Code" },
     @{ Id = "Microsoft.Azure.StorageExplorer";   Description = "Microsoft Azure Storage Explorer" },
     @{ Id = "JGraph.Draw";                       Description = "Draw.io - online diagram software" },
+    @{ Id = "dbeaver.dbeaver";                   Description = "DBeaver Community - Free Universal Database Tool" },
     @{ Id = "ZedIndustries.Zed";                 Description = "Zed - multiplayer code editor" },
     @{ Id = "Ollama.Ollama";                     Description = "Manage local LLMs" },
     @{ Id = "Microsoft.PowerShell";              Description = "PowerShell (latest stable version)"; SkipCommand = "pwsh" },

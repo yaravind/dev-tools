@@ -71,6 +71,7 @@ casks=(
   #"font-jetbrains-mono-nerd-font"
   "microsoft-azure-storage-explorer"
   "drawio"                    # Online diagram software
+  "dbeaver-community"         # Free Universal Database Tool
   "Zed"                       # Multiplayer code editor
   #"protege"                   # OWL for ontologies and knowledge graph
   "ollama"                    # Manage Local LLMs
