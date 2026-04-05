@@ -122,7 +122,30 @@ alias untar='tar -zxvf '
 alias aptu='sudo apt-get update && sudo apt-get upgrade'
 
 ## pass options to free ##
-alias meminfo='free -m -l -t'
+alias meminfo='
+echo "--- Physical Memory ---";
+sysctl hw.memsize | awk "{printf \"%-15s %10.2f GB\n\", \"Total RAM:\", \$2/(1024^3)}";
+vm_stat | perl -ne "/page size of (\d+) bytes/ && (\$s=\$1); /Pages (\w+(?:\s\w+)*): \s+(\d+)/ && printf(\"%-15s %10.2f MB\n\", \$1, \$2*\$s/1024/1024);" | grep -E "free|active|inactive|wired|occupied by compressor" | awk "{
+    label=\$1;
+    val=\$(NF-1);
+    if (\$1==\"occupied\") {label=\"compressed\"}
+    if (\$1==\"wired\") {label=\"wired\"}
+
+    if (val >= 1024) {
+        printf \"%-15s %10.2f GB\n\", label, val/1024
+    } else {
+        printf \"%-15s %10.2f MB\n\", label, val
+    }
+}";
+echo "\n--- Logical Calculation ---";
+echo "Total RAM ≈ (Active + Inactive + Wired + Compressed + Free)";
+echo "\n--- Legend ---";
+echo "Active:     RAM currently in use by running processes.";
+echo "Inactive:   Recently used RAM; kept for quick re-opening of apps.";
+echo "Wired:      Essential system memory that cannot be moved to disk.";
+echo "Compressed: Memory zipped to save space; much faster than using SSD swap.";
+echo "Free:       Empty RAM doing nothing (Wasted RAM).";
+'
  
 ## get top process eating memory
 alias psmem='ps auxf | sort -nr -k 4'
@@ -133,7 +156,21 @@ alias pscpu='ps auxf | sort -nr -k 3'
 alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
  
 ## Get server cpu info ##
-alias cpuinfo='lscpu'
+alias cpuinfo='
+echo "--- CPU Hardware Information ---";
+sysctl -n machdep.cpu.brand_string | awk "{print \"Model:             \", \$0}";
+sysctl -n machdep.cpu.core_count | awk "{print \"Total Cores:       \", \$1}";
+sysctl -n machdep.cpu.cores_per_package | awk "{print \"Cores per Package: \", \$1}";
+sysctl -n machdep.cpu.thread_count | awk "{print \"Total Threads:     \", \$1}";
+echo "\n--- Legend ---";
+echo "Model:             The specific Apple Silicon chip generation.";
+echo "Total Cores:       The total number of physical processing units.";
+echo "Cores per Package: Number of cores inside the physical M4 Max chip.";
+echo "Total Threads:     Simultaneous tasks the CPU can handle.";
+echo "\n--- Note on Apple Silicon ---";
+echo "Because Apple uses a System-on-a-Chip (SoC) design, there is only";
+echo "ONE package. Therefore, Cores per Package and Total Cores are identical.";
+'
  
 ## older system use /proc/cpuinfo ##
 ##alias cpuinfo='less /proc/cpuinfo' ##
