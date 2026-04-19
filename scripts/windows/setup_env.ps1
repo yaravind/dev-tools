@@ -27,6 +27,7 @@ $cliTools = @(
     @{ Id = "sharkdp.bat";           Description = "Clone of cat(1) with syntax highlighting and Git integration" },
     @{ Id = "OpenJS.NodeJS";         Description = "Cross-platform JavaScript runtime environment" },
     @{ Id = "JohnMacFarlane.Pandoc"; Description = "Swiss-army knife of markup format conversion" },
+    @{ Id = "ripgrip";               Description = "Render markdown in terminal with interactive preview"; FallbackName = "ripgrip" },
     @{ Id = "GitHub.Copilot.CLI";    Description = "GitHub Copilot CLI - AI pair-programmer in the terminal" },
     @{ Id = "Graphviz.Graphviz";     Description = "Convert dot files to images" }
 )

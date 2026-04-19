@@ -50,6 +50,7 @@ apps=(
   "lnav"        # A robust log colorizer to tail logs:   tail -f your_log_file.log | ccze -A
   #"hugo"        # Configurable fastest static site generator
   "graphviz"    # Convert dot files to images
+  "ripgrip"     # Render markdown in terminal with interactive preview
   "dockutil"     # Command line tool for manipulating macOS Dock items
 )
 

@@ -146,10 +146,10 @@ echo "Wired:      Essential system memory that cannot be moved to disk.";
 echo "Compressed: Memory zipped to save space; much faster than using SSD swap.";
 echo "Free:       Empty RAM doing nothing (Wasted RAM).";
 '
- 
+
 ## get top process eating memory
-alias psmem='ps auxf | sort -nr -k 4'
-alias psmem10='ps auxf | sort -nr -k 4 | head -10'
+alias psmem='ps -A -o pid=PID,pmem=%MEM,comm=COMMAND | tail -n +2 | sort -nr -k 2'
+alias psmem10='ps -A -o pid=PID,pmem=%MEM,comm=COMMAND | tail -n +2 | sort -nr -k 2 | head -10'
  
 ## get top process eating cpu ##
 alias pscpu='ps auxf | sort -nr -k 3'
