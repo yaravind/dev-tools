@@ -52,6 +52,7 @@ apps=(
   "graphviz"    # Convert dot files to images
   "ripgrip"     # Render markdown in terminal with interactive preview
   "dockutil"     # Command line tool for manipulating macOS Dock items
+  "freetds"     # FreeTDS allows TablePro (https://tablepro.app) to natively talk to Microsoft SQL Server and Sybase databases
 )
 
 # List of casks (GUI apps) to be installed
