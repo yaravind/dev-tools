@@ -73,7 +73,7 @@ casks=(
   #"font-jetbrains-mono-nerd-font"
   "microsoft-azure-storage-explorer"
   "drawio"                    # Online diagram software
-  "tolaria"                  # Tolaria - markdown-first note app (https://tolaria.md/)
+  "tolaria"                    # Tolaria - markdown-first note app (https://tolaria.md/)
   "dbeaver-community"         # Free Universal Database Tool
   "Zed"                       # Multiplayer code editor
   #"protege"                   # OWL for ontologies and knowledge graph
@@ -88,7 +88,6 @@ casks=(
   "powershell"                # PowerShell for Mac
   "fsnotes"                   # Note taking app with markdown support
   "go2shell"                  # Opens a terminal window to the current directory in Finder
-  "tolaria"                 # Tolaria - markdown-first note app (https://tolaria.md/. Alrernate to fsnqotes
 )
 
 # Function to check if a command exists
@@ -168,6 +167,20 @@ touch ~/.hushlogin
 echo -e "${UMAGENTA}===> Start installation.${RESET}"
 
 install_homebrew
+
+echo -e "${CYAN}===> Ensuring Homebrew tap 'jazzyalex/agent-sessions' is available...${RESET}"
+if command_exists brew; then
+  if brew tap | grep -q '^jazzyalex/agent-sessions$'; then
+    echo -e "${CYAN}===> Homebrew tap 'jazzyalex/agent-sessions' already present.${RESET}"
+  else
+    echo -e "${CYAN}===> Tapping jazzyalex/agent-sessions...${RESET}"
+    if brew tap jazzyalex/agent-sessions; then
+      echo -e "${GREEN}===> Tapped jazzyalex/agent-sessions.${RESET}"
+    else
+      echo -e "${YELLOW}===> Failed to tap jazzyalex/agent-sessions (continuing).${RESET}"
+    fi
+  fi
+fi
 
 echo -e "${BLUE}===> Updating Homebrew...${RESET}"
 brew update
