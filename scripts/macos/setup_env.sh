@@ -88,6 +88,7 @@ casks=(
   "powershell"                # PowerShell for Mac
   "fsnotes"                   # Note taking app with markdown support
   "go2shell"                  # Opens a terminal window to the current directory in Finder
+  "tolaria"                 # Tolaria - markdown-first note app (https://tolaria.md/. Alrernate to fsnqotes
 )
 
 # Function to check if a command exists
