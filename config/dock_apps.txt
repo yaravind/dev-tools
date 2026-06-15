@@ -18,9 +18,14 @@ SPACER
 /Applications/draw.io.app
 /Applications/Microsoft\ Azure\ Storage\ Explorer.app
 /Applications/FSNotes.app
+/Applications/Tolaria.app
 SPACER
 /Applications/Zed.app
+/Applications/DBeaver.app
 /Applications/Ollama.app
+SPACER
+/Applications/Codex.app
+/Applications/AgentSessions.app
 
 --/Applications/TextEdit.app
 --/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app
