@@ -30,6 +30,7 @@ fi
 apps=(
   "python@3.13"
   "rust"
+  "direnv"      # Load and unload environment variables (in .envrc) depending on the current directory
   "pipx"        # Needed to install poetry
   "uv"          # Extremely fast Python package installer and resolver, written in Rust
   "htop"        # Improved top (interactive process viewer)
@@ -50,9 +51,9 @@ apps=(
   "lnav"        # A robust log colorizer to tail logs:   tail -f your_log_file.log | ccze -A
   #"hugo"        # Configurable fastest static site generator
   "graphviz"    # Convert dot files to images
-  "ripgrip"     # Render markdown in terminal with interactive preview
-  "dockutil"     # Command line tool for manipulating macOS Dock items
-  "freetds"     # FreeTDS allows TablePro (https://tablepro.app) to natively talk to Microsoft SQL Server and Sybase databases
+  "ripgrep"     # ripgrep recursively searches directories for a regex pattern while respecting your gitignore rules
+  "dockutil"     # Command line tool for manipulating macOS Dock items to natively talk to Microsoft SQL Server and Sybase databases
+
 )
 
 # List of casks (GUI apps) to be installed
@@ -200,6 +201,19 @@ done
 
 echo -e "${BLUE}===> Cleaning up Homebrew...${RESET}"
 brew cleanup
+
+# Ensure direnv zsh hook is present in ~/.zshrc (only add if not already present)
+if command_exists direnv; then
+  if ! grep -qxF 'eval "$(direnv hook zsh)"' "$HOME/.zshrc" 2>/dev/null; then
+    echo -e "${CYAN}===> Adding direnv hook to ~/.zshrc...${RESET}"
+    echo "# direnv: load environment variables per-directory" >> "$HOME/.zshrc"
+    echo 'eval "$(direnv hook zsh)"' >> "$HOME/.zshrc"
+  else
+    echo -e "${CYAN}===> direnv hook already present in ~/.zshrc${RESET}"
+  fi
+else
+  echo -e "${YELLOW}===> direnv not installed; skipping ~/.zshrc hook setup.${RESET}"
+fi
 
 # set_env_vars comment this as jenv manages versions
 verify_installations
