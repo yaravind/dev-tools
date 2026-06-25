@@ -89,6 +89,8 @@ casks=(
   "powershell"                # PowerShell for Mac
   "fsnotes"                   # Note taking app with markdown support
   "go2shell"                  # Opens a terminal window to the current directory in Finder
+  "tad"             # TAD is a free and open-source data analysis tool for tabular data. It is designed to be easy to use, fast, and powerful.
+  "rancher"         # Kubernetes and container management on the desktop
 )
 
 # Function to check if a command exists
