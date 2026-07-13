@@ -16,16 +16,6 @@ for arg in "$@"; do
   esac
 done
 
-if [ "$DRY_RUN" -eq 1 ]; then
-  printf '===> DryRun: Planned actions (no changes will be made)\n'
-  printf '  - Ensure Homebrew is installed and updated\n'
-  printf '  - Install formulae: %s\n' "${apps[*]}"
-  printf '  - Install casks: %s\n' "${casks[*]}"
-  printf '  - Configure environment variables (JAVA_HOME, jenv)\n'
-  printf '  - Verify installations (git, java, mvn, code, intellij)\n'
-  exit 0
-fi
-
 # List of apps to be installed
 apps=(
   "python@3.13"
@@ -92,6 +82,16 @@ casks=(
   "tad"             # TAD is a free and open-source data analysis tool for tabular data. It is designed to be easy to use, fast, and powerful.
   "rancher"         # Kubernetes and container management on the desktop
 )
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  printf '===> DryRun: Planned actions (no changes will be made)\n'
+  printf '  - Ensure Homebrew is installed and updated\n'
+  printf '  - Install formulae: %s\n' "${apps[*]}"
+  printf '  - Install casks: %s\n' "${casks[*]}"
+  printf '  - Configure environment variables (JAVA_HOME, jenv)\n'
+  printf '  - Verify installations (git, java, mvn, code, intellij)\n'
+  exit 0
+fi
 
 # Function to check if a command exists
 command_exists() {
