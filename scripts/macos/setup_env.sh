@@ -234,6 +234,19 @@ cask_metadata_looks_admin_required() {
   return 1
 }
 
+is_confirmed_user_space_cask() {
+  local cask="$1"
+
+  case "$cask" in
+    intellij-idea|pycharm|drawio)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 looks_like_admin_failure() {
   local output="$1"
 
@@ -323,7 +336,7 @@ install_user_cask() {
     return 1
   fi
 
-  if cask_metadata_looks_admin_required "$cask"; then
+  if cask_metadata_looks_admin_required "$cask" && ! is_confirmed_user_space_cask "$cask"; then
     echo -e "${WARN}===> Cask metadata looks admin-likely; attempting user-space install before reclassifying: ${cask}${RESET}"
   fi
 
