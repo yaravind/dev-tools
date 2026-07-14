@@ -60,6 +60,8 @@ if [[ -z "$RUN_MODE" ]]; then
   exit 1
 fi
 
+SCRIPT_START_SECONDS=$SECONDS
+
 # List of Homebrew formulae to be installed. These should not require admin
 # privileges when Homebrew is owned by the installing user.
 formulae=(
@@ -507,6 +509,27 @@ print_items() {
   done
 }
 
+format_duration() {
+  local total_seconds="$1"
+  local hours=$((total_seconds / 3600))
+  local minutes=$(((total_seconds % 3600) / 60))
+  local seconds=$((total_seconds % 60))
+
+  if [[ "$hours" -gt 0 ]]; then
+    printf "%dh %dm %ds" "$hours" "$minutes" "$seconds"
+  elif [[ "$minutes" -gt 0 ]]; then
+    printf "%dm %ds" "$minutes" "$seconds"
+  else
+    printf "%ds" "$seconds"
+  fi
+}
+
+print_elapsed_time() {
+  local elapsed_seconds=$((SECONDS - SCRIPT_START_SECONDS))
+
+  echo -e "${INFO}Total duration: $(format_duration "$elapsed_seconds")${RESET}"
+}
+
 print_classification_suggestions() {
   local warning
   local bucket
@@ -741,6 +764,7 @@ configure_direnv_hook() {
 
 finish_with_summary() {
   print_install_summary
+  print_elapsed_time
 
   if [[ "${#failed_formulae[@]}" -gt 0 || "${#failed_user_casks[@]}" -gt 0 || "${#failed_admin_casks[@]}" -gt 0 ]]; then
     echo -e "${ERROR}===> Run completed with failures. Review the summary above.${RESET}"
