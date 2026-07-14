@@ -725,22 +725,6 @@ verify_admin_installations() {
   fi
 }
 
-ensure_agent_sessions_tap() {
-  echo -e "${INFO}===> Ensuring Homebrew tap 'jazzyalex/agent-sessions' is available...${RESET}"
-
-  if brew tap | grep -q '^jazzyalex/agent-sessions$'; then
-    echo -e "${INFO}===> Homebrew tap 'jazzyalex/agent-sessions' already present.${RESET}"
-    return 0
-  fi
-
-  echo -e "${ACTION}===> Tapping jazzyalex/agent-sessions...${RESET}"
-  if brew tap jazzyalex/agent-sessions; then
-    echo -e "${SUCCESS}===> Tapped jazzyalex/agent-sessions.${RESET}"
-  else
-    echo -e "${WARN}===> Failed to tap jazzyalex/agent-sessions (continuing).${RESET}"
-  fi
-}
-
 configure_direnv_hook() {
   if command_exists direnv; then
     if ! grep -qxF 'eval "$(direnv hook zsh)"' "$HOME/.zshrc" 2>/dev/null; then
@@ -794,7 +778,6 @@ run_non_admin_only() {
 
   echo -e "${SECTION}===> Start non-admin installation.${RESET}"
   ensure_homebrew_available
-  ensure_agent_sessions_tap
 
   echo -e "${ACTION}===> Updating Homebrew...${RESET}"
   brew update
