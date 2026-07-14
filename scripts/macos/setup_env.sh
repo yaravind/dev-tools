@@ -320,9 +320,7 @@ install_user_cask() {
   fi
 
   if cask_metadata_looks_admin_required "$cask"; then
-    echo -e "${WARN}===> Cask metadata looks admin-required; skipping user-space install: ${cask}${RESET}"
-    classification_warnings+=("user_casks:${cask}")
-    return 1
+    echo -e "${WARN}===> Cask metadata looks admin-likely; attempting user-space install before reclassifying: ${cask}${RESET}"
   fi
 
   if brew list --cask "$cask" >/dev/null 2>&1; then
@@ -347,6 +345,7 @@ install_user_cask() {
 
   if looks_like_admin_failure "$output"; then
     admin_privilege_failures+=("user_casks:${cask}")
+    classification_warnings+=("user_casks:${cask}")
   fi
 
   return "$exit_status"
