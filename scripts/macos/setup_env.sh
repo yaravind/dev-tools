@@ -73,7 +73,7 @@ formulae=(
   "jq"          # Lightweight and flexible command-line JSON processor
   "gh"          # GitHub command-line tool
   "azure-cli"
-  "tldr"        # Simplified and community-driven man pages
+  "tlrc"        # Rust client for tldr pages; replacement for deprecated tldr formula
   "eza"         # Eza is a modern replacement for the ls command
   "trash"       # Moves files to the trash, which is safer because it is reversible
   "jenv"        # Manage multiple versions of Java
