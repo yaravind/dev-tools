@@ -4,11 +4,60 @@ SCRIPT_DIR="${0:A:h}"
 DOCK_FILE="${SCRIPT_DIR}/../../config/dock_apps.txt"
 DOCK_PLIST="$HOME/Library/Preferences/com.apple.dock.plist"
 DOCK_PLIST_BAK="$HOME/Library/Preferences/com.apple.dock.plist.bak.$(date +%Y%m%d%H%M%S)"
+SCRIPT_NAME="${0:A:t}"
+DRY_RUN=0
+
+print_usage() {
+  printf "Usage: %s [--dry-run]\n" "$SCRIPT_NAME"
+  printf "Options:\n"
+  printf "  --dry-run, -n   Show Dock changes without applying them.\n"
+  printf "  --help, -h      Show this help message.\n"
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run|-n)
+      DRY_RUN=1
+      ;;
+    --help|-h)
+      print_usage
+      exit 0
+      ;;
+    *)
+      printf "\033[0;31m\nERROR: Unknown argument: %s\033[0m\n" "$arg"
+      print_usage
+      exit 1
+      ;;
+  esac
+done
 
 # Print and run a command in blue
 run_cmd() {
   printf "\033[0;34m$ %s\033[0m\n" "$*"
   "$@"
+}
+
+unescape_app_path() {
+  local app="$1"
+  app="${app//\\ / }"
+  app="${app/#\$HOME/$HOME}"
+  app="${app/#\$\{HOME\}/$HOME}"
+  app="${app/#\~/$HOME}"
+  printf "%s" "$app"
+}
+
+path_in_list() {
+  local needle="$1"
+  shift
+
+  local item
+  for item in "$@"; do
+    if [[ "$item" == "$needle" ]]; then
+      return 0
+    fi
+  done
+
+  return 1
 }
 
 # Rollback function
@@ -33,36 +82,108 @@ else
   printf "\033[0;35m\n==> Reading from %s\033[0m\n" "$DOCK_FILE"
 fi
 
-# Preview what will be added and removed
 add_list=()
 remove_list=()
-while IFS= read -r app; do
-  if [[ "$app" =~ ^-- ]]; then
-    app_to_remove="${app#--}"
-    app_to_remove="${app_to_remove## }"
-    if [ -n "$app_to_remove" ]; then
-      remove_list+=("$app_to_remove")
-    fi
-    continue
-  fi
-  if [[ -z "$app" ]] || [[ "$app" =~ ^// ]]; then
-    continue
-  fi
-  if [[ "${app// /}" =~ ^[sS][pP][aA][cC][eE][rR]$ ]]; then
-    add_list+=("[spacer]")
-    continue
-  fi
-  add_list+=("$app")
-done < "$DOCK_FILE"
+target_app_paths=()
+current_dock_paths=()
+current_remove_list=()
 
-printf "\nThe following items will be ADDED to the Dock:\n"
-for item in "${add_list[@]}"; do
-  printf "  + %s\n" "$item"
-done
-printf "\nThe following items will be REMOVED from the Dock (if present):\n"
-for item in "${remove_list[@]}"; do
-  printf "  - %s\n" "$item"
-done
+parse_dock_file() {
+  local app
+  local app_real
+  local app_to_remove
+
+  while IFS= read -r app; do
+    if [[ "$app" =~ ^-- ]]; then
+      app_to_remove="${app#--}"
+      app_to_remove="${app_to_remove## }"
+      if [ -n "$app_to_remove" ]; then
+        remove_list+=("$(unescape_app_path "$app_to_remove")")
+      fi
+      continue
+    fi
+
+    if [[ -z "$app" ]] || [[ "$app" =~ ^// ]]; then
+      continue
+    fi
+
+    if [[ "${app// /}" =~ ^[sS][pP][aA][cC][eE][rR]$ ]]; then
+      add_list+=("[spacer]")
+      continue
+    fi
+
+    app_real="$(unescape_app_path "$app")"
+    add_list+=("$app_real")
+    target_app_paths+=("$app_real")
+  done < "$DOCK_FILE"
+}
+
+collect_current_dock_apps() {
+  local dock_path
+
+  if ! command -v dockutil >/dev/null 2>&1; then
+    return 1
+  fi
+
+  while IFS= read -r dock_path; do
+    if [[ -n "$dock_path" ]]; then
+      current_dock_paths+=("$dock_path")
+    fi
+  done < <(dockutil --list | awk -F '\t' '{print $2}' | grep '^file:///' | sed 's|^file://||;s|/$||;s|%20| |g')
+
+  for dock_path in "${current_dock_paths[@]}"; do
+    if ! path_in_list "$dock_path" "${target_app_paths[@]}"; then
+      current_remove_list+=("$dock_path")
+    fi
+  done
+}
+
+print_plan() {
+  local index=1
+  local item
+
+  printf "\nThe following items will be ADDED to the Dock in this order:\n"
+  for item in "${add_list[@]}"; do
+    if [[ "$item" == "[spacer]" ]]; then
+      printf "  %2d. [spacer]\n" "$index"
+    elif [ -e "$item" ]; then
+      printf "  %2d. %s\n" "$index" "$item"
+    else
+      printf "  %2d. %s (missing, will be skipped)\n" "$index" "$item"
+    fi
+    ((index++))
+  done
+
+  printf "\nThe following explicit config removals will be applied if present:\n"
+  if [[ "${#remove_list[@]}" -eq 0 ]]; then
+    printf "  - none\n"
+  else
+    for item in "${remove_list[@]}"; do
+      printf "  - %s\n" "$item"
+    done
+  fi
+
+  printf "\nThe following current Dock apps will be removed because they are not in the target config:\n"
+  if [[ "${#current_remove_list[@]}" -eq 0 ]]; then
+    printf "  - none\n"
+  else
+    for item in "${current_remove_list[@]}"; do
+      printf "  - %s\n" "$item"
+    done
+  fi
+}
+
+parse_dock_file
+if ! collect_current_dock_apps; then
+  printf "\033[0;33m\nWARN: dockutil is not available; unable to compare against the current Dock.\033[0m\n"
+fi
+
+print_plan
+
+if [[ "$DRY_RUN" -eq 1 ]]; then
+  printf "\033[0;32m\nDry run complete. No Dock changes were made.\033[0m\n"
+  exit 0
+fi
 
 printf "\nWould you like to proceed? (y/n): "
 read -r proceed
@@ -105,6 +226,7 @@ while IFS= read -r app; do
     app_to_remove="${app#--}"
     app_to_remove="${app_to_remove## }" # trim leading spaces
     if [ -n "$app_to_remove" ]; then
+      app_to_remove="$(unescape_app_path "$app_to_remove")"
       # Check if the app is present in the Dock before removing
       if dockutil --list | grep -Fq "$app_to_remove"; then
         printf "\nRemoving %s from Dock...\n" "$app_to_remove"
@@ -122,12 +244,11 @@ while IFS= read -r app; do
   # Add a Dock spacer if the line is 'spacer' (case-insensitive, trimmed)
   if [[ "${app// /}" =~ ^[sS][pP][aA][cC][eE][rR]$ ]]; then
     printf "\nAdding spacer to Dock...\n"
-    run_cmd dockutil --add "''" --type spacer --section apps --no-restart || rollback "Failed to add spacer to Dock."
+    run_cmd dockutil --add "" --type spacer --section apps --no-restart || rollback "Failed to add spacer to Dock."
     ((count++))
     continue
   fi
-  # Unescape any \  to space for existence check and dockutil
-  app_real="${app//\\ / }"
+  app_real="$(unescape_app_path "$app")"
   if [ -e "$app_real" ]; then
     #printf "\nAdding %s to Dock...\n" "$app_real"
     run_cmd dockutil --add "$app_real" --no-restart || rollback "Failed to add $app_real to Dock."

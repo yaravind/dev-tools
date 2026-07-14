@@ -3,34 +3,34 @@
 /Applications/Microsoft\ Word.app
 /Applications/Microsoft\ Excel.app
 /Applications/Microsoft\ PowerPoint.app
+/Applications/OneDrive.app
 /Applications/Google\ Chrome.app
 SPACER
 /System/Applications/Apps.app
 /System/Applications/Utilities/Screenshot.app
 /System/Applications/Preview.app
+/System/Applications/Calculator.app
 /System/Applications/System\ Settings.app
+/System/Applications/Passwords.app
 /System/Applications/Utilities/Terminal.app
 /Applications/Microsoft\ 365\ Copilot.app
 SPACER
-/Applications/IntelliJ\ IDEA.app
-/Applications/PyCharm.app
-/Applications/Visual\ Studio\ Code.app
-/Applications/draw.io.app
-/Applications/Microsoft\ Azure\ Storage\ Explorer.app
-/Applications/FSNotes.app
-/Applications/Tolaria.app
+$HOME/Applications/IntelliJ\ IDEA.app
+$HOME/Applications/PyCharm.app
+$HOME/Applications/Visual\ Studio\ Code.app
+$HOME/Applications/Tolaria.app
 SPACER
-/Applications/Zed.app
-/Applications/DBeaver.app
-/Applications/Ollama.app
+$HOME/Applications/draw.io.app
+$HOME/Applications/Zed.app
+$HOME/Applications/DBeaver.app
+$HOME/Applications/Rancher\ Desktop.app
 SPACER
-/Applications/Codex.app
-/Applications/AgentSessions.app
+/Applications/ChatGPT.app
+$HOME/Applications/AgentSessions.app
 
 --/Applications/TextEdit.app
 --/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app
 --/Applications/Microsoft\ Edge.app
 --/Applications/Microsoft\ OneNote.app
---/Applications/OneDrive.app
 --/Applications/Company\ Portal.app
 --/Library/Application\ Support/Microsoft/MAU2.0/Microsoft\ AutoUpdate.app
