@@ -88,7 +88,7 @@ formulae=(
   "graphviz"    # Convert dot files to images
   "ripgrep"     # ripgrep recursively searches directories for a regex pattern while respecting your gitignore rules
   "dockutil"     # Command line tool for manipulating macOS Dock items to natively talk to Microsoft SQL Server and Sybase databases
-  "maven"        # Installed without dependencies below so Java remains controlled separately
+  "maven"        # Apache Maven build tool
 )
 
 # Casks expected to install as user-space GUI apps. These are installed into
@@ -292,11 +292,7 @@ install_formula() {
 
   echo -e "${ACTION}===> Installing formula: ${formula}...${RESET}"
 
-  if [[ "$formula" == "maven" ]]; then
-    output="$(brew install --ignore-dependencies "$formula" 2>&1)"
-  else
-    output="$(brew install "$formula" 2>&1)"
-  fi
+  output="$(brew install "$formula" 2>&1)"
   exit_status=$?
   printf '%s\n' "$output"
 
@@ -409,11 +405,7 @@ classify_formula() {
 
   echo -e "${ACTION}===> Dry-run formula install: ${formula}...${RESET}"
 
-  if [[ "$formula" == "maven" ]]; then
-    output="$(brew install --dry-run --ignore-dependencies "$formula" 2>&1)"
-  else
-    output="$(brew install --dry-run "$formula" 2>&1)"
-  fi
+  output="$(brew install --dry-run "$formula" 2>&1)"
   exit_status=$?
   printf '%s\n' "$output"
 
