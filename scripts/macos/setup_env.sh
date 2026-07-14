@@ -118,7 +118,7 @@ user_casks=(
   #"maccy"                     # Clipboard manager
   #"bruno"                     # open-source desktop alternative to Postman. saved to filesystem. use markup
   #"fsnotes"                   # Note taking app with markdown support
-  "go2shell"                  # Opens a terminal window to the current directory in Finder
+  #"go2shell"                 # Deprecated, Intel-only on Apple Silicon, and requires Rosetta 2
   "rancher"                   # Kubernetes and container management on the desktop
   #"tad"                       # TAD is a free and open-source data analysis tool for tabular data
 )
