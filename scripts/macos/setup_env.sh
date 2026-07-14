@@ -684,11 +684,14 @@ verify_non_admin_installations() {
   print_brew_versions "cask" "${user_casks[@]}"
 
   echo -e "${INFO}===> Verify Python...${RESET}"
-  if command_exists python3; then
-    which -a python3
-    python3 -V
+  local python_313_bin
+  python_313_bin="$(brew --prefix python@3.13 2>/dev/null)/bin/python3.13"
+
+  if [[ -x "$python_313_bin" ]]; then
+    echo "$python_313_bin"
+    "$python_313_bin" -V
   else
-    echo -e "${WARN}===> python3 not found in PATH.${RESET}"
+    echo -e "${WARN}===> python@3.13 executable not found.${RESET}"
   fi
 
   echo -e "${INFO}===> Verify Maven...${RESET}"
