@@ -165,6 +165,7 @@ failed_user_casks=()
 failed_admin_casks=()
 admin_privilege_failures=()
 classification_warnings=()
+skipped_formulae=()
 
 # Function to check if a command exists
 command_exists() {
@@ -235,6 +236,35 @@ looks_like_admin_failure() {
   return 1
 }
 
+homebrew_formula_owns_path() {
+  local formula="$1"
+  local path="$2"
+
+  brew list --formula "$formula" 2>/dev/null | grep -qxF "$path"
+}
+
+dotnet_command_conflicts_with_formula() {
+  local dotnet_path="/opt/homebrew/bin/dotnet"
+
+  [[ -e "$dotnet_path" || -L "$dotnet_path" ]] || return 1
+  homebrew_formula_owns_path "dotnet" "$dotnet_path" && return 1
+
+  return 0
+}
+
+should_skip_formula_install() {
+  local formula="$1"
+
+  if [[ "$formula" == "powershell" ]] && dotnet_command_conflicts_with_formula; then
+    echo -e "${WARN}===> Skipping powershell: /opt/homebrew/bin/dotnet exists but is not owned by the Homebrew dotnet formula.${RESET}"
+    echo -e "${WARN}===> Choose either Homebrew formula dotnet + powershell, or the admin dotnet-sdk cask without automated PowerShell.${RESET}"
+    skipped_formulae+=("powershell: dotnet command conflict")
+    return 0
+  fi
+
+  return 1
+}
+
 install_formula() {
   local formula="$1"
   local output
@@ -247,6 +277,10 @@ install_formula() {
 
   if brew list --formula "$formula" >/dev/null 2>&1; then
     echo -e "${SUCCESS}===> Formula already installed: ${formula}${RESET}"
+    return 0
+  fi
+
+  if should_skip_formula_install "$formula"; then
     return 0
   fi
 
@@ -530,6 +564,12 @@ print_install_summary() {
     echo
     echo -e "${WARN}Admin/permission signals${RESET}"
     print_items "$WARN" "${admin_privilege_failures[@]}"
+  fi
+
+  if [[ "${#skipped_formulae[@]}" -gt 0 ]]; then
+    echo
+    echo -e "${WARN}Skipped formulae${RESET}"
+    print_items "$WARN" "${skipped_formulae[@]}"
   fi
 
   if [[ "${#classification_warnings[@]}" -gt 0 ]]; then
