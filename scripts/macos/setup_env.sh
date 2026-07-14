@@ -101,6 +101,7 @@ user_casks=(
   "pycharm"                   # Use pycharm for Ultimate Edition
   "visual-studio-code"        # VS Code
   "copilot-cli"               # Brings the power of Copilot coding agent directly to your terminal
+  "agent-sessions"            # Menu bar app for managing local agent sessions
   #"font-3270-nerd-font"       # Modern fonts to show icons etc
   #"font-anonymice-nerd-font"
   #"font-code-new-roman-nerd-font"
@@ -148,6 +149,7 @@ if [ "$DRY_RUN" -eq 1 ]; then
       ;;
     --non-admin-only)
       printf "${INFO}  - Ensure Homebrew is available from the pre_setup.sh install and update it${RESET}\n"
+      printf "${INFO}  - Ensure the jazzyalex/agent-sessions tap is available for agent-sessions${RESET}\n"
       printf "${INFO}  - Install formulae: %s${RESET}\n" "${formulae[*]}"
       printf "${INFO}  - Install user-space casks into ~/Applications: %s${RESET}\n" "${user_casks[*]}"
       printf "${INFO}  - Configure non-admin shell hooks, aliases, and verify non-admin installs${RESET}\n"
@@ -195,6 +197,42 @@ quiet_homebrew_hints() {
   export HOMEBREW_NO_AUTO_UPDATE=1
   export HOMEBREW_NO_ENV_HINTS=1
   export HOMEBREW_NO_INSTALL_CLEANUP=1
+}
+
+array_contains() {
+  local needle="$1"
+  shift
+
+  local item
+  for item in "$@"; do
+    if [[ "$item" == "$needle" ]]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+ensure_agent_sessions_tap() {
+  if ! array_contains "agent-sessions" "${user_casks[@]}"; then
+    return 0
+  fi
+
+  echo -e "${INFO}===> Ensuring Homebrew tap 'jazzyalex/agent-sessions' is available for agent-sessions...${RESET}"
+
+  if ! brew tap | grep -q '^jazzyalex/agent-sessions$'; then
+    echo -e "${ACTION}===> Tapping jazzyalex/agent-sessions...${RESET}"
+    if ! brew tap jazzyalex/agent-sessions; then
+      echo -e "${ERROR}===> Failed to tap jazzyalex/agent-sessions.${RESET}"
+      failed_user_casks+=("agent-sessions")
+      return 1
+    fi
+  fi
+
+  if brew help trust >/dev/null 2>&1; then
+    echo -e "${INFO}===> Trusting agent-sessions cask from jazzyalex/agent-sessions...${RESET}"
+    brew trust --cask jazzyalex/agent-sessions/agent-sessions >/dev/null 2>&1 || true
+  fi
 }
 
 precheck_formula_metadata() {
@@ -820,6 +858,7 @@ run_non_admin_only() {
   echo -e "${ACTION}===> Updating Homebrew...${RESET}"
   brew update
   quiet_homebrew_hints
+  ensure_agent_sessions_tap
 
   echo -e "${SECTION}===> Installing formulae first...${RESET}"
   for formula in "${formulae[@]}"; do
