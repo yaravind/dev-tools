@@ -1,0 +1,5 @@
+# List GitHub repositories to clone, one per line.
+# Format: org/repo-name
+#
+# Example:
+# openai/openai-python
