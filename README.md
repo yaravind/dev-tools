@@ -76,6 +76,9 @@ You can also install by just `git + Enter` in the shell.
 8. Run <kbd>./scripts/macos/jenv_setup.sh</kbd> to add JDK
 9. Run <kbd>./scripts/macos/git_setup.sh</kbd> to setup Git Credentials
 10. Run <kbd>./scripts/macos/dock_setup.sh</kbd> to setup macOS Dock
+11. Run <kbd>./scripts/macos/vscode_setup.sh</kbd> to install VS Code extensions from `config/vscode.txt` and apply managed settings from `config/vscode_settings.json`
+12. Run <kbd>./scripts/macos/intellij_setup.sh</kbd> to install IntelliJ IDEA plugins from `config/intellij.txt`
+13. Run <kbd>./scripts/macos/pycharm_setup.sh</kbd> to install PyCharm plugins from `config/pycharm.txt`
 
 #### Minimal setup for Spark/Scala/Java development
 
@@ -86,8 +89,10 @@ A lightweight bootstrap script (`scripts/macos/setup_env_min.sh`) is available f
 3. cd <kbd>dev-tools</kbd>
 4. Make the script executable: <kbd>chmod +x scripts/macos/setup_env_min.sh</kbd>
 5. Run: <kbd>./scripts/macos/setup_env_min.sh</kbd>
-6. Run <kbd>./scripts/macos/vscode_setup.sh</kbd> to install required (and some optional) VS Code extensions. The list is in `config/vscode.txt` if you prefer to add or remove extensions.
+6. Run <kbd>./scripts/macos/vscode_setup.sh</kbd> to install required (and some optional) VS Code extensions and apply managed VS Code defaults. Extensions are read from `config/vscode.txt`, and managed settings are read from `config/vscode_settings.json`.
 7. *(Optional)* Launch IntelliJ IDEA once to complete its first-run setup
+8. *(Optional)* Run <kbd>./scripts/macos/intellij_setup.sh</kbd> to install IntelliJ plugins from `config/intellij.txt`
+9. *(Optional)* Run <kbd>./scripts/macos/pycharm_setup.sh</kbd> to install PyCharm plugins from `config/pycharm.txt`
 
 > ***Warning (on macOS)***
 >

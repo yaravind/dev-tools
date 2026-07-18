@@ -1,0 +1,18 @@
+{
+  "java.maven.downloadSources": true,
+  "maven.executable.preferMavenWrapper": true,
+  "workbench.colorTheme": "Light Modern",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "git.autofetch": true,
+  "terminal.integrated.scrollback": 10000,
+  "search.exclude": {
+    "**/target": true,
+    "**/.bloop": true,
+    "**/.metals": true
+  }
+}

@@ -236,7 +236,7 @@ The Application names to be added to the Dock are read from `config/dock_apps.tx
 
 ### vscode_setup.sh
 
-`vscode_setup.sh` automates the installation of Visual Studio Code extensions listed in a file named `vscode.txt`.
+`vscode_setup.sh` automates the installation of Visual Studio Code extensions listed in `config/vscode.txt` and applies managed VS Code settings from `config/vscode_settings.json`.
 
 ---
 

@@ -84,3 +84,21 @@ Create or run an existing Run/Debug configuration to build and run your applicat
 - .ignore
 - Markdown
 - Database Tools (if you work with databases)
+
+## Automated Plugin Installation (macOS)
+
+You can automate IntelliJ IDEA plugin installation with:
+
+```bash
+zsh scripts/macos/intellij_setup.sh
+```
+
+This script reads plugin IDs from [config/intellij.txt](/Users/ayarram/Developer/dev-tools/config/intellij.txt), ignores blank/comment lines, validates IDs, and installs each plugin via IntelliJ's CLI (`idea installPlugins`).
+
+> Important: quit IntelliJ IDEA before running the script.
+
+### Where to find Plugin IDs
+
+1. Open the plugin page on JetBrains Marketplace.
+2. Scroll to **Additional Information**.
+3. Copy the **Plugin ID** value into [config/intellij.txt](/Users/ayarram/Developer/dev-tools/config/intellij.txt) (one per line).

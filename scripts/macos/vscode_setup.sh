@@ -20,6 +20,8 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 VSCODE_EXT_FILE="$(cd "${SCRIPT_DIR}/../../config" && pwd -P)/vscode.txt"
+VSCODE_SETTINGS_FILE="$(cd "${SCRIPT_DIR}/../../config" && pwd -P)/vscode_settings.json"
+VSCODE_USER_SETTINGS_FILE="${HOME}/Library/Application Support/Code/User/settings.json"
 
 lowercase() {
   printf '%s' "$1" | tr '[:upper:]' '[:lower:]'
@@ -54,6 +56,72 @@ is_installed() {
   return 1
 }
 
+apply_managed_settings() {
+  local managed_settings_file="$1"
+  local user_settings_file="$2"
+  local user_settings_dir
+
+  if ! command -v python3 >/dev/null 2>&1; then
+    printf '%sERROR: python3 not found. Cannot merge VSCode settings.%s\n' "$RED" "$NC"
+    return 1
+  fi
+
+  if [[ ! -f "$managed_settings_file" ]]; then
+    printf '%sERROR: %s not found. Please create it with VSCode settings.%s\n' "$RED" "$managed_settings_file" "$NC"
+    return 1
+  fi
+
+  user_settings_dir="$(dirname "$user_settings_file")"
+  if [[ ! -d "$user_settings_dir" ]]; then
+    if ! run_cmd mkdir -p "$user_settings_dir"; then
+      printf '%sERROR: Failed to create VSCode settings directory "%s".%s\n' "$RED" "$user_settings_dir" "$NC"
+      return 1
+    fi
+  fi
+
+  if [[ ! -f "$user_settings_file" ]]; then
+    printf '%s$ printf %s > %q%s\n' "$BLUE" '"{}\\n"' "$user_settings_file" "$NC"
+    if ! printf '{}\n' > "$user_settings_file"; then
+      printf '%sERROR: Failed to initialize VSCode settings file "%s".%s\n' "$RED" "$user_settings_file" "$NC"
+      return 1
+    fi
+  fi
+
+  if ! run_cmd python3 - "$managed_settings_file" "$user_settings_file" <<'PY'; then
+import json
+import sys
+
+managed_path = sys.argv[1]
+user_path = sys.argv[2]
+
+with open(managed_path, encoding="utf-8") as managed_file:
+    managed = json.load(managed_file)
+if not isinstance(managed, dict):
+    raise SystemExit(f"ERROR: {managed_path} must contain a JSON object.")
+
+for key in sorted(managed):
+    value = json.dumps(managed[key], ensure_ascii=True)
+    print(f"==> Managed setting: {key} = {value}")
+
+with open(user_path, encoding="utf-8") as user_file:
+    existing = json.load(user_file)
+if not isinstance(existing, dict):
+    raise SystemExit(f"ERROR: {user_path} must contain a JSON object.")
+
+merged = existing.copy()
+merged.update(managed)
+
+with open(user_path, "w", encoding="utf-8") as user_file:
+    json.dump(merged, user_file, indent=2)
+    user_file.write("\n")
+PY
+    printf '%sERROR: Failed to merge VSCode settings. Ensure both settings files contain valid JSON objects.%s\n' "$RED" "$NC"
+    return 1
+  fi
+
+  return 0
+}
+
 if ! command -v code >/dev/null 2>&1; then
   printf '%sERROR: VSCode CLI "code" not found. Please install it first.%s\n' "$RED" "$NC"
   exit 1
@@ -61,6 +129,11 @@ fi
 
 if [[ ! -f "$VSCODE_EXT_FILE" ]]; then
   printf '%sERROR: %s not found. Please create it with extension IDs.%s\n' "$RED" "$VSCODE_EXT_FILE" "$NC"
+  exit 1
+fi
+
+if [[ ! -f "$VSCODE_SETTINGS_FILE" ]]; then
+  printf '%sERROR: %s not found. Please create it with VSCode settings.%s\n' "$RED" "$VSCODE_SETTINGS_FILE" "$NC"
   exit 1
 fi
 
@@ -106,6 +179,7 @@ printf '%sTotal extensions found: %d%s\n\n' "$MAGENTA" "${#exts_to_install[@]}" 
 install_count=0
 skip_count=0
 fail_count=0
+settings_fail_count=0
 
 for ext in "${exts_to_install[@]}"; do
   if is_installed "$ext"; then
@@ -130,14 +204,22 @@ for ext in "${exts_to_install[@]}"; do
   sleep 0.2
 done
 
+printf '%s\n==> Applying managed VSCode settings from %s%s\n' "$MAGENTA" "$VSCODE_SETTINGS_FILE" "$NC"
+if apply_managed_settings "$VSCODE_SETTINGS_FILE" "$VSCODE_USER_SETTINGS_FILE"; then
+  printf '%sSUCCESS: Managed VSCode settings applied to "%s".%s\n' "$GREEN" "$VSCODE_USER_SETTINGS_FILE" "$NC"
+else
+  ((settings_fail_count++))
+fi
+
 printf '%s\n==> VSCode extension installation complete.%s\n' "$MAGENTA" "$NC"
 printf '%sInstalled: %d%s\n' "$GREEN" "$install_count" "$NC"
 printf '%sSkipped: %d%s\n' "$GOLD" "$skip_count" "$NC"
 printf '%sDuplicates ignored: %d%s\n' "$GOLD" "$duplicate_count" "$NC"
 printf '%sInvalid ignored: %d%s\n' "$GOLD" "$invalid_count" "$NC"
 printf '%sFailed: %d%s\n' "$RED" "$fail_count" "$NC"
+printf '%sSettings merge failures: %d%s\n' "$RED" "$settings_fail_count" "$NC"
 
-if ((fail_count > 0 || invalid_count > 0)); then
+if ((fail_count > 0 || invalid_count > 0 || settings_fail_count > 0)); then
   printf '%s\nERROR: VSCode setup completed with issues.%s\n' "$RED" "$NC"
   exit 1
 fi

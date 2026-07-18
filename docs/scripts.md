@@ -15,7 +15,9 @@ This file documents the repository's helper scripts and what they do. For usage 
 | `scripts/macos/jenv_setup.sh`           | Discovers all installed JVMs and registers them with the `jenv` version manager                                                              |
 | `scripts/macos/dock_setup.sh`           | Customizes the macOS Dock — sets icon size, removes defaults, and adds preferred apps from `config/dock_apps.txt`                            |
 | `scripts/macos/gen_dock_apps.sh`        | Generates `config/dock_apps.txt` by reading the current Dock configuration                                                                    |
-| `scripts/macos/vscode_setup.sh`         | Installs VS Code extensions listed in `config/vscode.txt`                                                                                     |
+| `scripts/macos/vscode_setup.sh`         | Installs VS Code extensions from `config/vscode.txt` and applies managed VS Code settings from `config/vscode_settings.json`                  |
+| `scripts/macos/intellij_setup.sh`       | Installs IntelliJ IDEA plugins from `config/intellij.txt` via IntelliJ CLI                                                                   |
+| `scripts/macos/pycharm_setup.sh`        | Installs PyCharm plugins from `config/pycharm.txt` via PyCharm CLI                                                                            |
 | `scripts/macos/conv-dot-to-png.sh`      | Converts `triples.dot` to a PNG image using Graphviz                                                                                          |
 | `scripts/macos/colors.sh`               | Defines ANSI color code variables (sourced by other scripts)                                                                                 |
 | `scripts/macos/backup_codex.sh`         | Backs up local `~/.codex` data to a specified target directory                                                                               |

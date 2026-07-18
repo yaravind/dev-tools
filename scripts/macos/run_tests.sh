@@ -26,7 +26,9 @@ scripts=(
   "${SCRIPT_DIR}/dock_setup.sh"
   "${SCRIPT_DIR}/gen_dock_apps.sh"
   "${SCRIPT_DIR}/git_setup.sh"
+  "${SCRIPT_DIR}/intellij_setup.sh"
   "${SCRIPT_DIR}/jenv_setup.sh"
+  "${SCRIPT_DIR}/pycharm_setup.sh"
   "${SCRIPT_DIR}/setup_env.sh"
   "${SCRIPT_DIR}/setup_env_min.sh"
   "${SCRIPT_DIR}/setup_env_min_rollback.sh"
@@ -72,7 +74,10 @@ fi
 # Config file sanity checks
 config_files=(
   "${REPO_ROOT}/config/dock_apps.txt"
+  "${REPO_ROOT}/config/intellij.txt"
+  "${REPO_ROOT}/config/pycharm.txt"
   "${REPO_ROOT}/config/vscode.txt"
+  "${REPO_ROOT}/config/vscode_settings.json"
 )
 
 config_ok=0
