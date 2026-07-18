@@ -96,3 +96,4 @@ zsdoc/data
 /tests/_output/*
 !/tests/_output/.gitkeep
 
+.DS_Store
