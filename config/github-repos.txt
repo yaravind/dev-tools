@@ -3,3 +3,15 @@
 #
 # Example:
 # openai/openai-python
+
+The-Coca-Cola-Company/tccc-fabric-data-utils
+The-Coca-Cola-Company/tccc-azure-data-utils
+The-Coca-Cola-Company/tccc-data-recon-utils
+The-Coca-Cola-Company/tccc-fabric-automation-utils
+The-Coca-Cola-Company/tccc-mdp-self-serve-utils
+The-Coca-Cola-Company/tccc-spark-application-template
+The-Coca-Cola-Company/data-diff
+
+yaravind/dev-tools
+yaravind/vibe-coding
+yaravind/pipeline-to-semantic-agent-classifier-lab
