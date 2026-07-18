@@ -50,18 +50,23 @@ $APP_PROFILE_LOCATIONS
 EOF
 
 section "1. Verify ~/.codex"
-[ -d "$CODEX" ] && ok "Found $CODEX" || { bad "~/.codex not found"; exit 1; }
+if [ -d "$CODEX" ]; then
+  ok "Found $CODEX"
+else
+  bad "$HOME/.codex not found"
+  exit 1
+fi
 
 section "2. Key files"
 for f in sessions archived_sessions session_index.jsonl history.jsonl logs_2.sqlite state_5.sqlite memories_1.sqlite goals_1.sqlite; do
-  [ -e "$CODEX/$f" ] && ok "$f exists" || warn "$f missing"
+  if [ -e "$CODEX/$f" ]; then ok "$f exists"; else warn "$f missing"; fi
 done
 
 section "3. Session index"
 if [ -f "$CODEX/session_index.jsonl" ]; then
  c=$(wc -l < "$CODEX/session_index.jsonl")
  info "Lines: $c"
- [ "$c" -gt 0 ] && ok "Session index populated" || bad "Session index empty"
+ if [ "$c" -gt 0 ]; then ok "Session index populated"; else bad "Session index empty"; fi
  head -3 "$CODEX/session_index.jsonl"
 fi
 
@@ -70,7 +75,7 @@ if [ -d "$CODEX/sessions" ]; then
  n=$(find "$CODEX/sessions" -type f | wc -l | tr -d ' ')
  s=$(du -sh "$CODEX/sessions" | awk '{print $1}')
  info "Files: $n Size: $s"
- [ "$n" -gt 0 ] && ok "Session files found" || warn "No session files"
+ if [ "$n" -gt 0 ]; then ok "Session files found"; else warn "No session files"; fi
  find "$CODEX/sessions" -type f | head -5
 fi
 
@@ -79,13 +84,13 @@ if [ -d "$CODEX/archived_sessions" ]; then
  n=$(find "$CODEX/archived_sessions" -type f | wc -l | tr -d ' ')
  s=$(du -sh "$CODEX/archived_sessions"|awk '{print $1}')
  info "Files: $n Size: $s"
- [ "$n" -gt 0 ] && ok "Archived sessions found" || warn "No archived sessions"
+ if [ "$n" -gt 0 ]; then ok "Archived sessions found"; else warn "No archived sessions"; fi
 fi
 
 section "6. Ownership"
 owner=$(stat -f %Su "$CODEX")
 info "Owner: $owner"
-[ "$owner" = "$USER" ] && ok "Ownership correct" || bad "Owned by $owner"
+if [ "$owner" = "$USER" ]; then ok "Ownership correct"; else bad "Owned by $owner"; fi
 
 section "7. Other .codex dirs"
 found_codex=0
@@ -108,7 +113,11 @@ section "9. SQLite"
 if command -v sqlite3 >/dev/null 2>&1; then
  for db in logs_2.sqlite state_5.sqlite memories_1.sqlite goals_1.sqlite; do
    if [ -f "$CODEX/$db" ]; then
-      sqlite3 "$CODEX/$db" "pragma integrity_check;" 2>/dev/null | grep -q ok && ok "$db integrity OK" || warn "$db integrity could not be verified"
+      if sqlite3 "$CODEX/$db" "pragma integrity_check;" 2>/dev/null | grep -q ok; then
+       ok "$db integrity OK"
+      else
+       warn "$db integrity could not be verified"
+      fi
    fi
  done
 else
