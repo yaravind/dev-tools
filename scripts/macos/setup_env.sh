@@ -124,6 +124,7 @@ user_casks=(
   #"go2shell"                 # Deprecated, Intel-only on Apple Silicon, and requires Rosetta 2
   "rancher"                   # Kubernetes and container management on the desktop
   #"tad"                       # TAD is a free and open-source data analysis tool for tabular data
+  "stats"                     # Stats is a menu bar app that shows your Mac's CPU, GPU, Memory, Disk, Network, Sensors and Battery stats   
 )
 
 # Casks that commonly use pkg installers, privileged helpers, drivers, daemons,
