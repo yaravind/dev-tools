@@ -4,7 +4,7 @@
 
 📖 **Documentation:** [https://yaravind.github.io/dev-tools/](https://yaravind.github.io/dev-tools/)
 
-> **One command to bootstrap a productive macOS and Windows environment for software and data engineering development. From a fresh machine to fully equipped in minutes.** ✨ Several scripts and configurations in this repository were meticulously crafted through vibe coding powered by GitHub Copilot and Google Gemini.
+> **One command to bootstrap a productive macOS and Windows environment for software and data engineering development. From a fresh machine to fully developer friendly in minutes.** Several scripts and configurations in this repository were meticulously crafted through vibe coding powered by GitHub Copilot, Codex and Google Gemini.
 
 Setting up a new machine is tedious. Hunting down the right tools, configuring shells, managing Java versions, wiring up your IDE; it takes hours and rarely produces consistent results. This project captures battle-tested scripts and configs so you can reproduce a complete, opinionated developer environment on Apple Silicon (M1/M2/M3/M4) in one run.
 
@@ -32,7 +32,7 @@ Setting up a new machine is tedious. Hunting down the right tools, configuring s
 > ***Warning***
 >
 > 1. The script is tested on Apple M2/M3/M4 Pro (should also work on M1) and zsh shell.
-> 2. Type `bash` and hit enter. If you see the error "Bash is required to interpret this script", change to `bash` shell
+> 2. If you see the error "Bash is required to interpret this script", change to `bash` shell (type `bash` and hit enter).
 >    as Homebrew install script uses bash.
 > 3. If you haven't already installed Xcode Command Line Tools, you'll see a message that **The Xcode Command Line Tools
 >    will be installed.**
@@ -55,10 +55,16 @@ Check the output below to see if the Command Line Tools are installed:
     Done with Command Line Tools for Xcode
 ```
 
+#### Xcode/git install
+
+You can also install by just `git + Enter` in the shell.
+
+![Xcode install](assets/xcode-install.png)
+
 #### Steps
 
 1. If your Mac is **managed (work or school)** then try to get an admin account and switch user. For e.g. if the admin
-   account is `admin_acct` then `su admin_acct` and enter the password for that account with higher privileges
+   account is `admin_acct` then `su admin_acct` and enter the password for that account with higher privileges. Or you could use the 
 2. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
 3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
 4. cd <kbd>dev-tools</kbd>
