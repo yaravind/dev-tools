@@ -18,6 +18,14 @@ This file documents the repository's helper scripts and what they do. For usage 
 | `scripts/macos/vscode_setup.sh`         | Installs VS Code extensions listed in `config/vscode.txt`                                                                                     |
 | `scripts/macos/conv-dot-to-png.sh`      | Converts `triples.dot` to a PNG image using Graphviz                                                                                          |
 | `scripts/macos/colors.sh`               | Defines ANSI color code variables (sourced by other scripts)                                                                                 |
+| `scripts/macos/backup_codex.sh`         | Backs up local `~/.codex` data to a specified target directory                                                                               |
+| `scripts/macos/clone_github_repos.sh`   | Clones GitHub repositories listed in a file (`org/repo` format) into a destination directory                                                |
+| `scripts/macos/pre_setup.sh`            | Prepares Apple Silicon Homebrew setup (`/opt/homebrew` ownership, install, and shell profile wiring)                                        |
+| `scripts/macos/restore_codex.sh`        | Restores a full `.codex` backup into `~/.codex` with a safety backup and rollback on failure                                                |
+| `scripts/macos/run_tests.sh`            | Runs macOS script validation checks (syntax, optional ShellCheck, config presence, and minimal dry-run verification)                        |
+| `scripts/macos/setup_env_min_rollback.sh` | Rolls back minimal macOS bootstrap installs and performs Homebrew cleanup                                                                   |
+| `scripts/macos/test_setup_env_min.sh`   | Safe verification harness for minimal setup checks without installing any tools                                                              |
+| `scripts/macos/verify_codex_restore.sh` | Read-only diagnostics to verify restored `.codex` data integrity and related app profile/cache signals                                      |
 | `scripts/windows/setup_env.ps1`         | Primary bootstrap script — installs and configures tools using winget on Windows                                                            |
 | `scripts/windows/setup_env_min.ps1`     | Minimal Windows bootstrap script for Git, JDK, Maven, VS Code, and IntelliJ IDEA                                                             |
 | `scripts/windows/run_vscode_setup.ps1`  | Installs VS Code extensions listed in `config/vscode.txt` (runs `vscode_setup.ps1` with `-Yes`)                                               |
