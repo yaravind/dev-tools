@@ -31,6 +31,8 @@ This file documents the repository's helper scripts and what they do. For usage 
 | `scripts/windows/setup_env.ps1`         | Primary bootstrap script — installs and configures tools using winget on Windows                                                            |
 | `scripts/windows/setup_env_min.ps1`     | Minimal Windows bootstrap script for Git, JDK, Maven, VS Code, and IntelliJ IDEA                                                             |
 | `scripts/windows/run_vscode_setup.ps1`  | Installs VS Code extensions listed in `config/vscode.txt` (runs `vscode_setup.ps1` with `-Yes`)                                               |
+| `scripts/windows/intellij_setup.ps1`    | Installs IntelliJ IDEA plugins from `config/intellij.txt` via IntelliJ CLI                                                                    |
+| `scripts/windows/pycharm_setup.ps1`     | Installs PyCharm plugins from `config/pycharm.txt` via PyCharm CLI                                                                             |
 | `scripts/windows/run_taskbar_setup.ps1` | Pins/unpins Windows Taskbar apps from `config/taskbar_apps.txt`                                                                               |
 
 

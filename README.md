@@ -122,6 +122,8 @@ A lightweight bootstrap script (`scripts/macos/setup_env_min.sh`) is available f
 6. Restart your terminal to apply PATH and environment variable changes
 7. Run <kbd>./scripts/windows/jenv_setup.ps1</kbd> to register installed JDKs with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows)
 8. Run <kbd>./scripts/windows/git_setup.ps1</kbd> to set up Git credentials (name and email)
+9. Run <kbd>./scripts/windows/intellij_setup.ps1</kbd> to install IntelliJ IDEA plugins from `config/intellij.txt`
+10. Run <kbd>./scripts/windows/pycharm_setup.ps1</kbd> to install PyCharm plugins from `config/pycharm.txt`
 
 #### Minimal setup for Spark/Scala/Java development
 
@@ -158,6 +160,8 @@ A lightweight bootstrap script (`scripts/windows/setup_env_min.ps1`) is availabl
 6. Restart your terminal to apply PATH and `JAVA_HOME` changes
 7. Run <kbd>./scripts/windows/run_vscode_setup.ps1</kbd> to install required (and some optional) VS Code extensions. The list is in `config/vscode.txt` if you prefer to add or remove extensions.
 8. *(Optional)* Launch IntelliJ IDEA once to complete its first-run setup
+9. *(Optional)* Run <kbd>./scripts/windows/intellij_setup.ps1</kbd> to install IntelliJ plugins from `config/intellij.txt`
+10. *(Optional)* Run <kbd>./scripts/windows/pycharm_setup.ps1</kbd> to install PyCharm plugins from `config/pycharm.txt`
 
 > Running the above script might open a popup like below for your approval. Select **Yes**.
 > ![Windows approval notification](assets/win-ask-approval.png)

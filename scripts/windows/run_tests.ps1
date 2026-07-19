@@ -42,6 +42,8 @@ $scripts = @(
     "maven_setup.ps1",
     "taskbar_setup.ps1",
     "vscode_setup.ps1",
+    "intellij_setup.ps1",
+    "pycharm_setup.ps1",
     "run_taskbar_setup.ps1",
     "run_vscode_setup.ps1"
 )
@@ -95,6 +97,38 @@ try {
     }
 } catch {
     Write-Warn "DryRun FAILED: vscode_setup.ps1 - $_"
+}
+
+try {
+    $configPath = Join-Path $repoRoot "config"
+    $configPath = Join-Path $configPath "intellij.txt"
+    if ([string]::IsNullOrWhiteSpace($configPath)) {
+        Write-Warn "Config path is empty for intellij_setup.ps1"
+    } elseif (Test-Path $configPath) {
+        Write-Info "DryRun: intellij_setup.ps1"
+        & (Join-Path $scriptDir "intellij_setup.ps1") -DryRun -Yes -ConfigPath $configPath | Out-Null
+        Write-Ok "DryRun OK: intellij_setup.ps1"
+    } else {
+        Write-Warn "Config missing for intellij_setup.ps1: $configPath"
+    }
+} catch {
+    Write-Warn "DryRun FAILED: intellij_setup.ps1 - $_"
+}
+
+try {
+    $configPath = Join-Path $repoRoot "config"
+    $configPath = Join-Path $configPath "pycharm.txt"
+    if ([string]::IsNullOrWhiteSpace($configPath)) {
+        Write-Warn "Config path is empty for pycharm_setup.ps1"
+    } elseif (Test-Path $configPath) {
+        Write-Info "DryRun: pycharm_setup.ps1"
+        & (Join-Path $scriptDir "pycharm_setup.ps1") -DryRun -Yes -ConfigPath $configPath | Out-Null
+        Write-Ok "DryRun OK: pycharm_setup.ps1"
+    } else {
+        Write-Warn "Config missing for pycharm_setup.ps1: $configPath"
+    }
+} catch {
+    Write-Warn "DryRun FAILED: pycharm_setup.ps1 - $_"
 }
 
 # Run setup_env_min.ps1 in DryRun to ensure runtime paths and banner don't error
