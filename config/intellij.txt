@@ -18,4 +18,4 @@ community:com.intellij.ml.llm
 
 # Ultimate-only plugins (installed only in --ultimate mode)
 ultimate:com.intellij.cron
-com.intellij.ml.llm.experimental
+ultimate:com.intellij.ml.llm.experimental

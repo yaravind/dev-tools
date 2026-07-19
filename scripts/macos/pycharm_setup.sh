@@ -133,16 +133,29 @@ is_pycharm_running() {
 
 install_plugin() {
   local plugin_id="$1"
-  local install_output
+  local raw_output
+  local install_exit_code
 
-  install_output="$("${PYCHARM_CLI[@]}" installPlugins "$plugin_id" 2>&1)"
-  local install_exit_code=$?
-  if [[ -n "$install_output" ]]; then
-    printf '%s\n' "$install_output"
+  raw_output="$("${PYCHARM_CLI[@]}" installPlugins "$plugin_id" 2>&1)"
+  install_exit_code=$?
+
+  # Filter out PyCharm/JVM internal noise; display only actionable lines.
+  # Suppressed: timestamp-prefixed WARN logs, Java stack trace frames,
+  # exception class lines, JVM deprecation warnings, and blank lines.
+  local filtered_output
+  filtered_output="$(printf '%s\n' "$raw_output" | grep -Ev \
+    '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}|^[[:space:]]+at |^(java|kotlin)\.|^Caused by:|^WARNING:|^[[:space:]]*$')"
+  if [[ -n "$filtered_output" ]]; then
+    printf '%s\n' "$filtered_output"
   fi
 
-  if [[ "$install_output" == *"already installed"* ]]; then
+  if [[ "$raw_output" == *"already installed"* ]]; then
     return 2
+  fi
+
+  # Plugin ID not found in marketplace repository
+  if [[ "$raw_output" == *"unknown plugins"* ]]; then
+    return 3
   fi
 
   if [[ $install_exit_code -eq 0 ]]; then
@@ -250,6 +263,7 @@ log_info "Total plugin IDs queued: ${#plugins_to_install[@]}"
 install_count=0
 skip_count=0
 fail_count=0
+unknown_count=0
 
 total_plugins="${#plugins_to_install[@]}"
 plugin_index=0
@@ -269,6 +283,10 @@ for plugin_id in "${plugins_to_install[@]}"; do
       log_warn "Plugin \"${plugin_id}\" is already installed. Skipping."
       ((skip_count++))
       ;;
+    3)
+      log_warn "Plugin \"${plugin_id}\" not found in Marketplace (unknown plugin ID). Check the ID or remove from config."
+      ((unknown_count++))
+      ;;
     *)
       log_error "Failed to install \"${plugin_id}\"."
       ((fail_count++))
@@ -282,13 +300,18 @@ log_warn "Skipped (already installed): ${skip_count}"
 log_warn "Skipped by edition mode: ${edition_skip_count}"
 log_warn "Duplicates ignored: ${duplicate_count}"
 log_warn "Invalid ignored: ${invalid_count}"
+if (( unknown_count > 0 )); then
+  log_warn "Unknown plugin IDs (not in Marketplace): ${unknown_count}"
+else
+  log_ok "Unknown plugin IDs: ${unknown_count}"
+fi
 if (( fail_count > 0 )); then
   log_error "Failed: ${fail_count}"
 else
   log_ok "Failed: ${fail_count}"
 fi
 
-if (( fail_count > 0 || invalid_count > 0 )); then
+if (( fail_count > 0 || invalid_count > 0 || unknown_count > 0 )); then
   log_error "PyCharm setup completed with issues."
   exit 1
 fi
