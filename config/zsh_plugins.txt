@@ -1,0 +1,7 @@
+# Zsh plugins managed by scripts/macos/zsh_plugins_setup.sh (antidote format)
+# One plugin per line. Blank lines and comments are ignored.
+
+agkozak/zsh-z
+MichaelAquilina/zsh-you-should-use
+zsh-users/zsh-autosuggestions
+zsh-users/zsh-completions
