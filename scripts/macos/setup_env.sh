@@ -90,8 +90,10 @@ formulae=(
   "graphviz"    # Convert dot files to images
   "ripgrep"     # ripgrep recursively searches directories for a regex pattern while respecting your gitignore rules
   "dockutil"     # Command line tool for manipulating macOS Dock items to natively talk to Microsoft SQL Server and Sybase databases
+  "duti"         # Set default applications for file types and URL schemes via UTI mappings
   "maven"        # Apache Maven build tool
   "pure"         # Pretty, minimal and fast Zsh prompt (sindresorhus/pure)
+  "antidote"     # Fast Zsh plugin manager used by zsh_plugins_setup.sh
 )
 
 # Casks expected to install as user-space GUI apps. These are installed into
