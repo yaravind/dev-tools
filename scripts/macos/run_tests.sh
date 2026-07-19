@@ -23,6 +23,7 @@ log_step "Starting macOS script dry-run checks"
 scripts=(
   "${SCRIPT_DIR}/colors.sh"
   "${SCRIPT_DIR}/conv-dot-to-png.sh"
+  "${SCRIPT_DIR}/default_apps_setup.sh"
   "${SCRIPT_DIR}/dock_setup.sh"
   "${SCRIPT_DIR}/gen_dock_apps.sh"
   "${SCRIPT_DIR}/git_setup.sh"
@@ -33,6 +34,7 @@ scripts=(
   "${SCRIPT_DIR}/setup_env_min.sh"
   "${SCRIPT_DIR}/setup_env_min_rollback.sh"
   "${SCRIPT_DIR}/vscode_setup.sh"
+  "${SCRIPT_DIR}/zsh_plugins_setup.sh"
 )
 
 fail_count=0
@@ -74,10 +76,12 @@ fi
 # Config file sanity checks
 config_files=(
   "${REPO_ROOT}/config/dock_apps.txt"
+  "${REPO_ROOT}/config/default_apps_macos.txt"
   "${REPO_ROOT}/config/intellij.txt"
   "${REPO_ROOT}/config/pycharm.txt"
   "${REPO_ROOT}/config/vscode.txt"
   "${REPO_ROOT}/config/vscode_settings.json"
+  "${REPO_ROOT}/config/zsh_plugins.txt"
 )
 
 config_ok=0

@@ -1,0 +1,31 @@
+# Default macOS file/app associations via duti
+# Format:
+#   bundle_id uti_or_scheme role
+#   bundle_id url_scheme
+#
+# Roles supported by duti for UTI mappings: all, viewer, editor, shell
+
+# Make Google Chrome the default browser
+com.google.Chrome public.html all
+com.google.Chrome public.url all
+com.google.Chrome http
+com.google.Chrome https
+
+# Make Outlook the default calendar file handler
+# com.apple.ical.ics is the standard iCalendar UTI (.ics)
+# dyn.ah62d4rv4ge80w25bru is the dynamic UTI discovered for .ical on this machine
+com.microsoft.Outlook com.apple.ical.ics all
+com.microsoft.Outlook dyn.ah62d4rv4ge80w25bru all
+
+# Make Zed the default editor for requested text/source formats
+dev.zed.Zed com.apple.log all
+dev.zed.Zed public.plain-text all
+dev.zed.Zed public.comma-separated-values-text all
+dev.zed.Zed com.sun.java-source all
+dev.zed.Zed public.json all
+dev.zed.Zed public.yaml all
+dev.zed.Zed public.shell-script all
+dev.zed.Zed net.daringfireball.markdown all
+# Dynamic UTIs discovered for .scala and .sql
+dev.zed.Zed dyn.ah62d4rv4ge81g25brvuu all
+dev.zed.Zed dyn.ah62d4rv4ge81g6pq all
