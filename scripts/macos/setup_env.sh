@@ -91,6 +91,7 @@ formulae=(
   "ripgrep"     # ripgrep recursively searches directories for a regex pattern while respecting your gitignore rules
   "dockutil"     # Command line tool for manipulating macOS Dock items to natively talk to Microsoft SQL Server and Sybase databases
   "maven"        # Apache Maven build tool
+  "pure"         # Pretty, minimal and fast Zsh prompt (sindresorhus/pure)
 )
 
 # Casks expected to install as user-space GUI apps. These are installed into
@@ -814,6 +815,27 @@ configure_direnv_hook() {
   fi
 }
 
+configure_pure_prompt() {
+  if ! command_exists brew || [[ ! -d "$(brew --prefix)/share/zsh/site-functions" ]]; then
+    echo -e "${WARN}===> pure not found in Homebrew site-functions; skipping ~/.zshrc prompt setup.${RESET}"
+    return
+  fi
+
+  if grep -qxF 'prompt pure' "$HOME/.zshrc" 2>/dev/null; then
+    echo -e "${INFO}===> pure prompt already configured in ~/.zshrc; leaving it unchanged.${RESET}"
+    return
+  fi
+
+  echo -e "${INFO}===> Configuring pure prompt in ~/.zshrc...${RESET}"
+  {
+    echo ""
+    echo "# pure prompt (sindresorhus/pure — installed via brew)"
+    echo 'fpath+=("$(brew --prefix)/share/zsh/site-functions")'
+    echo "autoload -U promptinit; promptinit"
+    echo "prompt pure"
+  } >> "$HOME/.zshrc"
+}
+
 finish_with_summary() {
   print_install_summary
   print_elapsed_time
@@ -875,6 +897,7 @@ run_non_admin_only() {
   brew cleanup
 
   configure_direnv_hook
+  configure_pure_prompt
   verify_non_admin_installations
   finish_with_summary
 }
