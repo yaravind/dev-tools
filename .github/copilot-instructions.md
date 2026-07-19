@@ -20,6 +20,19 @@
 ## Config files
 - config/vscode.txt: one VS Code extension ID per line; ignore blanks/comments.
 - config/dock_apps.txt: full app path per line; `--` prefix removes; `SPACER` inserts spacer; ignore blanks.
+- config/intellij.txt: IntelliJ IDEA plugin IDs, one per line. Each line must be prefixed with `community:` or `ultimate:`. Community mode installs only `community:` entries; ultimate mode installs both.
+- config/pycharm.txt: PyCharm plugin IDs, one per line. Each line must be prefixed with `community:` or `professional:`. Community mode installs only `community:` entries; professional mode installs both.
+
+## JetBrains CLI conventions (intellij_setup.sh, pycharm_setup.sh)
+- Always resolve the **native app binary** (`/Applications/IntelliJ IDEA.app/Contents/MacOS/idea`, `/Applications/PyCharm.app/Contents/MacOS/pycharm`). Never use the Homebrew wrapper (`idea`, `charm`) for `installPlugins` — the `open -na` wrapper does not reliably return exit codes or install output.
+- `installPlugins` output is very noisy (JVM deprecation warnings, IntelliJ internal `WARN` logs, `ClassNotFoundException` stack traces). These are harmless startup-time exceptions from the running plugin environment, not script errors. Filter them from displayed output using `grep -Ev` on: timestamp-prefixed `WARN` lines, `    at ` stack frames, `java.`/`kotlin.` exception headers, `Caused by:`, and `WARNING:`.
+- Always inspect the **raw** (unfiltered) output for outcome detection: `already installed`, `unknown plugins`, and exit code.
+- Three install outcomes to handle: `already installed` (return 2 / skip), `unknown plugins` (return 3 / warn — plugin ID not in Marketplace), generic failure (return 1 / error).
+- `intellij.indexing.shared` is an internal platform module, not a Marketplace plugin — it cannot be installed via `installPlugins` and should not be in config.
+- Both scripts support interactive mode selection printed at startup (before any other work); default is the higher-tier mode (`--ultimate` / `--professional`).
+
+## zsh pitfalls
+- `status` is a **reserved read-only variable** in zsh. Never use it as a local variable to capture exit codes. Use `install_exit_code` or any other name instead.
 
 ## Fork ribbon (site-wide)
 - A small "Fork me" ribbon is injected site-wide from `_includes/head-custom.html`.
