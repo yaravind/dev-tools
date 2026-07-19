@@ -1,15 +1,21 @@
 # IntelliJ IDEA plugin IDs (https://plugins.jetbrains.com)
 # One plugin ID per line. Blank lines and comments are ignored.
+# Prefix each line with `community:` or `ultimate:`
 
-org.intellij.scala
-com.microsoft.tooling.msservices.intellij.azure
-mobi.hsz.idea.gitignore
-org.intellij.plugins.markdown
-org.jetbrains.plugins.yaml
-org.jetbrains.plugins.github
-com.intellij.mermaid
-com.vexus2.intellij.openingithub
-com.dsoftware.ghtoolbar
-Key Promoter X
-com.github.copilot
-net.ashald.envfile
+# Community-compatible plugins
+community:org.intellij.scala
+community:com.microsoft.tooling.msservices.intellij.azure
+community:mobi.hsz.idea.gitignore
+community:org.jetbrains.plugins.yaml
+community:org.jetbrains.plugins.github
+community:com.intellij.mermaid
+community:com.vexus2.intellij.openingithub
+community:com.dsoftware.ghtoolbar
+community:Key Promoter X
+community:com.github.copilot
+community:net.ashald.envfile
+community:com.intellij.ml.llm
+
+# Ultimate-only plugins (installed only in --ultimate mode)
+ultimate:com.intellij.cron
+com.intellij.ml.llm.experimental
