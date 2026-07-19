@@ -9,20 +9,22 @@ This file documents the repository's helper scripts and what they do. For usage 
 
 | Script Name                             | Description                                                                                                                                  |
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `scripts/macos/setup_env.sh`            | Primary bootstrap script — installs and configures 30+ developer tools (JDK, Python, Rust, fonts, IDEs, shell utils) on macOS Apple Silicon |
+| `scripts/macos/setup_env.sh`            | Primary bootstrap script — installs and configures 30+ developer tools (JDK, Python, Rust, fonts, IDEs, shell utils) on macOS (Apple Silicon and Intel) |
 | `scripts/macos/setup_env_min.sh`        | Minimal macOS bootstrap script for Git, JDK, Maven, VS Code, and IntelliJ IDEA                                                               |
 | `scripts/macos/git_setup.sh`            | Configures global Git user credentials (name and email)                                                                                      |
 | `scripts/macos/jenv_setup.sh`           | Discovers all installed JVMs and registers them with the `jenv` version manager                                                              |
 | `scripts/macos/dock_setup.sh`           | Customizes the macOS Dock — sets icon size, removes defaults, and adds preferred apps from `config/dock_apps.txt`                            |
 | `scripts/macos/gen_dock_apps.sh`        | Generates `config/dock_apps.txt` by reading the current Dock configuration                                                                    |
+| `scripts/macos/default_apps_setup.sh`   | Sets macOS default apps for file types/URL schemes from `config/default_apps_macos.txt`, and can discover current UTI-to-extension handlers |
 | `scripts/macos/vscode_setup.sh`         | Installs VS Code extensions from `config/vscode.txt` and applies managed VS Code settings from `config/vscode_settings.json`                  |
+| `scripts/macos/zsh_plugins_setup.sh`    | Installs zsh plugins from `config/zsh_plugins.txt` using antidote, generates `~/.zsh_plugins.zsh`, and wires it into `~/.zshrc`               |
 | `scripts/macos/intellij_setup.sh`       | Installs IntelliJ IDEA plugins from `config/intellij.txt` via IntelliJ CLI                                                                   |
 | `scripts/macos/pycharm_setup.sh`        | Installs PyCharm plugins from `config/pycharm.txt` via PyCharm CLI                                                                            |
 | `scripts/macos/conv-dot-to-png.sh`      | Converts `triples.dot` to a PNG image using Graphviz                                                                                          |
 | `scripts/macos/colors.sh`               | Defines ANSI color code variables (sourced by other scripts)                                                                                 |
 | `scripts/macos/backup_codex.sh`         | Backs up local `~/.codex` data to a specified target directory                                                                               |
 | `scripts/macos/clone_github_repos.sh`   | Clones GitHub repositories listed in a file (`org/repo` format) into a destination directory                                                |
-| `scripts/macos/pre_setup.sh`            | Prepares Apple Silicon Homebrew setup (`/opt/homebrew` ownership, install, and shell profile wiring)                                        |
+| `scripts/macos/pre_setup.sh`            | Prepares Homebrew setup for Apple Silicon and Intel (prefix detection, install, and shell profile wiring)                                   |
 | `scripts/macos/restore_codex.sh`        | Restores a full `.codex` backup into `~/.codex` with a safety backup and rollback on failure                                                |
 | `scripts/macos/run_tests.sh`            | Runs macOS script validation checks (syntax, optional ShellCheck, config presence, and minimal dry-run verification)                        |
 | `scripts/macos/setup_env_min_rollback.sh` | Rolls back minimal macOS bootstrap installs and performs Homebrew cleanup                                                                   |

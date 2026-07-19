@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 # This script is designed to automate the installation and configuration of some
-# commonly used developer tools on macOS M1/M2 chip
+# commonly used developer tools on macOS (Apple Silicon and Intel)
 
 # Import colors codes for text
 source "${0:A:h}/colors.sh"
@@ -180,11 +180,29 @@ command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
+default_homebrew_prefix() {
+  case "$(uname -m)" in
+    arm64)
+      printf '/opt/homebrew\n'
+      ;;
+    x86_64)
+      printf '/usr/local\n'
+      ;;
+    *)
+      printf '/opt/homebrew\n'
+      ;;
+  esac
+}
+
 # Function to make sure Homebrew was prepared by pre_setup.sh
 ensure_homebrew_available() {
-  if ! command_exists brew && [[ -x /opt/homebrew/bin/brew ]]; then
-    echo -e "${ACTION}===> Loading Homebrew from /opt/homebrew into this shell...${RESET}"
-    eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+  local expected_prefix
+  local brew_prefix
+  expected_prefix="$(default_homebrew_prefix)"
+
+  if ! command_exists brew && [[ -x "${expected_prefix}/bin/brew" ]]; then
+    echo -e "${ACTION}===> Loading Homebrew from ${expected_prefix} into this shell...${RESET}"
+    eval "$("${expected_prefix}/bin/brew" shellenv zsh)"
   fi
 
   if ! command_exists brew; then
@@ -192,8 +210,9 @@ ensure_homebrew_available() {
     exit 1
   fi
 
-  if [[ -d /opt/homebrew && "$(stat -f '%Su' /opt/homebrew)" != "$USER" ]]; then
-    echo -e "${WARN}===> /opt/homebrew is not owned by ${USER}; Homebrew installs may fail with permission errors.${RESET}"
+  brew_prefix="$(brew --prefix 2>/dev/null)"
+  if [[ "$brew_prefix" == "/opt/homebrew" && -d "$brew_prefix" && "$(stat -f '%Su' "$brew_prefix")" != "$USER" ]]; then
+    echo -e "${WARN}===> ${brew_prefix} is not owned by ${USER}; Homebrew installs may fail with permission errors.${RESET}"
   fi
 }
 
@@ -307,7 +326,11 @@ homebrew_formula_owns_path() {
 }
 
 dotnet_command_conflicts_with_formula() {
-  local dotnet_path="/opt/homebrew/bin/dotnet"
+  local brew_prefix
+  local dotnet_path
+
+  brew_prefix="$(brew --prefix 2>/dev/null)" || return 1
+  dotnet_path="${brew_prefix}/bin/dotnet"
 
   [[ -e "$dotnet_path" || -L "$dotnet_path" ]] || return 1
   homebrew_formula_owns_path "dotnet" "$dotnet_path" && return 1
@@ -319,7 +342,7 @@ should_skip_formula_install() {
   local formula="$1"
 
   if [[ "$formula" == "powershell" ]] && dotnet_command_conflicts_with_formula; then
-    echo -e "${WARN}===> Skipping powershell: /opt/homebrew/bin/dotnet exists but is not owned by the Homebrew dotnet formula.${RESET}"
+    echo -e "${WARN}===> Skipping powershell: brew-linked dotnet exists but is not owned by the Homebrew dotnet formula.${RESET}"
     echo -e "${WARN}===> Choose either Homebrew formula dotnet + powershell, or the admin dotnet-sdk cask without automated PowerShell.${RESET}"
     skipped_formulae+=("powershell: dotnet command conflict")
     return 0

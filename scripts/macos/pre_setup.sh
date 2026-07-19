@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-# Prepare Homebrew's Apple Silicon prefix so the installing user owns it.
+# Prepare the Homebrew prefix and shell wiring for Apple Silicon and Intel Macs.
 
 set -e
 
@@ -21,44 +21,85 @@ error() {
   printf "${RED}%s${RESET}\n" "$1"
 }
 
-if [[ "$(uname -m)" != "arm64" ]]; then
-  error 'This script is intended for Apple Silicon Macs only.'
-  error "Detected architecture: $(uname -m)"
+command_exists() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+ARCHITECTURE="$(uname -m)"
+
+case "$ARCHITECTURE" in
+  arm64)
+    HOMEBREW_PREFIX="/opt/homebrew"
+    PREPARE_PREFIX_OWNERSHIP=1
+    ;;
+  x86_64)
+    HOMEBREW_PREFIX="/usr/local"
+    PREPARE_PREFIX_OWNERSHIP=0
+    ;;
+  *)
+    error "Unsupported macOS architecture: ${ARCHITECTURE}"
+    exit 1
+    ;;
+esac
+
+info "===> Detected architecture: ${ARCHITECTURE}"
+info "===> Target Homebrew prefix: ${HOMEBREW_PREFIX}"
+
+if [[ -e "$HOMEBREW_PREFIX" && ! -d "$HOMEBREW_PREFIX" ]]; then
+  error "ERROR: ${HOMEBREW_PREFIX} exists but is not a directory."
   exit 1
 fi
 
-if [[ -d /opt/homebrew ]]; then
-  info '===> /opt/homebrew already exists.'
-elif [[ -e /opt/homebrew ]]; then
-  error 'ERROR: /opt/homebrew exists but is not a directory.'
-  exit 1
+if [[ "$PREPARE_PREFIX_OWNERSHIP" -eq 1 ]]; then
+  if [[ -d "$HOMEBREW_PREFIX" ]]; then
+    info "===> ${HOMEBREW_PREFIX} already exists."
+  else
+    info "===> Creating ${HOMEBREW_PREFIX}..."
+    sudo mkdir -p "$HOMEBREW_PREFIX"
+  fi
+
+  if [[ ! -d "$HOMEBREW_PREFIX" ]]; then
+    error "ERROR: ${HOMEBREW_PREFIX} was not created successfully."
+    exit 1
+  fi
+
+  info "===> Setting ${HOMEBREW_PREFIX} ownership to $USER:admin..."
+  sudo chown -R "$USER":admin "$HOMEBREW_PREFIX"
 else
-  info '===> Creating /opt/homebrew...'
-  sudo mkdir -p /opt/homebrew
+  info "===> Skipping recursive ownership changes for ${HOMEBREW_PREFIX} on Intel Macs."
 fi
-
-if [[ ! -d /opt/homebrew ]]; then
-  error 'ERROR: /opt/homebrew was not created successfully.'
-  exit 1
-fi
-
-info "===> Setting /opt/homebrew ownership to $USER:admin..."
-sudo chown -R "$USER":admin /opt/homebrew
 
 info '===> Installing Homebrew...'
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-info '===> Checking /opt/homebrew ownership...'
-ls -ld /opt/homebrew
+BREW_BIN="${HOMEBREW_PREFIX}/bin/brew"
 
-if [[ "$(stat -f '%Su' /opt/homebrew)" != "$USER" ]]; then
-  error "ERROR: /opt/homebrew is not owned by $USER."
+if [[ ! -x "$BREW_BIN" ]] && command_exists brew; then
+  BREW_BIN="$(command -v brew)"
+  HOMEBREW_PREFIX="$("$BREW_BIN" --prefix)"
+fi
+
+if [[ ! -x "$BREW_BIN" ]]; then
+  error "ERROR: Unable to find brew binary under ${HOMEBREW_PREFIX}/bin or PATH."
   exit 1
 fi
 
-success "===> Verified /opt/homebrew is owned by $USER."
+info "===> Detected Homebrew binary: ${BREW_BIN}"
+info "===> Active Homebrew prefix: ${HOMEBREW_PREFIX}"
 
-shellenv_line='eval "$(/opt/homebrew/bin/brew shellenv zsh)"'
+if [[ "$PREPARE_PREFIX_OWNERSHIP" -eq 1 ]]; then
+  info "===> Checking ${HOMEBREW_PREFIX} ownership..."
+  ls -ld "$HOMEBREW_PREFIX"
+
+  if [[ "$(stat -f '%Su' "$HOMEBREW_PREFIX")" != "$USER" ]]; then
+    error "ERROR: ${HOMEBREW_PREFIX} is not owned by $USER."
+    exit 1
+  fi
+
+  success "===> Verified ${HOMEBREW_PREFIX} is owned by $USER."
+fi
+
+shellenv_line="eval \"\$(${BREW_BIN} shellenv zsh)\""
 
 info '===> Adding Homebrew to ~/.zprofile if needed...'
 touch "$HOME/.zprofile"
@@ -71,7 +112,7 @@ else
 fi
 
 info '===> Loading Homebrew into this script session...'
-eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+eval "$("$BREW_BIN" shellenv zsh)"
 
 info '===> Verifying Homebrew...'
 brew --version

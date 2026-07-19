@@ -6,7 +6,7 @@
 
 > **One command to bootstrap a productive macOS and Windows environment for software and data engineering development. From a fresh machine to fully developer friendly in minutes.** Several scripts and configurations in this repository were meticulously crafted through vibe coding powered by GitHub Copilot, Codex and Google Gemini.
 
-Setting up a new machine is tedious. Hunting down the right tools, configuring shells, managing Java versions, wiring up your IDE; it takes hours and rarely produces consistent results. This project captures battle-tested scripts and configs so you can reproduce a complete, opinionated developer environment on Apple Silicon (M1/M2/M3/M4) in one run.
+Setting up a new machine is tedious. Hunting down the right tools, configuring shells, managing Java versions, wiring up your IDE; it takes hours and rarely produces consistent results. This project captures battle-tested scripts and configs so you can reproduce a complete, opinionated developer environment on macOS (Apple Silicon and Intel) in one run.
 
 ## Features
 
@@ -20,18 +20,18 @@ Setting up a new machine is tedious. Hunting down the right tools, configuring s
 
 ## Setup Instructions
 
-- [macOS (Apple Silicon M1/M2/M3/M4)](#macos-apple-silicon-m1m2m3m4)
+- [macOS (Apple Silicon + Intel)](#macos-apple-silicon--intel)
   - [Steps](#steps)
   - [Minimal setup for Spark/Scala/Java development](#minimal-setup-for-sparkscalajava-development)
 - [Windows (10/11)](#windows-1011)
   - [Steps](#steps-1)
   - [Minimal setup for Spark/Scala/Java development](#minimal-setup-for-sparkscalajava-development-1)
 
-### macOS (Apple Silicon M1/M2/M3/M4)
+### macOS (Apple Silicon + Intel)
 
 > ***Warning***
 >
-> 1. The script is tested on Apple M2/M3/M4 Pro (should also work on M1) and zsh shell.
+> 1. The script is tested on Apple M2/M3/M4 Pro and zsh shell; it now supports Intel Macs as well.
 > 2. If you see the error "Bash is required to interpret this script", change to `bash` shell (type `bash` and hit enter).
 >    as Homebrew install script uses bash.
 > 3. If you haven't already installed Xcode Command Line Tools, you'll see a message that **The Xcode Command Line Tools
@@ -68,17 +68,19 @@ You can also install by just `git + Enter` in the shell.
 2. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
 3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
 4. cd <kbd>dev-tools</kbd>
-5. Make `setup_env.sh` executable: <kbd>chmod +x scripts/macos/setup_env.sh scripts/macos/jenv_setup.sh scripts/macos/git_setup.sh scripts/macos/gen_dock_apps.sh
-   scripts/macos/dock_setup.sh</kbd>
+5. Make macOS scripts executable: <kbd>chmod +x scripts/macos/setup_env.sh scripts/macos/jenv_setup.sh scripts/macos/git_setup.sh scripts/macos/gen_dock_apps.sh
+   scripts/macos/dock_setup.sh scripts/macos/default_apps_setup.sh scripts/macos/zsh_plugins_setup.sh</kbd>
 6. Run: <kbd>./scripts/macos/setup_env.sh</kbd>
 7. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: <kbd>cp config/.zshrc ~/</kbd> and run <kbd>source ~
    /.zshrc</kbd>
 8. Run <kbd>./scripts/macos/jenv_setup.sh</kbd> to add JDK
 9. Run <kbd>./scripts/macos/git_setup.sh</kbd> to setup Git Credentials
 10. Run <kbd>./scripts/macos/dock_setup.sh</kbd> to setup macOS Dock
-11. Run <kbd>./scripts/macos/vscode_setup.sh</kbd> to install VS Code extensions from `config/vscode.txt` and apply managed settings from `config/vscode_settings.json`
-12. Run <kbd>./scripts/macos/intellij_setup.sh</kbd> to install IntelliJ IDEA plugins from `config/intellij.txt`
-13. Run <kbd>./scripts/macos/pycharm_setup.sh</kbd> to install PyCharm plugins from `config/pycharm.txt`
+11. Run <kbd>./scripts/macos/default_apps_setup.sh</kbd> to apply default apps from `config/default_apps_macos.txt` (use `--discover` to inspect current UTI mappings)
+12. Run <kbd>./scripts/macos/zsh_plugins_setup.sh</kbd> to install and configure zsh plugins managed in `config/zsh_plugins.txt` using antidote
+13. Run <kbd>./scripts/macos/vscode_setup.sh</kbd> to install VS Code extensions from `config/vscode.txt` and apply managed settings from `config/vscode_settings.json`
+14. Run <kbd>./scripts/macos/intellij_setup.sh</kbd> to install IntelliJ IDEA plugins from `config/intellij.txt`
+15. Run <kbd>./scripts/macos/pycharm_setup.sh</kbd> to install PyCharm plugins from `config/pycharm.txt`
 
 #### Minimal setup for Spark/Scala/Java development
 
