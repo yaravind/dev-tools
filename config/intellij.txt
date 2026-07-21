@@ -15,6 +15,7 @@ community:Key Promoter X
 community:com.github.copilot
 community:net.ashald.envfile
 community:com.intellij.ml.llm
+com.fapiko.jetbrains.plugins.better_direnv
 
 # Ultimate-only plugins (installed only in --ultimate mode)
 ultimate:com.intellij.cron
