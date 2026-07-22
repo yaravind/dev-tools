@@ -2,6 +2,9 @@
 # One plugin ID per line. Blank lines and comments are ignored.
 # Prefix each line with `community:` or `ultimate:`
 
+# NOTES:
+# com.redhat.devtools.lsp4ij is needed by agnix
+
 # Community-compatible plugins
 community:org.intellij.scala
 community:com.microsoft.tooling.msservices.intellij.azure
@@ -15,7 +18,9 @@ community:Key Promoter X
 community:com.github.copilot
 community:net.ashald.envfile
 community:com.intellij.ml.llm
-com.fapiko.jetbrains.plugins.better_direnv
+community:com.fapiko.jetbrains.plugins.better_direnv
+community:com.redhat.devtools.lsp4ij
+community:io.agnix.jetbrains
 
 # Ultimate-only plugins (installed only in --ultimate mode)
 ultimate:com.intellij.cron

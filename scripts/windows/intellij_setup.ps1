@@ -18,29 +18,24 @@ param(
     [switch]$DryRun
 )
 
-function Write-Step {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Magenta
-}
+Set-Variable -Name ThemeHeaderColor -Value "DarkMagenta" -Option ReadOnly -Scope Script
+Set-Variable -Name ThemeBodyColor -Value "DarkGray" -Option ReadOnly -Scope Script
+Set-Variable -Name ThemeSuccessColor -Value "DarkCyan" -Option ReadOnly -Scope Script
+Set-Variable -Name ThemeWarnColor -Value "DarkYellow" -Option ReadOnly -Scope Script
 
-function Write-Info {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Cyan
-}
+function Write-Step { param([string]$Message) ; Write-Host "===> $Message" -ForegroundColor $Script:ThemeHeaderColor }
+function Write-Info { param([string]$Message) ; Write-Host "===> $Message" -ForegroundColor $Script:ThemeBodyColor }
+function Write-Ok { param([string]$Message) ; Write-Host "===> $Message" -ForegroundColor $Script:ThemeSuccessColor }
+function Write-Warn { param([string]$Message) ; Write-Host "===> WARN: $Message" -ForegroundColor $Script:ThemeWarnColor }
+function Write-Err { param([string]$Message) ; Write-Host "ERROR: $Message" -ForegroundColor Red }
 
-function Write-Ok {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Green
-}
-
-function Write-Warn {
-    param([string]$Message)
-    Write-Host "===> WARN: $Message" -ForegroundColor Yellow
-}
-
-function Write-Err {
-    param([string]$Message)
-    Write-Host "ERROR: $Message" -ForegroundColor Red
+function Print-Banner {
+    Write-Host ""
+    Write-Host "+------------------------------------------------------------------------------+" -ForegroundColor $Script:ThemeHeaderColor
+    Write-Host ("| {0,-76} |" -f "dev-tools") -ForegroundColor $Script:ThemeHeaderColor
+    Write-Host ("| {0,-76} |" -f "https://github.com/yaravind/dev-tools") -ForegroundColor $Script:ThemeHeaderColor
+    Write-Host "+------------------------------------------------------------------------------+" -ForegroundColor $Script:ThemeHeaderColor
+    Write-Host ""
 }
 
 function Test-CommandExists {
@@ -55,11 +50,7 @@ function Resolve-ScriptDir {
 }
 
 function Test-IsInteractiveInput {
-    try {
-        return [Environment]::UserInteractive -and -not [Console]::IsInputRedirected
-    } catch {
-        return $false
-    }
+    try { return [Environment]::UserInteractive -and -not [Console]::IsInputRedirected } catch { return $false }
 }
 
 function Print-ModeOptions {
@@ -73,7 +64,6 @@ function Resolve-Mode {
         Write-Err "Use only one mode switch: -Ultimate or -Community."
         exit 1
     }
-
     if ($Ultimate) { return "ultimate" }
     if ($Community) { return "community" }
 
@@ -82,7 +72,6 @@ function Resolve-Mode {
         Write-Warn "Non-interactive confirmation enabled (-Yes); using mode: --$mode"
         return $mode
     }
-
     if (-not (Test-IsInteractiveInput)) {
         Write-Warn "No interactive terminal detected; using mode: --$mode"
         return $mode
@@ -134,9 +123,7 @@ function Resolve-IntelliJCli {
     }
 
     foreach ($cmd in @("idea64.exe", "idea64", "idea.exe", "idea")) {
-        if (Test-CommandExists $cmd) {
-            return (Get-Command $cmd -ErrorAction Stop).Source
-        }
+        if (Test-CommandExists $cmd) { return (Get-Command $cmd -ErrorAction Stop).Source }
     }
 
     if ($AllowMissing) {
@@ -150,38 +137,130 @@ function Resolve-IntelliJCli {
 
 function Filter-PluginInstallOutput {
     param([string[]]$Lines)
-
     if (-not $Lines) { return @() }
-    $noisePattern = '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|^\s+at |^(java|kotlin)\.|^Caused by:|^WARNING:|^\s*$'
+    $noisePattern = '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|^\s*plugin repositories:\s*\[null\]\s*$|^\s+at |^(java|kotlin)\.|^Caused by:|^WARNING:|^\s*$'
     return @($Lines | Where-Object { $_ -notmatch $noisePattern })
 }
 
+function Parse-MissingDependencies {
+    param([string[]]$RawLines)
+    $deps = New-Object System.Collections.Generic.HashSet[string] ([StringComparer]::OrdinalIgnoreCase)
+    $depParents = @{}
+    foreach ($line in $RawLines) {
+        if ($line -match "Plugin '[^']+'\s+\(([^)]+)\)\s+has dependency on '([^']+)'") {
+            $parent = $Matches[1].Trim()
+            $depId = $Matches[2].Trim()
+            if ($depId) {
+                [void]$deps.Add($depId)
+                if (-not $depParents.ContainsKey($depId)) {
+                    $depParents[$depId] = $parent
+                }
+            }
+        } elseif ($line -match "dependency on '([^']+)'") {
+            [void]$deps.Add($Matches[1].Trim())
+        }
+    }
+    return [PSCustomObject]@{
+        Dependencies = @($deps)
+        DependencyParents = $depParents
+    }
+}
+
 function Invoke-IntelliJPluginInstall {
-    param(
-        [string]$CliPath,
-        [string]$PluginId
-    )
+    param([string]$CliPath, [string]$PluginId)
 
     $rawLines = @(& $CliPath installPlugins $PluginId 2>&1 | ForEach-Object { $_.ToString() })
     $exitCode = $LASTEXITCODE
     $rawOutput = $rawLines -join "`n"
 
     $filtered = Filter-PluginInstallOutput -Lines $rawLines
-    foreach ($line in $filtered) {
-        Write-Host $line
+    foreach ($line in $filtered) { Write-Host $line }
+
+    $dependencyParse = Parse-MissingDependencies -RawLines $rawLines
+
+    $status = "failed"
+    if ($rawOutput -match "already installed") { $status = "already" }
+    elseif ($rawOutput -match "unknown plugins") { $status = "unknown" }
+    elseif ($exitCode -eq 0) { $status = "installed" }
+
+    return [PSCustomObject]@{
+        Status = $status
+        MissingDependencies = $dependencyParse.Dependencies
+        MissingDependencyParents = $dependencyParse.DependencyParents
+    }
+}
+
+function Print-StructuredReport {
+    param(
+        [string]$Mode,
+        [string]$ConfigPath,
+        [string]$Launcher,
+        [string]$OverallStatus,
+        [int]$InitialRequestedCount,
+        [int]$AttemptedCount,
+        [int]$InstalledCount,
+        [int]$SkippedCount,
+        [int]$AutoDependencyCount,
+        [int]$UnknownCount,
+        [int]$FailCount,
+        [int]$EditionSkipCount,
+        [int]$DuplicateCount,
+        [int]$InvalidCount,
+        [string[]]$NetNewPlugins,
+        [string[]]$DependencyOrder,
+        [hashtable]$DependencyParent
+    )
+
+    $statusIcon = if ($OverallStatus -eq "SUCCESS") { "✔" } else { "⚠" }
+    $statusColor = if ($OverallStatus -eq "SUCCESS") { $Script:ThemeSuccessColor } else { $Script:ThemeWarnColor }
+
+    Write-Host ""
+    Write-Host "Final Status Report" -ForegroundColor $Script:ThemeHeaderColor
+    Write-Host "──────────────────────────────────────────────────────────────────────────────" -ForegroundColor $Script:ThemeHeaderColor
+    Write-Host ("  {0,-24} {1}" -f "Script", "IntelliJ Plugin Setup (Windows)") -ForegroundColor $Script:ThemeBodyColor
+    Write-Host ("  {0,-24} {1}" -f "Mode", "--$Mode") -ForegroundColor $Script:ThemeBodyColor
+    Write-Host ("  {0,-24} {1}" -f "Config", $ConfigPath) -ForegroundColor $Script:ThemeBodyColor
+    Write-Host ("  {0,-24} {1}" -f "Launcher", $Launcher) -ForegroundColor $Script:ThemeBodyColor
+    Write-Host ("  {0,-24} {1} {2}" -f "Status", $statusIcon, $OverallStatus) -ForegroundColor $statusColor
+    Write-Host "──────────────────────────────────────────────────────────────────────────────" -ForegroundColor $Script:ThemeHeaderColor
+    Write-Host ("  {0,-24} {1}" -f "Requested", $InitialRequestedCount) -ForegroundColor $Script:ThemeBodyColor
+    Write-Host ("  {0,-24} {1}" -f "Attempted", $AttemptedCount) -ForegroundColor $Script:ThemeBodyColor
+    Write-Host ("  {0,-24} {1}" -f "Installed (net new)", $InstalledCount) -ForegroundColor $Script:ThemeBodyColor
+    Write-Host ("  {0,-24} {1}" -f "Already installed", $SkippedCount) -ForegroundColor $Script:ThemeBodyColor
+    Write-Host ("  {0,-24} {1}" -f "Auto dependencies queued", $AutoDependencyCount) -ForegroundColor $Script:ThemeBodyColor
+    Write-Host ("  {0,-24} {1}" -f "Unknown IDs", $UnknownCount) -ForegroundColor $Script:ThemeBodyColor
+    Write-Host ("  {0,-24} {1}" -f "Failed installs", $FailCount) -ForegroundColor $Script:ThemeBodyColor
+    Write-Host ("  {0,-24} {1}" -f "Edition skips", $EditionSkipCount) -ForegroundColor $Script:ThemeBodyColor
+    Write-Host ("  {0,-24} {1}" -f "Duplicates ignored", $DuplicateCount) -ForegroundColor $Script:ThemeBodyColor
+    Write-Host ("  {0,-24} {1}" -f "Invalid entries ignored", $InvalidCount) -ForegroundColor $Script:ThemeBodyColor
+    Write-Host "──────────────────────────────────────────────────────────────────────────────" -ForegroundColor $Script:ThemeHeaderColor
+
+    Write-Host "Net New Plugins Installed" -ForegroundColor $Script:ThemeHeaderColor
+    if (-not $NetNewPlugins -or $NetNewPlugins.Count -eq 0) {
+        Write-Host "  No net-new plugins were installed in this run." -ForegroundColor $Script:ThemeBodyColor
+    } else {
+        foreach ($plugin in $NetNewPlugins) { Write-Host "  • $plugin" -ForegroundColor $Script:ThemeSuccessColor }
     }
 
-    if ($rawOutput -match "already installed") { return "already" }
-    if ($rawOutput -match "unknown plugins") { return "unknown" }
-    if ($exitCode -eq 0) { return "installed" }
-    return "failed"
+    Write-Host ""
+    Write-Host "Next Steps" -ForegroundColor $Script:ThemeHeaderColor
+    if (-not $DependencyOrder -or $DependencyOrder.Count -eq 0) {
+        Write-Host "  No missing dependencies were detected." -ForegroundColor $Script:ThemeBodyColor
+    } else {
+        Write-Host "Suggested dependency entries to add to config/intellij.txt" -ForegroundColor $Script:ThemeHeaderColor
+        Write-Host ("| {0,-40} | {1,-34} | {2,-40} |" -f "Plugin ID", "Required By", "Suggested Entry")
+        Write-Host ("|-{0,-40}-|-{1,-34}-|-{2,-40}-|" -f ("-" * 40), ("-" * 34), ("-" * 40))
+        foreach ($dep in $DependencyOrder) {
+            $parent = $DependencyParent[$dep]
+            $suggested = "community:$dep"
+            Write-Host ("| {0,-40} | {1,-34} | {2,-40} |" -f $dep, $parent, $suggested)
+        }
+        Write-Host "  Review and add the suggested entries if you want deterministic future installs." -ForegroundColor $Script:ThemeBodyColor
+    }
 }
 
 $scriptDir = Resolve-ScriptDir
-if (-not $scriptDir) {
-    Write-Err "Could not resolve script directory."
-    exit 1
-}
+if (-not $scriptDir) { Write-Err "Could not resolve script directory." ; exit 1 }
 
 if (-not $ConfigPath) {
     $ConfigPath = Join-Path $scriptDir ".."
@@ -198,6 +277,7 @@ if ($resolvedConfig) {
     exit 1
 }
 
+Print-Banner
 Print-ModeOptions
 $mode = Resolve-Mode
 Write-Info "Selected mode: --$mode"
@@ -205,9 +285,13 @@ Write-Step "Reading IntelliJ plugin IDs from $ConfigPath"
 
 $pluginsToInstall = New-Object System.Collections.Generic.List[string]
 $seenPlugins = New-Object System.Collections.Generic.HashSet[string] ([StringComparer]::OrdinalIgnoreCase)
+$dependencyOrder = New-Object System.Collections.Generic.List[string]
+$dependencyParent = @{}
+$netNewPlugins = New-Object System.Collections.Generic.List[string]
 $duplicateCount = 0
 $invalidCount = 0
 $editionSkipCount = 0
+$autoDependencyCount = 0
 
 foreach ($line in Get-Content -Path $ConfigPath -ErrorAction Stop) {
     if ($null -eq $line) { continue }
@@ -242,10 +326,8 @@ foreach ($line in Get-Content -Path $ConfigPath -ErrorAction Stop) {
     [void]$pluginsToInstall.Add($pluginId)
 }
 
-if ($pluginsToInstall.Count -eq 0) {
-    Write-Err "No valid plugin IDs found in $ConfigPath."
-    exit 1
-}
+if ($pluginsToInstall.Count -eq 0) { Write-Err "No valid plugin IDs found in $ConfigPath." ; exit 1 }
+$initialRequestedCount = $pluginsToInstall.Count
 
 if ((-not $DryRun) -and (Test-IntelliJRunning)) {
     Write-Err "IntelliJ IDEA appears to be running. Quit IntelliJ IDEA, then re-run this script."
@@ -253,9 +335,7 @@ if ((-not $DryRun) -and (Test-IntelliJRunning)) {
 }
 
 $ideaCli = Resolve-IntelliJCli -AllowMissing:$DryRun
-if ($ideaCli) {
-    Write-Step "Using IntelliJ launcher: $ideaCli"
-}
+if ($ideaCli) { Write-Step "Using IntelliJ launcher: $ideaCli" }
 Write-Info ("Total plugin IDs queued: {0}" -f $pluginsToInstall.Count)
 
 $installCount = 0
@@ -264,21 +344,40 @@ $unknownCount = 0
 $failCount = 0
 $dryRunCount = 0
 
-for ($i = 0; $i -lt $pluginsToInstall.Count; $i++) {
-    $pluginId = $pluginsToInstall[$i]
-    Write-Step ("Installing plugin [{0}/{1}]: {2}" -f ($i + 1), $pluginsToInstall.Count, $pluginId)
+$index = 0
+while ($index -lt $pluginsToInstall.Count) {
+    $pluginId = $pluginsToInstall[$index]
+    Write-Step ("Installing plugin [{0}/{1}]: {2}" -f ($index + 1), $pluginsToInstall.Count, $pluginId)
 
     if ($DryRun) {
         Write-Info "DryRun: would install plugin: $pluginId"
         $dryRunCount++
+        $index++
         continue
     }
 
     $result = Invoke-IntelliJPluginInstall -CliPath $ideaCli -PluginId $pluginId
-    switch ($result) {
+    foreach ($depId in $result.MissingDependencies) {
+        if ([string]::IsNullOrWhiteSpace($depId)) { continue }
+        $requiredBy = if ($result.MissingDependencyParents.ContainsKey($depId)) { $result.MissingDependencyParents[$depId] } else { $pluginId }
+
+        if (-not $dependencyParent.ContainsKey($depId)) {
+            $dependencyParent[$depId] = $requiredBy
+            [void]$dependencyOrder.Add($depId)
+        }
+
+        if ($seenPlugins.Add($depId)) {
+            [void]$pluginsToInstall.Add($depId)
+            $autoDependencyCount++
+            Write-Info "Queued missing dependency plugin: $depId (required by $requiredBy)"
+        }
+    }
+
+    switch ($result.Status) {
         "installed" {
             Write-Ok "Installed `"$pluginId`"."
             $installCount++
+            [void]$netNewPlugins.Add($pluginId)
         }
         "already" {
             Write-Warn "Plugin `"$pluginId`" is already installed. Skipping."
@@ -293,29 +392,35 @@ for ($i = 0; $i -lt $pluginsToInstall.Count; $i++) {
             $failCount++
         }
     }
+
+    $index++
 }
 
-Write-Step "IntelliJ plugin setup complete."
-Write-Ok ("Installed: {0}" -f $installCount)
-Write-Warn ("Skipped (already installed): {0}" -f $skipCount)
-Write-Warn ("Skipped by edition mode: {0}" -f $editionSkipCount)
-Write-Warn ("Duplicates ignored: {0}" -f $duplicateCount)
-Write-Warn ("Invalid ignored: {0}" -f $invalidCount)
-if ($unknownCount -gt 0) {
-    Write-Warn ("Unknown plugin IDs (not in Marketplace): {0}" -f $unknownCount)
-} else {
-    Write-Ok ("Unknown plugin IDs: {0}" -f $unknownCount)
-}
-if ($DryRun) {
-    Write-Info ("DryRun plugins previewed: {0}" -f $dryRunCount)
-}
-if ($failCount -gt 0) {
-    Write-Err ("Failed: {0}" -f $failCount)
-} else {
-    Write-Ok ("Failed: {0}" -f $failCount)
-}
+if ($DryRun) { Write-Info ("DryRun plugins previewed: {0}" -f $dryRunCount) }
 
-if ($failCount -gt 0 -or $invalidCount -gt 0 -or $unknownCount -gt 0) {
+$overallStatus = "SUCCESS"
+if ($failCount -gt 0 -or $invalidCount -gt 0 -or $unknownCount -gt 0) { $overallStatus = "COMPLETED WITH ISSUES" }
+
+Print-StructuredReport `
+    -Mode $mode `
+    -ConfigPath $ConfigPath `
+    -Launcher $ideaCli `
+    -OverallStatus $overallStatus `
+    -InitialRequestedCount $initialRequestedCount `
+    -AttemptedCount $index `
+    -InstalledCount $installCount `
+    -SkippedCount $skipCount `
+    -AutoDependencyCount $autoDependencyCount `
+    -UnknownCount $unknownCount `
+    -FailCount $failCount `
+    -EditionSkipCount $editionSkipCount `
+    -DuplicateCount $duplicateCount `
+    -InvalidCount $invalidCount `
+    -NetNewPlugins @($netNewPlugins) `
+    -DependencyOrder @($dependencyOrder) `
+    -DependencyParent $dependencyParent
+
+if ($overallStatus -ne "SUCCESS") {
     Write-Err "IntelliJ setup completed with issues."
     exit 1
 }
