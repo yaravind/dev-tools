@@ -11,6 +11,10 @@ The-Coca-Cola-Company/tccc-fabric-automation-utils
 The-Coca-Cola-Company/tccc-mdp-self-serve-utils
 The-Coca-Cola-Company/tccc-spark-application-template
 The-Coca-Cola-Company/data-diff
+The-Coca-Cola-Company/agent-skills
+The-Coca-Cola-Company/tccc-agent-skills
+The-Coca-Cola-Company/tccc-agent-skills-for-data
+The-Coca-Cola-Company/tccc-data-product-agent-skills
 
 yaravind/dev-tools
 yaravind/vibe-coding
