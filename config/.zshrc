@@ -1,25 +1,23 @@
+# ============================================================
+# 1. SHELL MANAGEMENT
+# ============================================================
 alias profile='nano ~/.zshrc'
 alias reload='source ~/.zshrc && echo "Done"'
 alias cpreload='cp .zshrc ~/ && source ~/.zshrc && echo "Done"'
+alias c="clear"
+export EDITOR=/usr/bin/nano
 
-alias hosts='sudo nano /etc/hosts'
-alias gitconfig='nano ~/.gitconfig'
+# ============================================================
+# 2. NAVIGATION
+# ============================================================
+alias ..='cd ..'
+alias ...='cd ../../../'
+alias ....='cd ../../../../'
+alias .....='cd ../../../../../'
+alias .5='cd ../../../../..'
+alias ~="cd ~"
 
-alias rm='trash'
-alias cat='bat'
-
-# Grabs the disk usage in the current directory
-alias usage='du -ch | grep total'
-# Gets the total disk usage on your machine
-alias totalusage='df -hl'
-
-# Gives you what is using the most space. Both directories and files. Varies on current directory
-alias most='du -hsx * | sort -rh | head -10'
-
-# copy the working directory path
-alias cpwd='pwd|tr -d "\n" | pbcopy'
-
-#I can just run "up" to "cd ..", or I can run "up 6" to "cd ../../../../../.."
+# Run "up" to "cd ..", or "up 6" to go 6 levels up
 function up {
         if [[ "$#" < 1 ]] ; then
             cd ..
@@ -32,96 +30,41 @@ function up {
         fi
     }
 
+# ============================================================
+# 3. FILE LISTING
+# ============================================================
+alias ltr="eza -l -t modified -r -F -h --color=always"
+alias lta="eza -a -l -F -h --color=always"            # -F appends symbols to filenames
+alias ld='setopt +o nomatch; eza -ldh */ 2>/dev/null || eza -ldh .; setopt -o nomatch'  # directories only
+alias lf='eza -l --color=always | grep --color=always -v /$'    # files only (no hidden)
+alias lfa='eza -al --color=always | grep --color=always -v /$'  # files only (include hidden)
+alias l.='eza -a | grep "^\."'                         # dotfiles only
+alias o="open ."                                        # open current directory in Finder
 
-# ----------------------------------------Aravind bashrc ----------------------------------------
+# ============================================================
+# 4. FILE OPERATIONS
+# ============================================================
+alias rm='trash'
+alias cat='bat'
+alias untar='tar -zxvf '
+alias cpwd='pwd|tr -d "\n" | pbcopy'                   # copy working directory path to clipboard
+alias usage='du -ch | grep total'                       # disk usage in current directory
+alias totalusage='df -hl'                               # total disk usage on machine
+alias most='du -hsx * | sort -rh | head -10'            # top 10 largest files/dirs
 
-# External IP/Internet Speed
-alias myip="curl https://ipinfo.io/json" # or /ip for plain-text ip
-#know your external IP address
-alias ipe='curl ipinfo.io/ip'
-#know your local/internal IP address
-alias ipi='ipconfig getifaddr en0'
+# ============================================================
+# 5. NETWORK
+# ============================================================
+alias myip="curl https://ipinfo.io/json"                # external IP with full info (location, org, etc.)
+alias ipe='curl ipinfo.io/ip'                           # external IP plain text
+alias ipi='ipconfig getifaddr en0'                      # local/internal IP address
 alias speedtest="curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python3 -"
+
+# ============================================================
+# 6. SYSTEM INFO
+# ============================================================
 alias path='echo -e ${PATH//:/\n}'
 
-alias cls="clear"
-alias c="clear"
-alias ltr="eza -l -t modified -r -F -h --color=always"
-#-F appends symbols to filenames.
-alias lta="eza -a -l -F -h --color=always"
-#list only directories
-alias ld='setopt +o nomatch; eza -ldh */ 2>/dev/null || eza -ldh .; setopt -o nomatch'
-#list only files (exclude hidden files)
-alias lf='eza -l --color=always | grep --color=always -v /$'
-#list only files (include hidden files)
-alias lfa='eza -al --color=always | grep --color=always -v /$'
-# List only dotfiles (hidden files)
-alias l.='eza -a | grep "^\."'
-
-# Open the current directory in Finder (Mac only)
-alias o="open ."
-
-## a quick way to get out of current directory ##
-alias ..='cd ..'
-alias ...='cd ../../../'
-alias ....='cd ../../../../'
-alias .....='cd ../../../../'
-alias .4='cd ../../../../'
-alias .5='cd ../../../../..'
-alias ~="cd ~"
-
-#History
-alias hist='history'
-alias h='history'
-alias h1='history | tail -10'
-alias h2='history | tail -20'
-alias h3='history | tail -30'
-# History search (use: hs sometext)
-hs() { history | grep "$1"; }
-
-## Colorize the grep command output for ease of use (good for log files)##
-alias grep='grep --color=auto'
-
-# install  colordiff package :)
-alias cdiff='colordiff'
-
-#pretty format json using python tool
-#usage: prettyjson file.json
-#OR pipe unformatted to these to nicely format the JSON e.g. cat file.json | prettyjson
-alias prettyjson='python3 -m json.tool'
-alias json="python3 -m json.tool"
-
-#git
-alias gi='git init'
-alias gs='git status '
-alias ga='git add '
-alias gb='git branch '
-alias gc='git commit -m'
-alias gca='git commit --amend -m'
-alias gp='git push origin master'
-alias gd='git diff'
-alias go='git checkout '
-alias gl='git log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate'
-alias gld='git log --pretty=format:"%h %ad %s" --date=short --all'
-alias gsl='git shortlog'
-#List repository contributors by author name (sorted by name):
-alias gslu='git log --format='%aN' | sort -u'
-#List total commits by author (sorted by commit count)
-alias gslc='git shortlog -sn'
-#List file change stats by author
-gsu() { git log --shortstat --author="$1" | grep -E "fil(e|es) changed" | awk '{files+=$1; inserted+=$4; deleted+=$6; delta+=$4-$6; ratio=deleted/inserted} END {printf "Commit stats:\n- Files changed (total)..  %s\n- Lines added (total)....  %s\n- Lines deleted (total)..  %s\n- Total lines (delta)....  %s\n- Add./Del. ratio (1:n)..  1 : %s\n", files, inserted, deleted, delta, ratio }' - ;}
-#List what changed since given date
-gw() { git whatchanged --since "$1" --oneline --name-only --pretty=format: | sort | uniq; }
-# Git log find by commit message
-glf() { git log --all --grep="$1"; }
-
-#tar
-alias untar='tar -zxvf '
-
-#repository
-alias aptu='sudo apt-get update && sudo apt-get upgrade'
-
-## pass options to free ##
 alias meminfo='
 echo "--- Physical Memory ---";
 sysctl hw.memsize | awk "{printf \"%-15s %10.2f GB\n\", \"Total RAM:\", \$2/(1024^3)}";
@@ -147,15 +90,6 @@ echo "Compressed: Memory zipped to save space; much faster than using SSD swap."
 echo "Free:       Empty RAM doing nothing (Wasted RAM).";
 '
 
-## get top process eating memory
-alias psmem='ps -A -o pid=PID,pmem=%MEM,comm=COMMAND | tail -n +2 | sort -nr -k 2'
-alias psmem10='ps -A -o pid=PID,pmem=%MEM,comm=COMMAND | tail -n +2 | sort -nr -k 2 | head -10'
- 
-## get top process eating cpu ##
-alias pscpu='ps auxf | sort -nr -k 3'
-alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
- 
-## Get server cpu info ##
 alias cpuinfo='
 echo "--- CPU Hardware Information ---";
 sysctl -n machdep.cpu.brand_string | awk "{print \"Model:             \", \$0}";
@@ -171,26 +105,85 @@ echo "\n--- Note on Apple Silicon ---";
 echo "Because Apple uses a System-on-a-Chip (SoC) design, there is only";
 echo "ONE package. Therefore, Cores per Package and Total Cores are identical.";
 '
- 
-## older system use /proc/cpuinfo ##
-##alias cpuinfo='less /proc/cpuinfo' ##
- 
-## get GPU ram on desktop / laptop##
-alias gpumeminfo='grep -i --color memory /var/log/Xorg.0.log'
 
-# Edit shortcuts for config files
+alias gpumeminfo='system_profiler SPDisplaysDataType | grep -E "Chipset|Vendor|Metal|VRAM"'
+
+# ============================================================
+# 7. PROCESS MONITOR
+# ============================================================
+alias psmem='ps -A -o pid=PID,pmem=%MEM,comm=COMMAND | tail -n +2 | sort -nr -k 2'
+alias psmem10='ps -A -o pid=PID,pmem=%MEM,comm=COMMAND | tail -n +2 | sort -nr -k 2 | head -10'
+alias pscpu='ps aux | sort -nr -k 3'
+alias pscpu10='ps aux | sort -nr -k 3 | head -10'
+
+# ============================================================
+# 8. HISTORY
+# ============================================================
+alias h='history'
+alias h1='history | tail -10'
+alias h2='history | tail -20'
+alias h3='history | tail -30'
+hs() { history | grep "$1"; }                           # search history (usage: hs sometext)
+
+# ============================================================
+# 9. SEARCH & TEXT
+# ============================================================
+alias grep='grep --color=auto'
+alias json='jq .'                                       # pretty format json (usage: json file.json  OR  cat file.json | json)
+
+# ============================================================
+# 10. GIT
+# ============================================================
+alias gi='git init'
+alias gs='git status '
+alias ga='git add '
+alias gb='git branch '
+alias gc='git commit -m'
+alias gca='git commit --amend -m'
+alias gp='git push origin $(git branch --show-current)'
+alias gd='git diff'
+alias gco='git checkout '
+alias gl='git log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate'
+alias gld='git log --pretty=format:"%h %ad %s" --date=short --all'
+alias gsl='git shortlog'
+alias gslu='git log --format="%aN" | sort -u'          # list contributors by name
+alias gslc='git shortlog -sn'                           # total commits by author
+gsu() { git log --shortstat --author="$1" | grep -E "fil(e|es) changed" | awk '{files+=$1; inserted+=$4; deleted+=$6; delta+=$4-$6; ratio=deleted/inserted} END {printf "Commit stats:\n- Files changed (total)..  %s\n- Lines added (total)....  %s\n- Lines deleted (total)..  %s\n- Total lines (delta)....  %s\n- Add./Del. ratio (1:n)..  1 : %s\n", files, inserted, deleted, delta, ratio }' - ;}
+gw() { git whatchanged --since "$1" --oneline --name-only --pretty=format: | sort | uniq; }
+glf() { git log --all --grep="$1"; }                   # find commit by message
+
+# ============================================================
+# 11. GITHUB CLI
+# ============================================================
+alias ghr='gh repo view --web'                          # open current repo in browser
+alias ghpr='gh pr list'                                 # list open PRs
+alias ghprc='gh pr create'                              # create a PR
+alias ghprv='gh pr view --web'                          # open current PR in browser
+alias ghis='gh issue list'                              # list issues
+alias ghisc='gh issue create'                           # create an issue
+
+# ============================================================
+# 12. CONFIG EDITORS
+# ============================================================
+alias hosts='sudo nano /etc/hosts'
+alias gitconfig='nano ~/.gitconfig'
 alias sshconfig="${EDITOR:-nano} ~/.ssh/config"
-alias bashrc="${EDITOR:-nano} +120 ~/.bashrc && source ~/.bashrc && echo Bash config edited and reloaded."
 
-#JDK & Maven
+# ============================================================
+# 13. JAVA / MAVEN
+# ============================================================
 alias jdks='/usr/libexec/java_home -V'
 alias mvni='mvn clean install'
 alias mvnc='mvn clean compile'
 alias mvnp='mvn clean package'
 
-# Default editor to Nano - http://stackoverflow.com/questions/41866734/what-is-the-advantage-of-setting-a-default-editor-for-bash
-export EDITOR=/usr/bin/nano
-
-# jenv setup
 export PATH="$HOME/.jenv/bin:$PATH"
 eval "$(jenv init -)"
+
+# ============================================================
+# 14. TOOLS & INTEGRATIONS
+# ============================================================
+eval "$(thefuck --alias)"                               # type 'fuck' to correct last failed command
+eval "$(direnv hook zsh)"                               # auto-load .envrc on directory change
+alias tldr='tlrc'                                       # quick command examples
+alias logs='lnav'                                       # interactive log file navigator
