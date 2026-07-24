@@ -4,16 +4,28 @@
 - Purpose: cross-platform bootstrap for macOS (zsh) and Windows (PowerShell) using Homebrew/winget.
 - Layout: scripts/macos/, scripts/windows/, config/, docs/, assets/, .github/workflows/.
 
+## Branding and logging defaults (locked)
+- Keep repository identity as **dev-tools** (do not rename commands/URLs).
+- Primary tagline is **"Works on my machine. And yours."**
+- Visual direction is **Premium + Polished** with **Royal Purple + Mint Green** accents that work in dark/light terminals.
+- Keep the shared boxed ASCII `dev-tools` banner in `scripts/macos/branding.sh`, `scripts/macos/branding_bash.sh`, and `scripts/windows/branding.ps1`, and print it once per script invocation.
+- Runtime logs use Option 2 symbols and levels: `◆ PHASE`, `ℹ INFO`, `✓ OK`, `⚠ WARN`, `✖ ERROR` (optional `• DEBUG` with `EBK_DEBUG=1`).
+- Do not reintroduce legacy `===>`/`==>` runtime prefixes.
+- Normalize external `Warning:` lines to `⚠ WARN` where feasible.
+- Keep structured final reports (status/counts/duration) consistent across macOS and Windows setup/install scripts.
+- GitHub Pages branding should stay aligned with CLI branding (see `_config.yml` and `_includes/head-custom.html`).
+- For performance-sensitive setup paths, prefer bulk package-state queries/caches over repeated per-item package manager calls.
+
 ## macOS (zsh) conventions
 - Shebang `#!/bin/zsh`; use `command_exists(){ command -v "$1" >/dev/null 2>&1; }`.
-- Log prefix `===>`; colors from scripts/macos/colors.sh or inline (`$RED/$YELLOW/$GREEN/$CYAN/$MAGENTA/$NC`).
-- Use printf with args (`printf '===> %s\n' "$msg"`), skip blank/comment lines when reading config lists.
+- Use shared branding log helpers from `scripts/macos/branding.sh` / `scripts/macos/branding_bash.sh` for log format and colors.
+- Skip blank/comment lines when reading config lists.
 - Idempotent installs; rollback for destructive ops (see dock_setup.sh plist backup).
 - Resolve config paths relative to script dir: `${0:A:h}/../config/`.
 
 ## Windows (PowerShell) conventions
 - Target PS 5.1+; require admin; `Set-ExecutionPolicy Bypass -Scope Process -Force`.
-- Logging helpers: Write-Step (Magenta), Write-Info (Cyan), Write-Ok (Green), Write-Warn (Yellow); errors with `Write-Host "ERROR: ..." -ForegroundColor Red`.
+- Use shared branding log helpers from `scripts/windows/branding.ps1` (`Write-EbkPhase`, `Write-EbkInfo`, `Write-EbkOk`, `Write-EbkWarn`, `Write-EbkError`).
 - `Test-CommandExists` helper; `winget install --id "$Id" --exact --accept-source-agreements --accept-package-agreements --silent`; treat exit code -1978335189 as already installed.
 - Persist env vars with `[Environment]::SetEnvironmentVariable(name, value, "User")`.
 

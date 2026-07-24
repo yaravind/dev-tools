@@ -1,5 +1,8 @@
 # Developer Tools
 
+> **Engineer Bootstrap Kit**  
+> *Works on my machine. And yours.*
+
 [![Script Tests](https://github.com/yaravind/dev-tools/actions/workflows/script-tests.yml/badge.svg)](https://github.com/yaravind/dev-tools/actions/workflows/script-tests.yml)
 
 📖 **Documentation:** [https://yaravind.github.io/dev-tools/](https://yaravind.github.io/dev-tools/)
@@ -68,19 +71,24 @@ You can also install by just `git + Enter` in the shell.
 2. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
 3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
 4. cd <kbd>dev-tools</kbd>
-5. Make macOS scripts executable: <kbd>chmod +x scripts/macos/setup_env.sh scripts/macos/jenv_setup.sh scripts/macos/git_setup.sh scripts/macos/gen_dock_apps.sh
-   scripts/macos/dock_setup.sh scripts/macos/default_apps_setup.sh scripts/macos/zsh_plugins_setup.sh</kbd>
-6. Run: <kbd>./scripts/macos/setup_env.sh</kbd>
-7. Copy `.zshrc` (or `.bashrc` based on your shell) to home directory: <kbd>cp config/.zshrc ~/</kbd> and run <kbd>source ~
-   /.zshrc</kbd>
-8. Run <kbd>./scripts/macos/jenv_setup.sh</kbd> to add JDK
-9. Run <kbd>./scripts/macos/git_setup.sh</kbd> to setup Git Credentials
-10. Run <kbd>./scripts/macos/dock_setup.sh</kbd> to setup macOS Dock
-11. Run <kbd>./scripts/macos/default_apps_setup.sh</kbd> to apply default apps from `config/default_apps_macos.txt` (use `--discover` to inspect current UTI mappings)
-12. Run <kbd>./scripts/macos/zsh_plugins_setup.sh</kbd> to install and configure zsh plugins managed in `config/zsh_plugins.txt` using antidote
-13. Run <kbd>./scripts/macos/vscode_setup.sh</kbd> to install VS Code extensions from `config/vscode.txt` and apply managed settings from `config/vscode_settings.json`
-14. Run <kbd>./scripts/macos/intellij_setup.sh</kbd> to install IntelliJ IDEA plugins from `config/intellij.txt`
-15. Run <kbd>./scripts/macos/pycharm_setup.sh</kbd> to install PyCharm plugins from `config/pycharm.txt`
+5. Run the interactive launchpad and choose a setup profile: <kbd>zsh scripts/macos/launchpad.sh</kbd>
+6. To preview without making changes, run: <kbd>zsh scripts/macos/launchpad.sh --dry-run</kbd>
+
+Manual mode is still available if you prefer one script at a time:
+
+1. Run <kbd>zsh scripts/macos/pre_setup.sh</kbd>
+2. Run <kbd>zsh scripts/macos/setup_env.sh --non-admin-only</kbd>
+3. Run <kbd>zsh scripts/macos/setup_env.sh --admin-only</kbd> if you want admin-likely casks such as JDKs and dotnet-sdk
+4. Run <kbd>zsh scripts/macos/git_setup.sh</kbd> to setup Git credentials
+5. Run <kbd>zsh scripts/macos/clone_github_repos.sh</kbd> to clone repositories from `config/github-repos.txt`
+6. Run <kbd>zsh scripts/macos/zsh_plugins_setup.sh</kbd> to install and configure zsh plugins managed in `config/zsh_plugins.txt` using antidote
+7. Run <kbd>zsh scripts/macos/dock_setup.sh</kbd> to setup macOS Dock
+8. Run <kbd>zsh scripts/macos/macos_setup.sh --non-admin-only</kbd> or <kbd>zsh scripts/macos/macos_setup.sh --admin-only</kbd> to customize OS settings
+9. Run <kbd>zsh scripts/macos/default_apps_setup.sh</kbd> to apply default apps from `config/default_apps_macos.txt` (use `--discover` to inspect current UTI mappings)
+10. Run <kbd>zsh scripts/macos/jenv_setup.sh</kbd> to add JDKs to jenv
+11. Run <kbd>bash scripts/macos/vscode_setup.sh</kbd> to install VS Code extensions from `config/vscode.txt` and apply managed settings from `config/vscode_settings.json`
+12. Run <kbd>zsh scripts/macos/intellij_setup.sh</kbd> to install IntelliJ IDEA plugins from `config/intellij.txt`
+13. Run <kbd>zsh scripts/macos/pycharm_setup.sh</kbd> to install PyCharm plugins from `config/pycharm.txt`
 
 #### Minimal setup for Spark/Scala/Java development
 

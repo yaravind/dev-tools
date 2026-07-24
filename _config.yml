@@ -1,6 +1,8 @@
 title: Developer Tools
 description: >-
   One command to bootstrap scripts for software and data engineers. Quickly setup Apple Silicon macOS and Windows 11 with 30+ curated tools.
+product_label: Engineer Bootstrap Kit
+tagline: Works on my machine. And yours.
 url: "https://yaravind.github.io"
 baseurl: "/dev-tools"
 

@@ -11,6 +11,7 @@ This file documents the repository's helper scripts and what they do. For usage 
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scripts/macos/setup_env.sh`            | Primary bootstrap script — installs and configures 30+ developer tools (JDK, Python, Rust, fonts, IDEs, shell utils) on macOS (Apple Silicon and Intel) |
 | `scripts/macos/setup_env_min.sh`        | Minimal macOS bootstrap script for Git, JDK, Maven, VS Code, and IntelliJ IDEA                                                               |
+| `scripts/macos/launchpad.sh`            | Interactive macOS launchpad that lets users choose setup profiles or tasks, resolves dependencies, runs scripts in order, and writes per-step logs |
 | `scripts/macos/git_setup.sh`            | Configures global Git user credentials (name and email)                                                                                      |
 | `scripts/macos/jenv_setup.sh`           | Discovers all installed JVMs and registers them with the `jenv` version manager                                                              |
 | `scripts/macos/dock_setup.sh`           | Customizes the macOS Dock — sets icon size, removes defaults, and adds preferred apps from `config/dock_apps.txt`                            |

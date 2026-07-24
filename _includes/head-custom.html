@@ -1,6 +1,120 @@
 <!-- Favicon -->
 <link rel="icon" type="image/png" href="{{ '/assets/favicon.png' | relative_url }}">
 
+<!-- Engineer Bootstrap Kit brand tokens + header injection -->
+<style>
+  :root {
+    --ebk-bg: #ffffff;
+    --ebk-text: #2e2445;
+    --ebk-muted: #5b4d7a;
+    --ebk-border: #e5def7;
+    --ebk-primary: #7c3aed;
+    --ebk-accent: #10b981;
+    --ebk-surface: #f8f5ff;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ebk-bg: #100c19;
+      --ebk-text: #f4efff;
+      --ebk-muted: #c7b9eb;
+      --ebk-border: #31244d;
+      --ebk-primary: #a78bfa;
+      --ebk-accent: #6ee7b7;
+      --ebk-surface: #171127;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .ebk-brand-block {
+    margin: 14px 0 18px;
+    padding: 12px 14px;
+    border: 1px solid var(--ebk-border);
+    border-radius: 10px;
+    background: var(--ebk-surface);
+    color: var(--ebk-text);
+  }
+
+  .ebk-brand-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ebk-brand-logo {
+    width: 26px;
+    height: 26px;
+    display: inline-block;
+  }
+
+  .ebk-brand-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+
+  .ebk-brand-subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--ebk-muted);
+  }
+
+  .ebk-brand-badge {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: var(--ebk-primary);
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var pageHeader = document.querySelector('.page-header');
+    if (!pageHeader || pageHeader.querySelector('[data-ebk-brand="true"]')) {
+      return;
+    }
+
+    var block = document.createElement('div');
+    block.className = 'ebk-brand-block';
+    block.setAttribute('data-ebk-brand', 'true');
+
+    var row = document.createElement('div');
+    row.className = 'ebk-brand-row';
+
+    var logo = document.createElement('img');
+    logo.className = 'ebk-brand-logo';
+    logo.alt = 'Command Spark logo';
+    logo.src = '{{ "/assets/command-spark.svg" | relative_url }}';
+
+    var textWrap = document.createElement('div');
+    var title = document.createElement('p');
+    title.className = 'ebk-brand-title';
+    title.textContent = '{{ site.product_label | default: "Engineer Bootstrap Kit" | escape }}';
+
+    var subtitle = document.createElement('p');
+    subtitle.className = 'ebk-brand-subtitle';
+    subtitle.textContent = '{{ site.tagline | default: "Works on my machine. And yours." | escape }}';
+
+    textWrap.appendChild(title);
+    textWrap.appendChild(subtitle);
+
+    var badge = document.createElement('span');
+    badge.className = 'ebk-brand-badge';
+    badge.textContent = 'dev-tools';
+
+    row.appendChild(logo);
+    row.appendChild(textWrap);
+    row.appendChild(badge);
+    block.appendChild(row);
+    pageHeader.appendChild(block);
+  });
+</script>
+
 <!-- Google Analytics -->
 {% if site.google_analytics %}
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ site.google_analytics }}"></script>
