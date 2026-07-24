@@ -32,6 +32,7 @@ ms-toolsai.jupyter-renderers
 ms-toolsai.vscode-jupyter-cell-tags
 ms-azuretools.vscode-docker
 ms-vscode.azurecli
+ms-vscode.powershell
 ms-azuretools.vscode-azurefunctions
 ms-azuretools.vscode-azureappservice
 ms-azuretools.vscode-azureresourcegroups
