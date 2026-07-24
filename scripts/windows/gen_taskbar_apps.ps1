@@ -1,16 +1,9 @@
 # Requires -Version 5.1
 
-function Write-Step($msg) {
-    Write-Host "===> $msg" -ForegroundColor Magenta
-}
-function Write-Info($msg) {
-    Write-Host "===> $msg" -ForegroundColor Cyan
-}
-function Write-Ok($msg) {
-    Write-Host "===> $msg" -ForegroundColor Green
-}
-function Write-Warn($msg) {
-    Write-Host "===> $msg" -ForegroundColor Yellow
+$brandingScript = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "branding.ps1"
+if (Test-Path $brandingScript) {
+    . $brandingScript
+    Show-EbkBanner -ScriptName (Split-Path -Leaf $MyInvocation.MyCommand.Path)
 }
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
@@ -76,4 +69,3 @@ foreach ($app in $pinnedItems) {
 }
 
 Write-Ok "Done. Pinned Taskbar apps exported to $configPath"
-

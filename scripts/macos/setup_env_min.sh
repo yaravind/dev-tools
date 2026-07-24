@@ -13,8 +13,8 @@
 #   chmod +x scripts/macos/setup_env_min.sh
 #   ./scripts/macos/setup_env_min.sh
 
-# Import colors codes for text
-source "${0:A:h}/colors.sh"
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
 
 # Parse args
 DRY_RUN=0
@@ -43,24 +43,25 @@ command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
-log_step() {
-  printf '===> %s\n' "$1" | sed "s/^/${MAGENTA}/;s/$/${RESET}/"
+print_normalized_output() {
+  local line
+  while IFS= read -r line; do
+    if [[ "$line" == Warning:* ]]; then
+      log_warn "${line#Warning: }"
+    else
+      printf '%s\n' "$line"
+    fi
+  done
 }
 
-log_info() {
-  printf '===> %s\n' "$1" | sed "s/^/${CYAN}/;s/$/${RESET}/"
-}
-
-log_ok() {
-  printf '===> %s\n' "$1" | sed "s/^/${GREEN}/;s/$/${RESET}/"
-}
-
-log_warn() {
-  printf '===> %s\n' "$1" | sed "s/^/${YELLOW}/;s/$/${RESET}/"
-}
-
-log_error() {
-  printf 'ERROR: %s\n' "$1" | sed "s/^/${RED}/;s/$/${RESET}/" >&2
+run_brew_with_normalized_warnings() {
+  local output
+  output="$("$@" 2>&1)"
+  local command_status=$?
+  if [[ -n "$output" ]]; then
+    print_normalized_output <<< "$output"
+  fi
+  return "$command_status"
 }
 
 # Function to install Homebrew if not installed
@@ -80,7 +81,7 @@ brew_install_formula() {
   fi
 
   log_info "Installing formula: $formula"
-  brew install "$formula"
+  run_brew_with_normalized_warnings brew install "$formula"
 }
 
 brew_install_cask() {
@@ -92,7 +93,7 @@ brew_install_cask() {
   fi
 
   log_info "Installing cask: $cask"
-  brew install --cask "$cask"
+  run_brew_with_normalized_warnings brew install --cask "$cask"
 }
 
 install_maven_no_java_dep() {
@@ -103,7 +104,7 @@ install_maven_no_java_dep() {
 
   # Mirrors the approach used in setup_env.sh
   log_info "Installing maven (without pulling Java as a dependency)"
-  brew install --ignore-dependencies maven
+  run_brew_with_normalized_warnings brew install --ignore-dependencies maven
 }
 
 verify() {
@@ -150,7 +151,7 @@ main() {
   install_homebrew
 
   log_info "Updating Homebrew..."
-  brew update
+  run_brew_with_normalized_warnings brew update
 
   log_step "Installing required tools..."
 
@@ -168,7 +169,7 @@ main() {
   brew_install_cask intellij-idea-ce
 
   log_info "Cleaning up Homebrew..."
-  brew cleanup
+  run_brew_with_normalized_warnings brew cleanup
 
   verify
 

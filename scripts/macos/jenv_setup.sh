@@ -1,40 +1,7 @@
 #!/bin/zsh
 
-if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
-  RED=$(printf '\033[0;31m')
-  GREEN=$(printf '\033[0;32m')
-  YELLOW=$(printf '\033[1;33m')
-  CYAN=$(printf '\033[0;36m')
-  MAGENTA=$(printf '\033[0;35m')
-  RESET=$(printf '\033[0m')
-else
-  RED=''
-  GREEN=''
-  YELLOW=''
-  CYAN=''
-  MAGENTA=''
-  RESET=''
-fi
-
-log_step() {
-  printf '\n%s===> %s%s\n' "$MAGENTA" "$1" "$RESET"
-}
-
-log_info() {
-  printf '%sINFO: %s%s\n' "$CYAN" "$1" "$RESET"
-}
-
-log_ok() {
-  printf '%sOK: %s%s\n' "$GREEN" "$1" "$RESET"
-}
-
-log_warn() {
-  printf '%sWARN: %s%s\n' "$YELLOW" "$1" "$RESET"
-}
-
-log_error() {
-  printf '%sERROR: %s%s\n' "$RED" "$1" "$RESET" >&2
-}
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
 
 fail_count=0
 
@@ -117,7 +84,7 @@ select_global_version() {
   local global_ver
 
   while true; do
-    printf '\n%sINFO: Choose the version (from above) to set as global version: %s' "$CYAN" "$RESET"
+    printf '\nChoose the version (from above) to set as global version: '
     if ! read global_ver; then
       record_failure "No global Java version was provided."
       return 1

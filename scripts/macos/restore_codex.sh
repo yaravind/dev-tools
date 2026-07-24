@@ -1,5 +1,8 @@
 #!/bin/zsh
 
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
+
 set -u
 
 if [[ $# -ne 1 ]]; then

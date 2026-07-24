@@ -4,24 +4,10 @@
 #   Set-ExecutionPolicy Bypass -Scope Process -Force
 #   .\scripts\maven_setup.ps1
 
-function Write-Step {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Magenta
-}
-
-function Write-Info {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Cyan
-}
-
-function Write-Ok {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Green
-}
-
-function Write-Warn {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Yellow
+$brandingScript = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "branding.ps1"
+if (Test-Path $brandingScript) {
+    . $brandingScript
+    Show-EbkBanner -ScriptName (Split-Path -Leaf $MyInvocation.MyCommand.Path)
 }
 
 function Test-CommandExists {
@@ -88,8 +74,8 @@ if (-not (Test-Path $mavenDir)) {
     }
 
     if (-not $downloaded) {
-        Write-Host "ERROR: Could not download Maven $version from Apache mirrors." -ForegroundColor Red
-        Write-Host "ERROR: Check network access or update the version in scripts/maven_setup.ps1." -ForegroundColor Red
+        Write-EbkError "Could not download Maven $version from Apache mirrors."
+        Write-EbkError "Check network access or update the version in scripts/maven_setup.ps1."
         exit 1
     }
 

@@ -2,14 +2,13 @@
 # test_setup_env_min.sh - Safe verification harness for setup_env_min.sh
 # This script does not install anything. It performs the same verification checks as setup_env_min.sh's verify() function.
 
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
+
 SCRIPT_DIR="${0:A:h}"
 REPO_ROOT="${SCRIPT_DIR}/.."
 
 command_exists() { command -v "$1" >/dev/null 2>&1; }
-
-log_step() { printf '===> %s\n' "$1" }
-log_ok() { printf '===> OK: %s\n' "$1" }
-log_warn() { printf '===> WARN: %s\n' "$1" }
 
 log_step "Starting macOS minimal setup verification (safe)"
 

@@ -1,6 +1,7 @@
 #!/bin/zsh
 
-source "${0:A:h}/colors.sh"
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
 
 SCRIPT_DIR="${0:A:h}"
 SCRIPT_NAME="${0:t}"
@@ -10,6 +11,7 @@ THEME_HEADER=$'\033[38;5;63m'
 THEME_SUCCESS=$'\033[38;5;36m'
 THEME_WARN=$'\033[38;5;136m'
 THEME_BODY=$'\033[38;5;238m'
+RESET="$EBK_RESET"
 
 print_usage() {
   printf 'Usage: %s [--professional|--community]\n' "${SCRIPT_NAME}"
@@ -17,37 +19,8 @@ print_usage() {
   printf '  --community      Install only community entries and skip professional entries with warnings.\n'
 }
 
-print_banner() {
-  printf '\n'
-  printf "${THEME_HEADER}+------------------------------------------------------------------------------+${RESET}\n"
-  printf "${THEME_HEADER}| ${THEME_BODY}%-76s ${THEME_HEADER}|${RESET}\n" "dev-tools"
-  printf "${THEME_HEADER}| ${THEME_BODY}%-76s ${THEME_HEADER}|${RESET}\n" "https://github.com/yaravind/dev-tools"
-  printf "${THEME_HEADER}+------------------------------------------------------------------------------+${RESET}\n"
-  printf '\n'
-}
-
 command_exists() {
   command -v "$1" >/dev/null 2>&1
-}
-
-log_step() {
-  printf "${THEME_HEADER}===> %s${RESET}\n" "$1"
-}
-
-log_info() {
-  printf "${THEME_BODY}===> %s${RESET}\n" "$1"
-}
-
-log_ok() {
-  printf "${THEME_SUCCESS}===> %s${RESET}\n" "$1"
-}
-
-log_warn() {
-  printf "${THEME_WARN}===> WARN: %s${RESET}\n" "$1"
-}
-
-log_error() {
-  printf "${RED}ERROR: %s${RESET}\n" "$1" >&2
 }
 
 print_mode_options() {
@@ -278,7 +251,6 @@ for arg in "$@"; do
   esac
 done
 
-print_banner
 print_mode_options
 prompt_for_mode
 log_info "Selected mode: --${MODE}"

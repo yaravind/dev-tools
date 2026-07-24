@@ -1,29 +1,23 @@
 #!/bin/zsh
 
-source "${0:A:h}/colors.sh"
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
 
 SCRIPT_DIR="${0:A:h}"
 SCRIPT_NAME="${0:t}"
 INTELLIJ_PLUGIN_FILE="$(cd "${SCRIPT_DIR}/../../config" && pwd -P)/intellij.txt"
 MODE="ultimate"
+SCRIPT_START_SECONDS=$SECONDS
 THEME_HEADER=$'\033[38;5;63m'
 THEME_SUCCESS=$'\033[38;5;36m'
 THEME_WARN=$'\033[38;5;136m'
 THEME_BODY=$'\033[38;5;238m'
+RESET="$EBK_RESET"
 
 print_usage() {
   printf 'Usage: %s [--ultimate|--community]\n' "${SCRIPT_NAME}"
   printf '  --ultimate   Install community and ultimate plugin entries (default).\n'
   printf '  --community  Install only community entries and skip ultimate entries with warnings.\n'
-}
-
-print_banner() {
-  printf '\n'
-  printf "${THEME_HEADER}+------------------------------------------------------------------------------+${RESET}\n"
-  printf "${THEME_HEADER}| ${THEME_BODY}%-76s ${THEME_HEADER}|${RESET}\n" "dev-tools"
-  printf "${THEME_HEADER}| ${THEME_BODY}%-76s ${THEME_HEADER}|${RESET}\n" "https://github.com/yaravind/dev-tools"
-  printf "${THEME_HEADER}+------------------------------------------------------------------------------+${RESET}\n"
-  printf '\n'
 }
 
 print_mode_options() {
@@ -64,24 +58,9 @@ command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
-log_step() {
-  printf "${THEME_HEADER}===> %s${RESET}\n" "$1"
-}
-
-log_info() {
-  printf "${THEME_BODY}===> %s${RESET}\n" "$1"
-}
-
-log_ok() {
-  printf "${THEME_SUCCESS}===> %s${RESET}\n" "$1"
-}
-
-log_warn() {
-  printf "${THEME_WARN}===> WARN: %s${RESET}\n" "$1"
-}
-
-log_error() {
-  printf "${RED}ERROR: %s${RESET}\n" "$1" >&2
+log_phase() {
+  ebk_log_phase "$1"
+  [[ -n "${2:-}" ]] && ebk_log_info "$2"
 }
 
 trim() {
@@ -90,6 +69,21 @@ trim() {
   value="${value#"${value%%[![:space:]]*}"}"
   value="${value%"${value##*[![:space:]]}"}"
   printf '%s' "$value"
+}
+
+format_duration() {
+  local total_seconds="$1"
+  local hours=$((total_seconds / 3600))
+  local minutes=$(((total_seconds % 3600) / 60))
+  local seconds=$((total_seconds % 60))
+
+  if (( hours > 0 )); then
+    printf '%dh %dm %ds' "$hours" "$minutes" "$seconds"
+  elif (( minutes > 0 )); then
+    printf '%dm %ds' "$minutes" "$seconds"
+  else
+    printf '%ds' "$seconds"
+  fi
 }
 
 resolve_idea_cli() {
@@ -229,6 +223,7 @@ print_structured_report() {
   printf '  %-24s %s\n' "Edition skips" "$edition_skip_count"
   printf '  %-24s %s\n' "Duplicates ignored" "$duplicate_count"
   printf '  %-24s %s\n' "Invalid entries ignored" "$invalid_count"
+  printf '  %-24s %s\n' "Duration" "$(format_duration $((SECONDS - SCRIPT_START_SECONDS)))"
   printf "${THEME_HEADER}──────────────────────────────────────────────────────────────────────────────${RESET}\n"
 
   printf "${THEME_HEADER}Net New Plugins Installed${RESET}\n"
@@ -278,10 +273,10 @@ for arg in "$@"; do
   esac
 done
 
-print_banner
 print_mode_options
 prompt_for_mode
 log_info "Selected mode: --${MODE}"
+log_phase "DISCOVER" "Validating configuration and launcher"
 
 if [[ ! -f "$INTELLIJ_PLUGIN_FILE" ]]; then
   log_error "${INTELLIJ_PLUGIN_FILE} not found. Please create it with IntelliJ plugin IDs."
@@ -358,6 +353,7 @@ initial_requested_count="${#plugins_to_install[@]}"
 
 log_step "Using IntelliJ launcher: ${IDEA_CLI[1]}"
 log_info "Total plugin IDs queued: ${#plugins_to_install[@]}"
+log_phase "INSTALL" "Installing queued IntelliJ plugins"
 
 install_count=0
 skip_count=0
@@ -421,6 +417,7 @@ if (( fail_count > 0 || invalid_count > 0 || unknown_count > 0 )); then
 fi
 
 attempted_total=$((plugin_index - 1))
+log_phase "SUMMARY" "Compiling final run report"
 print_structured_report "$overall_status" "$attempted_total" "${#net_new_plugins[@]}"
 
 if [[ "$overall_status" != "SUCCESS" ]]; then

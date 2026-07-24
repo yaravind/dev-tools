@@ -12,6 +12,12 @@ param(
     [switch]$DryRun
 )
 
+$brandingScript = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "branding.ps1"
+if (Test-Path $brandingScript) {
+    . $brandingScript
+    Show-EbkBanner -ScriptName (Split-Path -Leaf $MyInvocation.MyCommand.Path)
+}
+
 $scriptDir = if ($PSScriptRoot) {
     $PSScriptRoot
 } elseif ($MyInvocation.MyCommand.Path) {
@@ -21,7 +27,7 @@ $scriptDir = if ($PSScriptRoot) {
 }
 
 if (-not $scriptDir) {
-    Write-Host "ERROR: Could not resolve script directory." -ForegroundColor Red
+    Write-EbkError "Could not resolve script directory."
     exit 1
 }
 
@@ -36,37 +42,17 @@ $resolvedConfig = Resolve-Path -Path $ConfigPath -ErrorAction SilentlyContinue
 if ($resolvedConfig) {
     $ConfigPath = $resolvedConfig.Path
 } elseif (-not (Test-Path -LiteralPath $ConfigPath)) {
-    Write-Host "ERROR: Config file not found." -ForegroundColor Red
+    Write-EbkError "Config file not found."
     exit 1
 }
 
 $TaskbarPinnedDir = Join-Path $env:APPDATA "Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"
 $BackupDir = Join-Path $env:TEMP ("taskbar_backup_{0}" -f (Get-Date -Format "yyyyMMddHHmmss"))
 
-function Write-Step {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Magenta
-}
-
-function Write-Info {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Cyan
-}
-
-function Write-Ok {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Green
-}
-
-function Write-Warn {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Yellow
-}
-
 function Assert-Admin {
     $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        Write-Host "ERROR: This script must be run as Administrator." -ForegroundColor Red
+        Write-EbkError "This script must be run as Administrator."
         exit 1
     }
 }
@@ -79,7 +65,7 @@ function Backup-TaskbarPins {
             Copy-Item -Path (Join-Path $TaskbarPinnedDir "*") -Destination $BackupDir -Recurse -Force -ErrorAction Stop
         }
     } catch {
-        Write-Host "ERROR: Failed to backup Taskbar pins. $_" -ForegroundColor Red
+        Write-EbkError "Failed to backup Taskbar pins. $_"
         exit 1
     }
 }
@@ -97,7 +83,7 @@ function Restore-TaskbarPins {
         Get-ChildItem -Path $TaskbarPinnedDir -Filter "*.lnk" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
         Copy-Item -Path (Join-Path $BackupDir "*") -Destination $TaskbarPinnedDir -Recurse -Force -ErrorAction Stop
     } catch {
-        Write-Host "ERROR: Failed to restore Taskbar pins. $_" -ForegroundColor Red
+        Write-EbkError "Failed to restore Taskbar pins. $_"
     }
 }
 
@@ -182,7 +168,7 @@ function Pin-PathToTaskbar {
     param([string]$AppPath)
 
     if (-not (Test-Path $AppPath)) {
-        Write-Warn "WARN: $AppPath does not exist, skipping."
+        Write-Warn "$AppPath does not exist, skipping."
         return $false
     }
 
@@ -321,7 +307,7 @@ try {
         if (Pin-PathToTaskbar -AppPath $entry) { $added++ } else { $skipped++ }
     }
 } catch {
-    Write-Host "ERROR: Taskbar update failed. $_" -ForegroundColor Red
+    Write-EbkError "Taskbar update failed. $_"
     Restore-TaskbarPins
     exit 1
 }
@@ -332,4 +318,3 @@ Write-Ok "Added: $added"
 Write-Ok "Removed: $removed"
 Write-Warn "Skipped: $skipped"
 Write-Ok "Taskbar setup complete."
-

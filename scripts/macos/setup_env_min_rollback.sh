@@ -14,27 +14,28 @@
 #   chmod +x scripts/macos/setup_env_min_rollback.sh
 #   ./scripts/macos/setup_env_min_rollback.sh
 
-# Import colors codes for text
-source "${0:A:h}/colors.sh"
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
 
-log_step() {
-  printf '===> %s\n' "$1" | sed "s/^/${MAGENTA}/;s/$/${RESET}/"
+print_normalized_output() {
+  local line
+  while IFS= read -r line; do
+    if [[ "$line" == Warning:* ]]; then
+      log_warn "${line#Warning: }"
+    else
+      printf '%s\n' "$line"
+    fi
+  done
 }
 
-log_info() {
-  printf '===> %s\n' "$1" | sed "s/^/${CYAN}/;s/$/${RESET}/"
-}
-
-log_ok() {
-  printf '===> %s\n' "$1" | sed "s/^/${GREEN}/;s/$/${RESET}/"
-}
-
-log_warn() {
-  printf '===> %s\n' "$1" | sed "s/^/${YELLOW}/;s/$/${RESET}/"
-}
-
-log_error() {
-  printf 'ERROR: %s\n' "$1" | sed "s/^/${RED}/;s/$/${RESET}/" >&2
+run_brew_with_normalized_warnings() {
+  local output
+  output="$("$@" 2>&1)"
+  local command_status=$?
+  if [[ -n "$output" ]]; then
+    print_normalized_output <<< "$output"
+  fi
+  return "$command_status"
 }
 
 brew_uninstall_formula() {
@@ -46,7 +47,7 @@ brew_uninstall_formula() {
   fi
 
   log_info "Uninstalling formula: $formula"
-  brew uninstall "$formula"
+  run_brew_with_normalized_warnings brew uninstall "$formula"
 }
 
 brew_uninstall_cask() {
@@ -58,7 +59,7 @@ brew_uninstall_cask() {
   fi
 
   log_info "Uninstalling cask: $cask"
-  brew uninstall --cask "$cask"
+  run_brew_with_normalized_warnings brew uninstall --cask "$cask"
 }
 
 main() {
@@ -87,7 +88,7 @@ main() {
   brew_uninstall_cask intellij-idea-ce
 
   log_info "Cleaning up Homebrew..."
-  brew cleanup
+  run_brew_with_normalized_warnings brew cleanup
 
   log_ok "Rollback complete!"
 }

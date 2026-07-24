@@ -1,12 +1,15 @@
 #!/bin/zsh
 
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
+
 APPLIST_FILE="${0:A:h}/../../config/dock_apps.txt"
 
-printf "\nGenerating %s from current Dock...\n" "$APPLIST_FILE"
+ebk_log_phase "Generating ${APPLIST_FILE} from current Dock"
 dockutil --list | awk -F '\t' '{print $2}' | \
   grep '^file:///' | \
   grep '.app/' | \
   sed 's|file://||;s|/$||' > "$APPLIST_FILE"
-printf "\n%s created.\n" "$APPLIST_FILE"
+ebk_log_ok "${APPLIST_FILE} created."
 
-printf "\n\n👌 Awesome, all set. Now run the dock_setup.sh\n"
+ebk_log_info "Awesome, all set. Now run dock_setup.sh."

@@ -1,12 +1,7 @@
 #!/bin/zsh
 
-source "${0:A:h}/colors.sh"
-
-INFO="${CYAN}"
-ACTION="${BLUE}"
-SUCCESS="${GREEN}"
-WARN="${YELLOW}"
-ERROR="${RED}"
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
 SCRIPT_NAME="${0:A:t}"
 SCRIPT_DIR="${0:A:h}"
 CONFIG_FILE="${SCRIPT_DIR}/../../config/default_apps_macos.txt"
@@ -80,15 +75,15 @@ PY
 }
 
 print_usage() {
-  printf "${INFO}Usage: %s [--apply|--discover] [--dry-run] [--config <path>] [--output <path>]${RESET}\n" "$SCRIPT_NAME"
-  printf "${INFO}Modes:${RESET}\n"
-  printf "${INFO}  --apply           Apply associations from config using duti (default mode)${RESET}\n"
-  printf "${INFO}  --discover        Show current LaunchServices UTI handlers with discovered extensions${RESET}\n"
-  printf "${INFO}Options:${RESET}\n"
-  printf "${INFO}  --config <path>   Override config file path for apply mode${RESET}\n"
-  printf "${INFO}  --output <path>   Write discover output TSV to a file${RESET}\n"
-  printf "${INFO}  --dry-run, -n     Preview apply-mode duti commands without running them${RESET}\n"
-  printf "${INFO}  --help, -h        Show this help message${RESET}\n"
+  printf 'Usage: %s [--apply|--discover] [--dry-run] [--config <path>] [--output <path>]\n' "$SCRIPT_NAME"
+  printf 'Modes:\n'
+  printf '  --apply           Apply associations from config using duti (default mode)\n'
+  printf '  --discover        Show current LaunchServices UTI handlers with discovered extensions\n'
+  printf 'Options:\n'
+  printf '  --config <path>   Override config file path for apply mode\n'
+  printf '  --output <path>   Write discover output TSV to a file\n'
+  printf '  --dry-run, -n     Preview apply-mode duti commands without running them\n'
+  printf '  --help, -h        Show this help message\n'
 }
 
 while [[ $# -gt 0 ]]; do
@@ -102,7 +97,7 @@ while [[ $# -gt 0 ]]; do
     --config)
       shift
       if [[ -z "$1" ]]; then
-        printf "${ERROR}===> Missing value for --config${RESET}\n"
+        log_error "Missing value for --config"
         exit 1
       fi
       CONFIG_FILE="$1"
@@ -110,7 +105,7 @@ while [[ $# -gt 0 ]]; do
     --output)
       shift
       if [[ -z "$1" ]]; then
-        printf "${ERROR}===> Missing value for --output${RESET}\n"
+        log_error "Missing value for --output"
         exit 1
       fi
       OUTPUT_FILE="$1"
@@ -123,7 +118,7 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     *)
-      printf "${ERROR}===> Unknown argument: %s${RESET}\n" "$1"
+      log_error "Unknown argument: $1"
       print_usage
       exit 1
       ;;
@@ -133,11 +128,11 @@ done
 
 discover_handlers() {
   if ! command_exists python3; then
-    printf "${ERROR}===> python3 is required for discover mode.${RESET}\n"
+    log_error "python3 is required for discover mode."
     exit 1
   fi
 
-  printf "${INFO}===> Discovering current LaunchServices UTI handlers and extension mappings...${RESET}\n"
+  log_phase "Discovering current LaunchServices UTI handlers and extension mappings..."
 
   local discover_output
   discover_output="$(python3 - <<'PY'
@@ -250,16 +245,16 @@ PY
 )"
   local discover_status=$?
   if [[ "$discover_status" -ne 0 ]]; then
-    printf "${ERROR}===> Discover mode failed while reading LaunchServices data.${RESET}\n"
+    log_error "Discover mode failed while reading LaunchServices data."
     exit 1
   fi
 
   if [[ -z "$discover_output" ]]; then
-    printf "${WARN}===> No UTI handler records were found.${RESET}\n"
+    log_warn "No UTI handler records were found."
     exit 0
   fi
 
-  printf "${SUCCESS}===> Current UTI handler table${RESET}\n"
+  log_ok "Current UTI handler table"
   DISCOVER_OUTPUT="$discover_output" python3 - <<'PY'
 import os
 import sys
@@ -294,26 +289,26 @@ PY
 
   if [[ -n "$OUTPUT_FILE" ]]; then
     printf '%s\n' "$discover_output" > "$OUTPUT_FILE" || {
-      printf "${ERROR}===> Failed to write discover output to %s${RESET}\n" "$OUTPUT_FILE"
+      log_error "Failed to write discover output to ${OUTPUT_FILE}"
       exit 1
     }
-    printf "${SUCCESS}===> Discover output written to %s${RESET}\n" "$OUTPUT_FILE"
+    log_ok "Discover output written to ${OUTPUT_FILE}"
   fi
 }
 
 apply_mappings() {
   if [[ "$DRY_RUN" -ne 1 ]] && ! command_exists duti; then
-    printf "${ERROR}===> duti is not installed. Install it first with: brew install duti${RESET}\n"
+    log_error "duti is not installed. Install it first with: brew install duti"
     exit 1
   fi
 
   if [[ ! -f "$CONFIG_FILE" ]]; then
-    printf "${ERROR}===> Config file not found: %s${RESET}\n" "$CONFIG_FILE"
+    log_error "Config file not found: ${CONFIG_FILE}"
     exit 1
   fi
 
-  printf "${INFO}===> Reading default app mappings from %s${RESET}\n" "$CONFIG_FILE"
-  [[ "$DRY_RUN" -eq 1 ]] && printf "${WARN}===> Dry run enabled. No changes will be applied.${RESET}\n"
+  log_info "Reading default app mappings from ${CONFIG_FILE}"
+  [[ "$DRY_RUN" -eq 1 ]] && log_warn "Dry run enabled. No changes will be applied."
 
   local line line_number=0
   local apply_count=0 skip_count=0 fail_count=0 invalid_count=0
@@ -334,7 +329,7 @@ apply_mappings() {
 
     local bundle_id="${fields[1]}"
     if [[ -z "$bundle_id" ]]; then
-      printf "${ERROR}===> Invalid entry at line %d: %s${RESET}\n" "$line_number" "$line"
+      log_error "Invalid entry at line ${line_number}: ${line}"
       ((invalid_count++))
       continue
     fi
@@ -346,27 +341,27 @@ apply_mappings() {
         current_handler="$(get_current_scheme_handler "$scheme")"
       fi
       if [[ "${current_handler:l}" == "${bundle_id:l}" ]]; then
-        printf "${WARN}===> Scheme already mapped: %s -> %s${RESET}\n" "$scheme" "$bundle_id"
+        log_warn "Scheme already mapped: ${scheme} -> ${bundle_id}"
         ((skip_count++))
         continue
       fi
       local -a cmd=(duti -s "$bundle_id" "$scheme")
       if [[ "$DRY_RUN" -eq 1 ]]; then
-        printf "${ACTION}[dry-run] %q %q %q %q${RESET}\n" "${cmd[1]}" "${cmd[2]}" "${cmd[3]}" "${cmd[4]}"
+        log_debug "[dry-run] ${cmd[*]}"
         ((apply_count++))
       elif "${cmd[@]}"; then
-        printf "${SUCCESS}===> Applied scheme mapping: %s -> %s${RESET}\n" "$scheme" "$bundle_id"
+        log_ok "Applied scheme mapping: ${scheme} -> ${bundle_id}"
         ((apply_count++))
       else
         if command_exists python3; then
           current_handler="$(get_current_scheme_handler "$scheme")"
           if [[ "${current_handler:l}" == "${bundle_id:l}" ]]; then
-            printf "${WARN}===> Scheme mapping already in effect after duti error: %s -> %s${RESET}\n" "$scheme" "$bundle_id"
+            log_warn "Scheme mapping already in effect after duti error: ${scheme} -> ${bundle_id}"
             ((skip_count++))
             continue
           fi
         fi
-        printf "${ERROR}===> Failed scheme mapping at line %d: %s${RESET}\n" "$line_number" "$line"
+        log_error "Failed scheme mapping at line ${line_number}: ${line}"
         ((fail_count++))
       fi
       continue
@@ -379,7 +374,7 @@ apply_mappings() {
         all|viewer|editor|shell)
           ;;
         *)
-          printf "${ERROR}===> Invalid role '%s' at line %d (allowed: all|viewer|editor|shell).${RESET}\n" "$role" "$line_number"
+          log_error "Invalid role '${role}' at line ${line_number} (allowed: all|viewer|editor|shell)."
           ((invalid_count++))
           continue
           ;;
@@ -390,41 +385,45 @@ apply_mappings() {
         current_handler="$(get_current_uti_handler "$uti")"
       fi
       if [[ "${current_handler:l}" == "${bundle_id:l}" ]]; then
-        printf "${WARN}===> UTI already mapped: %s (%s) -> %s${RESET}\n" "$uti" "$role" "$bundle_id"
+        log_warn "UTI already mapped: ${uti} (${role}) -> ${bundle_id}"
         ((skip_count++))
         continue
       fi
 
       local -a cmd=(duti -s "$bundle_id" "$uti" "$role")
       if [[ "$DRY_RUN" -eq 1 ]]; then
-        printf "${ACTION}[dry-run] %q %q %q %q %q${RESET}\n" "${cmd[1]}" "${cmd[2]}" "${cmd[3]}" "${cmd[4]}" "${cmd[5]}"
+        log_debug "[dry-run] ${cmd[*]}"
         ((apply_count++))
       elif "${cmd[@]}"; then
-        printf "${SUCCESS}===> Applied UTI mapping: %s (%s) -> %s${RESET}\n" "$uti" "$role" "$bundle_id"
+        log_ok "Applied UTI mapping: ${uti} (${role}) -> ${bundle_id}"
         ((apply_count++))
       else
         if [[ "$role" == "all" ]] && command_exists python3; then
           current_handler="$(get_current_uti_handler "$uti")"
           if [[ "${current_handler:l}" == "${bundle_id:l}" ]]; then
-            printf "${WARN}===> UTI mapping already in effect after duti error: %s (%s) -> %s${RESET}\n" "$uti" "$role" "$bundle_id"
+            log_warn "UTI mapping already in effect after duti error: ${uti} (${role}) -> ${bundle_id}"
             ((skip_count++))
             continue
           fi
         fi
-        printf "${ERROR}===> Failed UTI mapping at line %d: %s${RESET}\n" "$line_number" "$line"
+        log_error "Failed UTI mapping at line ${line_number}: ${line}"
         ((fail_count++))
       fi
       continue
     fi
 
-    printf "${ERROR}===> Invalid entry at line %d: %s${RESET}\n" "$line_number" "$line"
+    log_error "Invalid entry at line ${line_number}: ${line}"
     ((invalid_count++))
   done < "$CONFIG_FILE"
 
-  printf "${SUCCESS}===> Applied mappings: %d${RESET}\n" "$apply_count"
-  printf "${WARN}===> Skipped lines: %d${RESET}\n" "$skip_count"
-  printf "${WARN}===> Invalid lines: %d${RESET}\n" "$invalid_count"
-  printf "${ERROR}===> Failed mappings: %d${RESET}\n" "$fail_count"
+  log_ok "Applied mappings: ${apply_count}"
+  log_warn "Skipped lines: ${skip_count}"
+  log_warn "Invalid lines: ${invalid_count}"
+  if (( fail_count > 0 )); then
+    log_error "Failed mappings: ${fail_count}"
+  else
+    log_ok "Failed mappings: ${fail_count}"
+  fi
 
   if (( fail_count > 0 || invalid_count > 0 )); then
     exit 1

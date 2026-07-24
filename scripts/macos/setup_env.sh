@@ -3,6 +3,9 @@
 # This script is designed to automate the installation and configuration of some
 # commonly used developer tools on macOS (Apple Silicon and Intel)
 
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
+
 # Import colors codes for text
 source "${0:A:h}/colors.sh"
 
@@ -15,6 +18,13 @@ ERROR="${RED}"
 SECTION="${BMAGENTA}"
 MUTED="${BBLACK}"
 SCRIPT_NAME="${0:A:t}"
+
+log_phase() {
+  local phase="$1"
+  local detail="$2"
+  ebk_log_phase "$phase"
+  ebk_log_info "$detail"
+}
 
 print_usage() {
   echo -e "${INFO}Usage: ${SCRIPT_NAME} MODE [--dry-run]${RESET}"
@@ -33,7 +43,7 @@ for arg in "$@"; do
   case "$arg" in
     --classify-only|--non-admin-only|--admin-only)
       if [[ -n "$RUN_MODE" ]]; then
-        echo -e "${ERROR}===> Specify only one mode.${RESET}"
+        echo -e "${ERROR}✖ ERROR Specify only one mode.${RESET}"
         print_usage
         exit 1
       fi
@@ -47,7 +57,7 @@ for arg in "$@"; do
       exit 0
       ;;
     *)
-      echo -e "${ERROR}===> Unknown argument: ${arg}${RESET}"
+      echo -e "${ERROR}✖ ERROR Unknown argument: ${arg}${RESET}"
       print_usage
       exit 1
       ;;
@@ -55,7 +65,7 @@ for arg in "$@"; do
 done
 
 if [[ -z "$RUN_MODE" ]]; then
-  echo -e "${ERROR}===> Missing required mode.${RESET}"
+  echo -e "${ERROR}✖ ERROR Missing required mode.${RESET}"
   print_usage
   exit 1
 fi
@@ -141,7 +151,7 @@ admin_casks=(
 )
 
 if [ "$DRY_RUN" -eq 1 ]; then
-  printf "${SECTION}===> DryRun: Planned actions (no changes will be made)${RESET}\n"
+  printf "${SECTION}◆ PHASE DryRun: Planned actions (no changes will be made)${RESET}\n"
   printf "${INFO}  - Mode: %s${RESET}\n" "$RUN_MODE"
 
   case "$RUN_MODE" in
@@ -174,6 +184,8 @@ failed_admin_casks=()
 admin_privilege_failures=()
 classification_warnings=()
 skipped_formulae=()
+installed_formula_names_cache=$'\n'
+formula_cache_loaded=0
 
 # Function to check if a command exists
 command_exists() {
@@ -201,18 +213,18 @@ ensure_homebrew_available() {
   expected_prefix="$(default_homebrew_prefix)"
 
   if ! command_exists brew && [[ -x "${expected_prefix}/bin/brew" ]]; then
-    echo -e "${ACTION}===> Loading Homebrew from ${expected_prefix} into this shell...${RESET}"
+    echo -e "${ACTION}ℹ INFO  Loading Homebrew from ${expected_prefix} into this shell...${RESET}"
     eval "$("${expected_prefix}/bin/brew" shellenv zsh)"
   fi
 
   if ! command_exists brew; then
-    echo -e "${ERROR}===> Homebrew not found. Run pre_setup.sh first, then re-run setup_env.sh.${RESET}"
+    echo -e "${ERROR}✖ ERROR Homebrew not found. Run pre_setup.sh first, then re-run setup_env.sh.${RESET}"
     exit 1
   fi
 
   brew_prefix="$(brew --prefix 2>/dev/null)"
   if [[ "$brew_prefix" == "/opt/homebrew" && -d "$brew_prefix" && "$(stat -f '%Su' "$brew_prefix")" != "$USER" ]]; then
-    echo -e "${WARN}===> ${brew_prefix} is not owned by ${USER}; Homebrew installs may fail with permission errors.${RESET}"
+    echo -e "${WARN}⚠ WARN  ${brew_prefix} is not owned by ${USER}; Homebrew installs may fail with permission errors.${RESET}"
   fi
 }
 
@@ -236,49 +248,93 @@ array_contains() {
   return 1
 }
 
+print_normalized_output() {
+  local line
+  while IFS= read -r line; do
+    if [[ "$line" == Warning:* ]]; then
+      echo -e "${WARN}⚠ WARN  ${line#Warning: }${RESET}"
+    else
+      printf '%s\n' "$line"
+    fi
+  done
+}
+
+print_command_output() {
+  local output="$1"
+  if [[ -z "$output" ]]; then
+    return 0
+  fi
+  print_normalized_output <<< "$output"
+}
+
+load_installed_formula_cache() {
+  local output
+  local line
+
+  installed_formula_names_cache=$'\n'
+  output="$(brew list --formula 2>&1)"
+  while IFS= read -r line; do
+    if [[ "$line" == Warning:* ]]; then
+      echo -e "${WARN}⚠ WARN  ${line#Warning: }${RESET}"
+      continue
+    fi
+
+    [[ -z "$line" ]] && continue
+    installed_formula_names_cache+="${line}"$'\n'
+  done <<< "$output"
+
+  formula_cache_loaded=1
+}
+
+formula_is_installed_cached() {
+  local formula="$1"
+  [[ "$formula_cache_loaded" -eq 1 ]] || load_installed_formula_cache
+  [[ "$installed_formula_names_cache" == *$'\n'"$formula"$'\n'* ]]
+}
+
 ensure_agent_sessions_tap() {
   if ! array_contains "agent-sessions" "${user_casks[@]}"; then
     return 0
   fi
 
-  echo -e "${INFO}===> Ensuring Homebrew tap 'jazzyalex/agent-sessions' is available for agent-sessions...${RESET}"
+  echo -e "${INFO}ℹ INFO  Ensuring Homebrew tap 'jazzyalex/agent-sessions' is available for agent-sessions...${RESET}"
 
   if ! brew tap | grep -q '^jazzyalex/agent-sessions$'; then
-    echo -e "${ACTION}===> Tapping jazzyalex/agent-sessions...${RESET}"
+    echo -e "${ACTION}ℹ INFO  Tapping jazzyalex/agent-sessions...${RESET}"
     if ! brew tap jazzyalex/agent-sessions; then
-      echo -e "${ERROR}===> Failed to tap jazzyalex/agent-sessions.${RESET}"
+      echo -e "${ERROR}✖ ERROR Failed to tap jazzyalex/agent-sessions.${RESET}"
       failed_user_casks+=("agent-sessions")
       return 1
     fi
   fi
 
   if brew help trust >/dev/null 2>&1; then
-    echo -e "${INFO}===> Trusting agent-sessions cask from jazzyalex/agent-sessions...${RESET}"
+    echo -e "${INFO}ℹ INFO  Trusting agent-sessions cask from jazzyalex/agent-sessions...${RESET}"
     brew trust --cask jazzyalex/agent-sessions/agent-sessions >/dev/null 2>&1 || true
   fi
 }
 
 precheck_formula_metadata() {
   local formula="$1"
-  echo -e "${INFO}===> Checking Homebrew metadata for formula: ${formula}...${RESET}"
+  echo -e "${INFO}ℹ INFO  Checking Homebrew metadata for formula: ${formula}...${RESET}"
 
   if brew info --json=v2 "$formula" >/dev/null 2>&1; then
     return 0
   fi
 
-  echo -e "${ERROR}===> Missing or unreadable Homebrew metadata for formula: ${formula}${RESET}"
+  echo -e "${ERROR}✖ ERROR Missing or unreadable Homebrew metadata for formula: ${formula}${RESET}"
   return 1
 }
 
 precheck_cask_metadata() {
   local cask="$1"
-  echo -e "${INFO}===> Checking Homebrew metadata for cask: ${cask}...${RESET}"
+  echo -e "${INFO}ℹ INFO  Checking Homebrew metadata for cask: ${cask}...${RESET}"
 
   if brew info --json=v2 --cask "$cask" >/dev/null 2>&1; then
     return 0
   fi
 
-  echo -e "${ERROR}===> Missing or unreadable Homebrew metadata for cask: ${cask}${RESET}"
+  echo -e "${ERROR}✖ ERROR Missing or unreadable Homebrew metadata for cask: ${cask}${RESET}"
   return 1
 }
 
@@ -321,8 +377,15 @@ looks_like_admin_failure() {
 homebrew_formula_owns_path() {
   local formula="$1"
   local path="$2"
+  local owned_path
 
-  brew list --formula "$formula" 2>/dev/null | grep -qxF "$path"
+  while IFS= read -r owned_path; do
+    if [[ "$owned_path" == "$path" ]]; then
+      return 0
+    fi
+  done < <(brew list --formula "$formula" 2>/dev/null)
+
+  return 1
 }
 
 dotnet_command_conflicts_with_formula() {
@@ -342,8 +405,8 @@ should_skip_formula_install() {
   local formula="$1"
 
   if [[ "$formula" == "powershell" ]] && dotnet_command_conflicts_with_formula; then
-    echo -e "${WARN}===> Skipping powershell: brew-linked dotnet exists but is not owned by the Homebrew dotnet formula.${RESET}"
-    echo -e "${WARN}===> Choose either Homebrew formula dotnet + powershell, or the admin dotnet-sdk cask without automated PowerShell.${RESET}"
+    echo -e "${WARN}⚠ WARN  Skipping powershell: brew-linked dotnet exists but is not owned by the Homebrew dotnet formula.${RESET}"
+    echo -e "${WARN}⚠ WARN  Choose either Homebrew formula dotnet + powershell, or the admin dotnet-sdk cask without automated PowerShell.${RESET}"
     skipped_formulae+=("powershell: dotnet command conflict")
     return 0
   fi
@@ -356,32 +419,33 @@ install_formula() {
   local output
   local exit_status
 
+  if formula_is_installed_cached "$formula"; then
+    echo -e "${SUCCESS}✓ OK    Formula already installed: ${formula}${RESET}"
+    return 0
+  fi
+
   if ! precheck_formula_metadata "$formula"; then
     failed_formulae+=("$formula")
     return 1
-  fi
-
-  if brew list --formula "$formula" >/dev/null 2>&1; then
-    echo -e "${SUCCESS}===> Formula already installed: ${formula}${RESET}"
-    return 0
   fi
 
   if should_skip_formula_install "$formula"; then
     return 0
   fi
 
-  echo -e "${ACTION}===> Installing formula: ${formula}...${RESET}"
+  echo -e "${ACTION}ℹ INFO  Installing formula: ${formula}...${RESET}"
 
   output="$(brew install "$formula" 2>&1)"
   exit_status=$?
-  printf '%s\n' "$output"
+  print_command_output "$output"
 
   if [[ "$exit_status" -eq 0 ]]; then
-    echo -e "${SUCCESS}===> Installed formula: ${formula}${RESET}"
+    installed_formula_names_cache+="${formula}"$'\n'
+    echo -e "${SUCCESS}✓ OK    Installed formula: ${formula}${RESET}"
     return 0
   fi
 
-  echo -e "${ERROR}===> Failed to install formula: ${formula}${RESET}"
+  echo -e "${ERROR}✖ ERROR Failed to install formula: ${formula}${RESET}"
   failed_formulae+=("$formula")
 
   if looks_like_admin_failure "$output"; then
@@ -402,27 +466,27 @@ install_user_cask() {
   fi
 
   if cask_metadata_looks_admin_required "$cask" && ! is_confirmed_user_space_cask "$cask"; then
-    echo -e "${WARN}===> Cask metadata looks admin-likely; attempting user-space install before reclassifying: ${cask}${RESET}"
+    echo -e "${WARN}⚠ WARN  Cask metadata looks admin-likely; attempting user-space install before reclassifying: ${cask}${RESET}"
   fi
 
   if brew list --cask "$cask" >/dev/null 2>&1; then
-    echo -e "${SUCCESS}===> Cask already installed: ${cask}${RESET}"
+    echo -e "${SUCCESS}✓ OK    Cask already installed: ${cask}${RESET}"
     return 0
   fi
 
   mkdir -p "$HOME/Applications"
 
-  echo -e "${ACTION}===> Installing user-space cask: ${cask}...${RESET}"
+  echo -e "${ACTION}ℹ INFO  Installing user-space cask: ${cask}...${RESET}"
   output="$(brew install --cask --appdir="$HOME/Applications" "$cask" 2>&1)"
   exit_status=$?
-  printf '%s\n' "$output"
+  print_command_output "$output"
 
   if [[ "$exit_status" -eq 0 ]]; then
-    echo -e "${SUCCESS}===> Installed user-space cask: ${cask}${RESET}"
+    echo -e "${SUCCESS}✓ OK    Installed user-space cask: ${cask}${RESET}"
     return 0
   fi
 
-  echo -e "${ERROR}===> Failed to install user-space cask: ${cask}${RESET}"
+  echo -e "${ERROR}✖ ERROR Failed to install user-space cask: ${cask}${RESET}"
   failed_user_casks+=("$cask")
 
   if looks_like_admin_failure "$output"; then
@@ -444,26 +508,26 @@ install_admin_cask() {
   fi
 
   if ! cask_metadata_looks_admin_required "$cask"; then
-    echo -e "${WARN}===> Cask metadata does not look admin-required; consider moving to user_casks: ${cask}${RESET}"
+    echo -e "${WARN}⚠ WARN  Cask metadata does not look admin-required; consider moving to user_casks: ${cask}${RESET}"
     classification_warnings+=("admin_casks:${cask}")
   fi
 
   if brew list --cask "$cask" >/dev/null 2>&1; then
-    echo -e "${SUCCESS}===> Cask already installed: ${cask}${RESET}"
+    echo -e "${SUCCESS}✓ OK    Cask already installed: ${cask}${RESET}"
     return 0
   fi
 
-  echo -e "${ACTION}===> Installing admin-likely cask: ${cask}...${RESET}"
+  echo -e "${ACTION}ℹ INFO  Installing admin-likely cask: ${cask}...${RESET}"
   output="$(brew install --cask "$cask" 2>&1)"
   exit_status=$?
-  printf '%s\n' "$output"
+  print_command_output "$output"
 
   if [[ "$exit_status" -eq 0 ]]; then
-    echo -e "${SUCCESS}===> Installed admin-likely cask: ${cask}${RESET}"
+    echo -e "${SUCCESS}✓ OK    Installed admin-likely cask: ${cask}${RESET}"
     return 0
   fi
 
-  echo -e "${ERROR}===> Failed to install admin-likely cask: ${cask}${RESET}"
+  echo -e "${ERROR}✖ ERROR Failed to install admin-likely cask: ${cask}${RESET}"
   failed_admin_casks+=("$cask")
 
   if looks_like_admin_failure "$output"; then
@@ -483,18 +547,18 @@ classify_formula() {
     return 1
   fi
 
-  echo -e "${ACTION}===> Dry-run formula install: ${formula}...${RESET}"
+  echo -e "${ACTION}ℹ INFO  Dry-run formula install: ${formula}...${RESET}"
 
   output="$(brew install --dry-run "$formula" 2>&1)"
   exit_status=$?
-  printf '%s\n' "$output"
+  print_command_output "$output"
 
   if [[ "$exit_status" -eq 0 ]]; then
-    echo -e "${SUCCESS}===> Formula dry-run passed: ${formula}${RESET}"
+    echo -e "${SUCCESS}✓ OK    Formula dry-run passed: ${formula}${RESET}"
     return 0
   fi
 
-  echo -e "${ERROR}===> Formula dry-run failed: ${formula}${RESET}"
+  echo -e "${ERROR}✖ ERROR Formula dry-run failed: ${formula}${RESET}"
   failed_formulae+=("$formula")
 
   if looks_like_admin_failure "$output"; then
@@ -515,23 +579,23 @@ classify_user_cask() {
   fi
 
   if cask_metadata_looks_admin_required "$cask"; then
-    echo -e "${WARN}===> Cask metadata looks admin-required; consider moving out of user_casks: ${cask}${RESET}"
+    echo -e "${WARN}⚠ WARN  Cask metadata looks admin-required; consider moving out of user_casks: ${cask}${RESET}"
     classification_warnings+=("user_casks:${cask}")
   else
-    echo -e "${SUCCESS}===> Cask metadata looks user-space friendly: ${cask}${RESET}"
+    echo -e "${SUCCESS}✓ OK    Cask metadata looks user-space friendly: ${cask}${RESET}"
   fi
 
-  echo -e "${ACTION}===> Dry-run user-space cask install: ${cask}...${RESET}"
+  echo -e "${ACTION}ℹ INFO  Dry-run user-space cask install: ${cask}...${RESET}"
   output="$(brew install --cask --dry-run --appdir="$HOME/Applications" "$cask" 2>&1)"
   exit_status=$?
-  printf '%s\n' "$output"
+  print_command_output "$output"
 
   if [[ "$exit_status" -eq 0 ]]; then
-    echo -e "${SUCCESS}===> User-space cask dry-run passed: ${cask}${RESET}"
+    echo -e "${SUCCESS}✓ OK    User-space cask dry-run passed: ${cask}${RESET}"
     return 0
   fi
 
-  echo -e "${ERROR}===> User-space cask dry-run failed: ${cask}${RESET}"
+  echo -e "${ERROR}✖ ERROR User-space cask dry-run failed: ${cask}${RESET}"
   failed_user_casks+=("$cask")
 
   if looks_like_admin_failure "$output"; then
@@ -552,23 +616,23 @@ classify_admin_cask() {
   fi
 
   if cask_metadata_looks_admin_required "$cask"; then
-    echo -e "${SUCCESS}===> Cask metadata looks admin-likely: ${cask}${RESET}"
+    echo -e "${SUCCESS}✓ OK    Cask metadata looks admin-likely: ${cask}${RESET}"
   else
-    echo -e "${WARN}===> Cask metadata does not look admin-required; consider moving to user_casks: ${cask}${RESET}"
+    echo -e "${WARN}⚠ WARN  Cask metadata does not look admin-required; consider moving to user_casks: ${cask}${RESET}"
     classification_warnings+=("admin_casks:${cask}")
   fi
 
-  echo -e "${ACTION}===> Dry-run admin-likely cask install: ${cask}...${RESET}"
+  echo -e "${ACTION}ℹ INFO  Dry-run admin-likely cask install: ${cask}...${RESET}"
   output="$(brew install --cask --dry-run "$cask" 2>&1)"
   exit_status=$?
-  printf '%s\n' "$output"
+  print_command_output "$output"
 
   if [[ "$exit_status" -eq 0 ]]; then
-    echo -e "${SUCCESS}===> Admin-likely cask dry-run passed: ${cask}${RESET}"
+    echo -e "${SUCCESS}✓ OK    Admin-likely cask dry-run passed: ${cask}${RESET}"
     return 0
   fi
 
-  echo -e "${ERROR}===> Admin-likely cask dry-run failed: ${cask}${RESET}"
+  echo -e "${ERROR}✖ ERROR Admin-likely cask dry-run failed: ${cask}${RESET}"
   failed_admin_casks+=("$cask")
 
   if looks_like_admin_failure "$output"; then
@@ -605,7 +669,7 @@ format_duration() {
 print_elapsed_time() {
   local elapsed_seconds=$((SECONDS - SCRIPT_START_SECONDS))
 
-  echo -e "${INFO}Total duration: $(format_duration "$elapsed_seconds")${RESET}"
+  echo -e "${INFO}ℹ INFO  Duration: $(format_duration "$elapsed_seconds")${RESET}"
 }
 
 print_classification_suggestions() {
@@ -632,26 +696,46 @@ print_classification_suggestions() {
 }
 
 print_install_summary() {
-  echo
-  echo -e "${SECTION}========================================${RESET}"
-  echo -e "${SECTION} Run Summary${RESET}"
-  echo -e "${SECTION}========================================${RESET}"
+  local status_label="SUCCESS"
+  local status_icon="✔"
+  local status_color="${SUCCESS}"
+  local elapsed_seconds=$((SECONDS - SCRIPT_START_SECONDS))
+  local total_failures=$(( ${#failed_formulae[@]} + ${#failed_user_casks[@]} + ${#failed_admin_casks[@]} ))
+  local total_signals=$(( ${#admin_privilege_failures[@]} + ${#classification_warnings[@]} + ${#skipped_formulae[@]} ))
 
-  if [[ "${#failed_formulae[@]}" -eq 0 && "${#failed_user_casks[@]}" -eq 0 && "${#failed_admin_casks[@]}" -eq 0 ]]; then
+  if (( total_failures > 0 )); then
+    status_label="COMPLETED WITH ISSUES"
+    status_icon="⚠"
+    status_color="${WARN}"
+  fi
+
+  echo
+  echo -e "${SECTION}Final Status Report${RESET}"
+  echo -e "${SECTION}──────────────────────────────────────────────────────────────────────────────${RESET}"
+  printf '  %-24s %s\n' "Script" "Environment Setup (macOS)"
+  printf '  %-24s %s\n' "Mode" "${RUN_MODE}"
+  printf "  %-24s ${status_color}%s %s${RESET}\n" "Status" "${status_icon}" "${status_label}"
+  echo -e "${SECTION}──────────────────────────────────────────────────────────────────────────────${RESET}"
+  printf '  %-24s %d\n' "Formula entries" "${#formulae[@]}"
+  printf '  %-24s %d\n' "User cask entries" "${#user_casks[@]}"
+  printf '  %-24s %d\n' "Admin cask entries" "${#admin_casks[@]}"
+  printf '  %-24s %d\n' "Failure count" "${total_failures}"
+  printf '  %-24s %d\n' "Warning/signal count" "${total_signals}"
+  printf '  %-24s %s\n' "Duration" "$(format_duration "$elapsed_seconds")"
+  echo -e "${SECTION}──────────────────────────────────────────────────────────────────────────────${RESET}"
+
+  if (( total_failures == 0 )); then
     echo -e "${SUCCESS}No install/classification failures recorded.${RESET}"
   else
     echo -e "${ERROR}Failures${RESET}"
-
     if [[ "${#failed_formulae[@]}" -gt 0 ]]; then
       echo -e "${ERROR}Formulae:${RESET}"
       print_items "$ERROR" "${failed_formulae[@]}"
     fi
-
     if [[ "${#failed_user_casks[@]}" -gt 0 ]]; then
       echo -e "${ERROR}User-space casks:${RESET}"
       print_items "$ERROR" "${failed_user_casks[@]}"
     fi
-
     if [[ "${#failed_admin_casks[@]}" -gt 0 ]]; then
       echo -e "${ERROR}Admin-likely casks:${RESET}"
       print_items "$ERROR" "${failed_admin_casks[@]}"
@@ -676,25 +760,29 @@ print_install_summary() {
     print_classification_suggestions "${classification_warnings[@]}"
   fi
 
-  if [[ "${#admin_privilege_failures[@]}" -eq 0 && "${#classification_warnings[@]}" -eq 0 ]]; then
-    echo -e "${SUCCESS}No admin-permission signals or bucket changes suggested.${RESET}"
+  echo
+  echo -e "${SECTION}Next Steps${RESET}"
+  if (( total_failures > 0 )); then
+    echo "  Review failed installs above and rerun the matching mode."
+  elif (( total_signals > 0 )); then
+    echo "  Review warning/signal entries above for optional cleanup."
+  else
+    echo "  No follow-up action required."
   fi
-
-  echo -e "${SECTION}========================================${RESET}"
 }
 
 # Function to set environment variables
 set_env_vars() {
-  echo -e "${SECTION}===> Start setting ENV VARs${RESET}"
+  echo -e "${SECTION}◆ PHASE Start setting ENV VARs${RESET}"
   if [[ -z "${JAVA_HOME}" ]]; then
-    echo -e "${INFO}===> Adding JAVA_HOME env variable to .zshrc...${RESET}"
+    echo -e "${INFO}ℹ INFO  Adding JAVA_HOME env variable to .zshrc...${RESET}"
     echo "# brew_install_apps.sh - Appending JAVA_HOME env var" >>~/.zshrc
     echo "export JAVA_HOME=$(/usr/libexec/java_home)" >>~/.zshrc
   else
-    echo -e "${INFO}===> JAVA_HOME is already set to: ${JAVA_HOME}${RESET}"
+    echo -e "${INFO}ℹ INFO  JAVA_HOME is already set to: ${JAVA_HOME}${RESET}"
   fi
 
-  echo -e "${ACTION}===> Source .zshrc...${RESET}"
+  echo -e "${ACTION}ℹ INFO  Source .zshrc...${RESET}"
   echo 'export PATH="$HOME/.jenv/bin:$PATH"' >>~/.zshrc
   echo 'eval "$(jenv init -)"' >>~/.zshrc
 
@@ -705,21 +793,40 @@ print_brew_versions() {
   local package_type="$1"
   shift
 
-  local package
+  local bulk_output
+  if [[ "$package_type" == "cask" ]]; then
+    bulk_output="$(brew list --cask --versions 2>&1)"
+  else
+    bulk_output="$(brew list --formula --versions 2>&1)"
+  fi
 
+  local line
+  local cleaned_output=''
+  while IFS= read -r line; do
+    if [[ "$line" == Warning:* ]]; then
+      echo -e "${WARN}⚠ WARN  ${line#Warning: }${RESET}"
+      continue
+    fi
+
+    [[ -z "$line" ]] && continue
+    cleaned_output+="${line}"$'\n'
+  done <<< "$bulk_output"
+
+  local package
+  local found_line
   for package in "$@"; do
-    if [[ "$package_type" == "cask" ]]; then
-      if brew list --cask --versions "$package" >/dev/null 2>&1; then
-        brew list --cask --versions "$package"
-      else
-        echo -e "${WARN}  - ${package}: not installed${RESET}"
+    found_line=''
+    while IFS= read -r line; do
+      if [[ "$line" == "${package} "* ]]; then
+        found_line="$line"
+        break
       fi
+    done <<< "$cleaned_output"
+
+    if [[ -n "$found_line" ]]; then
+      printf '%s\n' "$found_line"
     else
-      if brew list --formula --versions "$package" >/dev/null 2>&1; then
-        brew list --formula --versions "$package"
-      else
-        echo -e "${WARN}  - ${package}: not installed${RESET}"
-      fi
+      echo -e "${WARN}  - ${package}: not installed${RESET}"
     fi
   done
 }
@@ -745,11 +852,11 @@ add_alias_if_missing() {
   touch "$zshrc"
 
   if alias_exists_in_zshrc "$alias_name"; then
-    echo -e "${INFO}===> Alias ${alias_name} already exists in ~/.zshrc; leaving it unchanged.${RESET}"
+    echo -e "${INFO}ℹ INFO  Alias ${alias_name} already exists in ~/.zshrc; leaving it unchanged.${RESET}"
     return 0
   fi
 
-  echo -e "${INFO}===> Adding alias ${alias_name}='${alias_value}' to ~/.zshrc...${RESET}"
+  echo -e "${INFO}ℹ INFO  Adding alias ${alias_name}='${alias_value}' to ~/.zshrc...${RESET}"
   echo "alias ${alias_name}='${alias_value}'" >> "$zshrc"
 }
 
@@ -757,26 +864,26 @@ configure_non_admin_aliases() {
   if command_exists trash; then
     add_alias_if_missing "rm" "trash"
   else
-    echo -e "${WARN}===> trash is not available; skipping rm alias.${RESET}"
+    echo -e "${WARN}⚠ WARN  trash is not available; skipping rm alias.${RESET}"
   fi
 
   if command_exists bat; then
     add_alias_if_missing "cat" "bat"
   else
-    echo -e "${WARN}===> bat is not available; skipping cat alias.${RESET}"
+    echo -e "${WARN}⚠ WARN  bat is not available; skipping cat alias.${RESET}"
   fi
 }
 
 # Function to verify non-admin installations
 verify_non_admin_installations() {
-  echo -e "${SECTION}===> Start verification${RESET}"
-  echo -e "${INFO}===> Installed formulae managed by --non-admin-only...${RESET}"
+  echo -e "${SECTION}◆ PHASE Start verification${RESET}"
+  echo -e "${INFO}ℹ INFO  Installed formulae managed by --non-admin-only...${RESET}"
   print_brew_versions "formula" "${formulae[@]}"
 
-  echo -e "${INFO}===> Installed user-space casks managed by --non-admin-only...${RESET}"
+  echo -e "${INFO}ℹ INFO  Installed user-space casks managed by --non-admin-only...${RESET}"
   print_brew_versions "cask" "${user_casks[@]}"
 
-  echo -e "${INFO}===> Verify Python...${RESET}"
+  echo -e "${INFO}ℹ INFO  Verify Python...${RESET}"
   local python_313_bin
   python_313_bin="$(brew --prefix python@3.13 2>/dev/null)/bin/python3.13"
 
@@ -784,15 +891,15 @@ verify_non_admin_installations() {
     echo "$python_313_bin"
     "$python_313_bin" -V
   else
-    echo -e "${WARN}===> python@3.13 executable not found.${RESET}"
+    echo -e "${WARN}⚠ WARN  python@3.13 executable not found.${RESET}"
   fi
 
-  echo -e "${INFO}===> Verify Maven...${RESET}"
+  echo -e "${INFO}ℹ INFO  Verify Maven...${RESET}"
   if command_exists mvn; then
     which -a mvn
-    echo -e "${SUCCESS}===> Maven command is available.${RESET}"
+    echo -e "${SUCCESS}✓ OK    Maven command is available.${RESET}"
   else
-    echo -e "${WARN}===> mvn not found in PATH.${RESET}"
+    echo -e "${WARN}⚠ WARN  mvn not found in PATH.${RESET}"
   fi
 
   configure_non_admin_aliases
@@ -800,58 +907,58 @@ verify_non_admin_installations() {
 
 # Function to verify admin-likely installations
 verify_admin_installations() {
-  echo -e "${SECTION}===> Start verification${RESET}"
-  echo -e "${INFO}===> Installed casks managed by --admin-only...${RESET}"
+  echo -e "${SECTION}◆ PHASE Start verification${RESET}"
+  echo -e "${INFO}ℹ INFO  Installed casks managed by --admin-only...${RESET}"
   print_brew_versions "cask" "${admin_casks[@]}"
 
-  echo -e "${INFO}===> Verify Java...${RESET}"
+  echo -e "${INFO}ℹ INFO  Verify Java...${RESET}"
   if command_exists java; then
     java -version
   else
-    echo -e "${WARN}===> java not found in PATH.${RESET}"
+    echo -e "${WARN}⚠ WARN  java not found in PATH.${RESET}"
   fi
 
-  echo -e "${INFO}===> Verify .NET...${RESET}"
+  echo -e "${INFO}ℹ INFO  Verify .NET...${RESET}"
   if command_exists dotnet; then
     dotnet --version
   else
-    echo -e "${WARN}===> dotnet not found in PATH.${RESET}"
+    echo -e "${WARN}⚠ WARN  dotnet not found in PATH.${RESET}"
   fi
 
-  echo -e "${INFO}===> Verify Git Credential Manager...${RESET}"
+  echo -e "${INFO}ℹ INFO  Verify Git Credential Manager...${RESET}"
   if command_exists git-credential-manager; then
     git-credential-manager --version
   else
-    echo -e "${WARN}===> git-credential-manager not found in PATH.${RESET}"
+    echo -e "${WARN}⚠ WARN  git-credential-manager not found in PATH.${RESET}"
   fi
 }
 
 configure_direnv_hook() {
   if command_exists direnv; then
     if ! grep -qxF 'eval "$(direnv hook zsh)"' "$HOME/.zshrc" 2>/dev/null; then
-      echo -e "${INFO}===> Adding direnv hook to ~/.zshrc...${RESET}"
+      echo -e "${INFO}ℹ INFO  Adding direnv hook to ~/.zshrc...${RESET}"
       echo "# direnv: load environment variables per-directory" >> "$HOME/.zshrc"
       echo 'eval "$(direnv hook zsh)"' >> "$HOME/.zshrc"
     else
-      echo -e "${INFO}===> direnv hook already present in ~/.zshrc${RESET}"
+      echo -e "${INFO}ℹ INFO  direnv hook already present in ~/.zshrc${RESET}"
     fi
   else
-    echo -e "${WARN}===> direnv not installed; skipping ~/.zshrc hook setup.${RESET}"
+    echo -e "${WARN}⚠ WARN  direnv not installed; skipping ~/.zshrc hook setup.${RESET}"
   fi
 }
 
 configure_pure_prompt() {
   if ! command_exists brew || [[ ! -d "$(brew --prefix)/share/zsh/site-functions" ]]; then
-    echo -e "${WARN}===> pure not found in Homebrew site-functions; skipping ~/.zshrc prompt setup.${RESET}"
+    echo -e "${WARN}⚠ WARN  pure not found in Homebrew site-functions; skipping ~/.zshrc prompt setup.${RESET}"
     return
   fi
 
   if grep -qxF 'prompt pure' "$HOME/.zshrc" 2>/dev/null; then
-    echo -e "${INFO}===> pure prompt already configured in ~/.zshrc; leaving it unchanged.${RESET}"
+    echo -e "${INFO}ℹ INFO  pure prompt already configured in ~/.zshrc; leaving it unchanged.${RESET}"
     return
   fi
 
-  echo -e "${INFO}===> Configuring pure prompt in ~/.zshrc...${RESET}"
+  echo -e "${INFO}ℹ INFO  Configuring pure prompt in ~/.zshrc...${RESET}"
   {
     echo ""
     echo "# pure prompt (sindresorhus/pure — installed via brew)"
@@ -862,33 +969,33 @@ configure_pure_prompt() {
 }
 
 finish_with_summary() {
+  log_phase "SUMMARY" "Compiling final run report"
   print_install_summary
-  print_elapsed_time
 
   if [[ "${#failed_formulae[@]}" -gt 0 || "${#failed_user_casks[@]}" -gt 0 || "${#failed_admin_casks[@]}" -gt 0 ]]; then
-    echo -e "${ERROR}===> Run completed with failures. Review the summary above.${RESET}"
+    echo -e "${ERROR}✖ ERROR Run completed with failures. Review the summary above.${RESET}"
     exit 1
   fi
 
-  printf "\n\n👌 Awesome, all set.\n"
+  echo -e "${SUCCESS}✓ OK    setup_env completed successfully.${RESET}"
 }
 
 run_classify_only() {
-  echo -e "${SECTION}===> Start classification.${RESET}"
+  log_phase "DISCOVER" "Starting package classification"
   ensure_homebrew_available
   quiet_homebrew_hints
 
-  echo -e "${SECTION}===> Classifying formulae...${RESET}"
+  log_phase "INSTALL" "Classifying formulae"
   for formula in "${formulae[@]}"; do
     classify_formula "$formula"
   done
 
-  echo -e "${SECTION}===> Classifying user-space casks...${RESET}"
+  log_phase "INSTALL" "Classifying user-space casks"
   for cask in "${user_casks[@]}"; do
     classify_user_cask "$cask"
   done
 
-  echo -e "${SECTION}===> Classifying admin-likely casks...${RESET}"
+  log_phase "INSTALL" "Classifying admin-likely casks"
   for cask in "${admin_casks[@]}"; do
     classify_admin_cask "$cask"
   done
@@ -897,52 +1004,60 @@ run_classify_only() {
 }
 
 run_non_admin_only() {
-  echo -e "${INFO}===> Creating ~/.hushlogin to disable login banner.${RESET}"
+  log_phase "DISCOVER" "Preparing non-admin installation"
+  echo -e "${INFO}ℹ INFO  Creating ~/.hushlogin to disable login banner.${RESET}"
   touch ~/.hushlogin
 
-  echo -e "${SECTION}===> Start non-admin installation.${RESET}"
+  log_phase "INSTALL" "Installing formulae and user-space casks"
   ensure_homebrew_available
 
-  echo -e "${ACTION}===> Updating Homebrew...${RESET}"
+  echo -e "${ACTION}ℹ INFO  Updating Homebrew...${RESET}"
   brew update
   quiet_homebrew_hints
   ensure_agent_sessions_tap
+  load_installed_formula_cache
 
-  echo -e "${SECTION}===> Installing formulae first...${RESET}"
+  echo -e "${SECTION}◆ PHASE Installing formulae first...${RESET}"
   for formula in "${formulae[@]}"; do
     install_formula "$formula"
   done
 
-  echo -e "${SECTION}===> Installing user-space casks into ~/Applications...${RESET}"
+  echo -e "${SECTION}◆ PHASE Installing user-space casks into ~/Applications...${RESET}"
   for cask in "${user_casks[@]}"; do
     install_user_cask "$cask"
   done
 
-  echo -e "${ACTION}===> Cleaning up Homebrew...${RESET}"
-  brew cleanup
+  echo -e "${ACTION}ℹ INFO  Cleaning up Homebrew...${RESET}"
+  local cleanup_output
+  cleanup_output="$(brew cleanup 2>&1)"
+  print_command_output "$cleanup_output"
 
   configure_direnv_hook
   configure_pure_prompt
+  log_phase "VERIFY" "Verifying non-admin installations"
   verify_non_admin_installations
   finish_with_summary
 }
 
 run_admin_only() {
-  echo -e "${SECTION}===> Start admin-likely installation.${RESET}"
+  log_phase "DISCOVER" "Preparing admin-likely installation"
   ensure_homebrew_available
 
-  echo -e "${ACTION}===> Updating Homebrew...${RESET}"
+  echo -e "${ACTION}ℹ INFO  Updating Homebrew...${RESET}"
   brew update
   quiet_homebrew_hints
 
-  echo -e "${SECTION}===> Installing admin-likely casks...${RESET}"
+  log_phase "INSTALL" "Installing admin-likely casks"
   for cask in "${admin_casks[@]}"; do
     install_admin_cask "$cask"
   done
 
-  echo -e "${ACTION}===> Cleaning up Homebrew...${RESET}"
-  brew cleanup
+  echo -e "${ACTION}ℹ INFO  Cleaning up Homebrew...${RESET}"
+  local cleanup_output
+  cleanup_output="$(brew cleanup 2>&1)"
+  print_command_output "$cleanup_output"
 
+  log_phase "VERIFY" "Verifying admin-likely installations"
   verify_admin_installations
   finish_with_summary
 }

@@ -1,12 +1,7 @@
 #!/bin/zsh
 
-source "${0:A:h}/colors.sh"
-
-INFO="${CYAN}"
-SUCCESS="${GREEN}"
-WARN="${YELLOW}"
-ERROR="${RED}"
-SECTION="${BMAGENTA}"
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
 
 SCRIPT_DIR="${0:A:h}"
 SCRIPT_NAME="${0:A:t}"
@@ -20,27 +15,7 @@ ANTIDOTE_SOURCE_FILE=""
 command_exists() { command -v "$1" >/dev/null 2>&1; }
 
 print_usage() {
-  echo -e "${INFO}Usage: ${SCRIPT_NAME}${RESET}"
-}
-
-log_step() {
-  echo -e "${SECTION}===> $1${RESET}"
-}
-
-log_info() {
-  echo -e "${INFO}===> $1${RESET}"
-}
-
-log_ok() {
-  echo -e "${SUCCESS}===> $1${RESET}"
-}
-
-log_warn() {
-  echo -e "${WARN}===> WARN: $1${RESET}"
-}
-
-log_error() {
-  echo -e "${ERROR}ERROR: $1${RESET}" >&2
+  printf 'Usage: %s\n' "$SCRIPT_NAME"
 }
 
 trim() {

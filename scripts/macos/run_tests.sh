@@ -1,22 +1,13 @@
 #!/bin/zsh
 # run_tests.sh - Dry-run validation for macOS scripts
 
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
+
 SCRIPT_DIR="${0:A:h}"
 REPO_ROOT="${SCRIPT_DIR}/../.."
 
 command_exists() { command -v "$1" >/dev/null 2>&1; }
-
-log_step() {
-  printf '===> %s\n' "$1"
-}
-
-log_warn() {
-  printf '===> WARN: %s\n' "$1"
-}
-
-log_ok() {
-  printf '===> OK: %s\n' "$1"
-}
 
 log_step "Starting macOS script dry-run checks"
 
@@ -29,6 +20,7 @@ scripts=(
   "${SCRIPT_DIR}/git_setup.sh"
   "${SCRIPT_DIR}/intellij_setup.sh"
   "${SCRIPT_DIR}/jenv_setup.sh"
+  "${SCRIPT_DIR}/launchpad.sh"
   "${SCRIPT_DIR}/pycharm_setup.sh"
   "${SCRIPT_DIR}/setup_env.sh"
   "${SCRIPT_DIR}/setup_env_min.sh"

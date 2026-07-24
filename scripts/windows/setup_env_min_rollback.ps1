@@ -26,29 +26,15 @@ param(
     [switch]$Help
 )
 
+$brandingScript = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "branding.ps1"
+if (Test-Path $brandingScript) {
+    . $brandingScript
+    Show-EbkBanner -ScriptName (Split-Path -Leaf $MyInvocation.MyCommand.Path)
+}
+
 # ============================================================
 # Helper Functions
 # ============================================================
-
-function Write-Step {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Magenta
-}
-
-function Write-Info {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Cyan
-}
-
-function Write-Ok {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Green
-}
-
-function Write-Warn {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Yellow
-}
 
 function Test-CommandExists {
     param([string]$Command)
@@ -62,9 +48,9 @@ function Assert-Winget {
             $script:WingetExe = $null
             return
         }
-        Write-Host "ERROR: winget (App Installer) is not installed." -ForegroundColor Red
-        Write-Host "Install it from the Microsoft Store:" -ForegroundColor Red
-        Write-Host "  https://www.microsoft.com/store/productId/9NBLGGH4NNS1" -ForegroundColor Yellow
+        Write-EbkError "winget (App Installer) is not installed."
+        Write-EbkError "Install it from the Microsoft Store:"
+        Write-Warn "https://www.microsoft.com/store/productId/9NBLGGH4NNS1"
         exit 1
     }
 
@@ -256,13 +242,11 @@ function Read-YesNo {
 Write-Step "Starting rollback of minimal Windows developer environment..."
 
 if ($Help) {
-    Write-Host "" -ForegroundColor Cyan
-    Write-Host "Usage: .\scripts\windows\setup_env_min_rollback.ps1 [ -DryRun ] [ -Interactive ] [ -Silent ] [ -Help ]" -ForegroundColor Cyan
-    Write-Host "" -ForegroundColor Cyan
-    Write-Host "Examples:" -ForegroundColor Cyan
-    Write-Host "  .\scripts\windows\setup_env_min_rollback.ps1          # Silent (default)" -ForegroundColor Cyan
-    Write-Host "  .\scripts\windows\setup_env_min_rollback.ps1 -Interactive  # Choose what to uninstall" -ForegroundColor Cyan
-    Write-Host "  .\scripts\windows\setup_env_min_rollback.ps1 -DryRun       # Preview actions, no changes" -ForegroundColor Cyan
+    Write-Info "Usage: .\scripts\windows\setup_env_min_rollback.ps1 [ -DryRun ] [ -Interactive ] [ -Silent ] [ -Help ]"
+    Write-Info "Examples:"
+    Write-Info ".\scripts\windows\setup_env_min_rollback.ps1          # Silent (default)"
+    Write-Info ".\scripts\windows\setup_env_min_rollback.ps1 -Interactive  # Choose what to uninstall"
+    Write-Info ".\scripts\windows\setup_env_min_rollback.ps1 -DryRun       # Preview actions, no changes"
     exit 0
 }
 
@@ -326,4 +310,4 @@ foreach ($c in $selected) {
 }
 
 Write-Warn "Restart your terminal to apply the environment changes."
-Write-Host "`n`nRollback complete!" -ForegroundColor Green
+Write-Ok "Rollback complete!"

@@ -14,24 +14,10 @@ param(
     [switch]$DryRun
 )
 
-function Write-Step {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Magenta
-}
-
-function Write-Info {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Cyan
-}
-
-function Write-Ok {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Green
-}
-
-function Write-Warn {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Yellow
+$brandingScript = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "branding.ps1"
+if (Test-Path $brandingScript) {
+    . $brandingScript
+    Show-EbkBanner -ScriptName (Split-Path -Leaf $MyInvocation.MyCommand.Path)
 }
 
 function Test-CommandExists {
@@ -79,7 +65,7 @@ function Get-InstalledExtensions {
             return @()
         }
 
-        Write-Host "ERROR: VS Code CLI 'code' not found. Install VS Code and enable the 'code' command." -ForegroundColor Red
+        Write-EbkError "VS Code CLI 'code' not found. Install VS Code and enable the 'code' command."
         exit 1
     }
 
@@ -100,7 +86,7 @@ function Print-Extensions {
 
 $scriptDir = Resolve-ScriptDir
 if (-not $scriptDir) {
-    Write-Host "ERROR: Could not resolve script directory." -ForegroundColor Red
+    Write-EbkError "Could not resolve script directory."
     exit 1
 }
 
@@ -115,7 +101,7 @@ $resolvedConfig = Resolve-Path -Path $ConfigPath -ErrorAction SilentlyContinue
 if ($resolvedConfig) {
     $ConfigPath = $resolvedConfig.Path
 } elseif (-not (Test-Path -LiteralPath $ConfigPath)) {
-    Write-Host "ERROR: Config file not found: $ConfigPath" -ForegroundColor Red
+    Write-EbkError "Config file not found: $ConfigPath"
     exit 1
 }
 

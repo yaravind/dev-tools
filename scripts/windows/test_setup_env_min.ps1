@@ -4,9 +4,11 @@ param(
     [switch]$VerboseOutput
 )
 
-function Write-Step { param([string]$Message) Write-Host "===> $Message" -ForegroundColor Magenta }
-function Write-Ok { param([string]$Message) Write-Host "===> OK: $Message" -ForegroundColor Green }
-function Write-Warn { param([string]$Message) Write-Host "===> WARN: $Message" -ForegroundColor Yellow }
+$brandingScript = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "branding.ps1"
+if (Test-Path $brandingScript) {
+    . $brandingScript
+    Show-EbkBanner -ScriptName (Split-Path -Leaf $MyInvocation.MyCommand.Path)
+}
 
 $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $PSCommandPath }
 $minScript = Join-Path $scriptDir "setup_env_min.ps1"
@@ -31,4 +33,3 @@ try {
     Write-Warn "DryRun FAILED: $(Split-Path -Leaf $minScript) - Exception: $_"
     exit 1
 }
-

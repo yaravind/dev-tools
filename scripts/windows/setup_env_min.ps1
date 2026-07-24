@@ -26,29 +26,15 @@ param(
     [switch]$Help
 )
 
+$brandingScript = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "branding.ps1"
+if (Test-Path $brandingScript) {
+    . $brandingScript
+    Show-EbkBanner -ScriptName (Split-Path -Leaf $MyInvocation.MyCommand.Path)
+}
+
 # ============================================================
 # Helper Functions
 # ============================================================
-
-function Write-Step {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Magenta
-}
-
-function Write-Info {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Cyan
-}
-
-function Write-Ok {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Green
-}
-
-function Write-Warn {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Yellow
-}
 
 function Test-CommandExists {
     param([string]$Command)
@@ -80,9 +66,9 @@ function Assert-Winget {
             $script:WingetExe = $null
             return
         }
-        Write-Host "ERROR: winget (App Installer) is not installed." -ForegroundColor Red
-        Write-Host "Install it from the Microsoft Store:" -ForegroundColor Red
-        Write-Host "  https://www.microsoft.com/store/productId/9NBLGGH4NNS1" -ForegroundColor Yellow
+        Write-EbkError "winget (App Installer) is not installed."
+        Write-EbkError "Install it from the Microsoft Store:"
+        Write-Warn "https://www.microsoft.com/store/productId/9NBLGGH4NNS1"
         exit 1
     }
 
@@ -311,15 +297,15 @@ if ($Interactive) {
 }
 
 # Print a short banner/help at top that prints accepted switches, defaults, and chosen mode
-Write-Host "===> setup_env_min.ps1 - Minimal Windows bootstrap" -ForegroundColor Cyan
-Write-Host "===> Accepted switches: -DryRun (preview), -Interactive (installer UX), -Silent (no prompts), -Help (this message)." -ForegroundColor Cyan
-Write-Host "===> Default behavior: Silent installs (no prompts)." -ForegroundColor Cyan
+Write-Step "setup_env_min.ps1 - Minimal Windows bootstrap"
+Write-Info "Accepted switches: -DryRun (preview), -Interactive (installer UX), -Silent (no prompts), -Help (this message)."
+Write-Info "Default behavior: Silent installs (no prompts)."
 if ($DryRun) {
-    Write-Host "===> Mode: DryRun (no changes will be made)." -ForegroundColor Yellow
+    Write-Warn "Mode: DryRun (no changes will be made)."
 } elseif ($useInteractive) {
-    Write-Host "===> Mode: Interactive (installer UX will be shown)." -ForegroundColor Yellow
+    Write-Warn "Mode: Interactive (installer UX will be shown)."
 } else {
-    Write-Host "===> Mode: Silent (default)." -ForegroundColor Yellow
+    Write-Warn "Mode: Silent (default)."
 }
 
 # If DryRun, short-circuit actual install actions and show planned actions + verification
@@ -370,10 +356,10 @@ if ($DryRun) {
     $mavenScriptPath = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "maven_setup.ps1"
     Write-Host "  - Install: Apache Maven (via $mavenScriptPath) [skipped in DryRun]"
 
-    Write-Host "\n===> Running verification commands against the current environment..." -ForegroundColor Cyan
+    Write-Info "Running verification commands against the current environment..."
 
     Invoke-Verify
-    Write-Host "\n===> DryRun complete. No changes were made." -ForegroundColor Green
+    Write-Ok "DryRun complete. No changes were made."
     exit 0
 }
 
@@ -383,13 +369,11 @@ Print-PathEntries -Scope "Machine"
 Print-PathEntries -Scope "User"
 
 if ($Help) {
-    Write-Host "" -ForegroundColor Cyan
-    Write-Host "Usage: .\scripts\windows\setup_env_min.ps1 [ -DryRun ] [ -Interactive ] [ -Silent ] [ -Help ]" -ForegroundColor Cyan
-    Write-Host "" -ForegroundColor Cyan
-    Write-Host "Examples:" -ForegroundColor Cyan
-    Write-Host "  .\scripts\windows\setup_env_min.ps1            # Silent (default)" -ForegroundColor Cyan
-    Write-Host "  .\scripts\windows\setup_env_min.ps1 -Interactive  # Show installer UX" -ForegroundColor Cyan
-    Write-Host "  .\scripts\windows\setup_env_min.ps1 -DryRun       # Preview actions, no changes" -ForegroundColor Cyan
+    Write-Info "Usage: .\scripts\windows\setup_env_min.ps1 [ -DryRun ] [ -Interactive ] [ -Silent ] [ -Help ]"
+    Write-Info "Examples:"
+    Write-Info ".\scripts\windows\setup_env_min.ps1            # Silent (default)"
+    Write-Info ".\scripts\windows\setup_env_min.ps1 -Interactive  # Show installer UX"
+    Write-Info ".\scripts\windows\setup_env_min.ps1 -DryRun       # Preview actions, no changes"
     exit 0
 }
 
@@ -438,5 +422,4 @@ Print-PathEntries -Scope "User"
 
 Invoke-Verify
 
-Write-Host "`n`nAwesome, all set!" -ForegroundColor Green
-
+Write-Ok "Awesome, all set!"

@@ -7,29 +7,15 @@
 #   Set-ExecutionPolicy Bypass -Scope Process -Force
 #   .\scripts\jenv_setup.ps1
 
+$brandingScript = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "branding.ps1"
+if (Test-Path $brandingScript) {
+    . $brandingScript
+    Show-EbkBanner -ScriptName (Split-Path -Leaf $MyInvocation.MyCommand.Path)
+}
+
 # ============================================================
 # Helper Functions
 # ============================================================
-
-function Write-Step {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Magenta
-}
-
-function Write-Info {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Cyan
-}
-
-function Write-Ok {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Green
-}
-
-function Write-Warn {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Yellow
-}
 
 function Test-CommandExists {
     param([string]$Command)
@@ -58,8 +44,8 @@ function Install-JEnv {
         if (Test-CommandExists "jenv") {
             Write-Ok "JEnv-for-Windows installed successfully."
         } else {
-            Write-Host "ERROR: jenv not found after installation. Restart your terminal and re-run this script." -ForegroundColor Red
-            Write-Host "  Manual install: iwr -useb 'https://raw.githubusercontent.com/FelixSelter/JEnv-for-Windows/main/jenv.ps1' | iex" -ForegroundColor Yellow
+            Write-EbkError "jenv not found after installation. Restart your terminal and re-run this script."
+            Write-Warn "Manual install: iwr -useb 'https://raw.githubusercontent.com/FelixSelter/JEnv-for-Windows/main/jenv.ps1' | iex"
             exit 1
         }
     }
@@ -137,4 +123,4 @@ java -version
 Write-Info "Verifying JAVA_HOME..."
 Write-Host $env:JAVA_HOME
 
-Write-Host "`n`n👌 Awesome, all set." -ForegroundColor Green
+Write-Ok "Awesome, all set."

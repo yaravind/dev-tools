@@ -2,26 +2,41 @@
 
 set -o pipefail
 
-if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
-  RED=$'\033[0;31m'
-  GOLD=$'\033[0;33m'
-  GREEN=$'\033[0;32m'
-  MAGENTA=$'\033[0;35m'
-  BLUE=$'\033[0;34m'
-  NC=$'\033[0m'
-else
-  RED=''
-  GOLD=''
-  GREEN=''
-  MAGENTA=''
-  BLUE=''
-  NC=''
-fi
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/branding_bash.sh"
+ebk_print_banner "$(basename "${BASH_SOURCE[0]}")"
+BLUE="$EBK_INFO_COLOR"
+NC="$EBK_RESET"
+
 VSCODE_EXT_FILE="$(cd "${SCRIPT_DIR}/../../config" && pwd -P)/vscode.txt"
 VSCODE_SETTINGS_FILE="$(cd "${SCRIPT_DIR}/../../config" && pwd -P)/vscode_settings.json"
 VSCODE_USER_SETTINGS_FILE="${HOME}/Library/Application Support/Code/User/settings.json"
+SCRIPT_START_SECONDS=$SECONDS
+
+LOG_HEADER="$EBK_PHASE_COLOR"
+LOG_SUCCESS="$EBK_OK_COLOR"
+LOG_WARN="$EBK_WARN_COLOR"
+
+log_phase() {
+  ebk_log_phase "$1"
+  [[ -n "${2:-}" ]] && ebk_log_info "$2"
+}
+
+format_duration() {
+  local total_seconds="$1"
+  local hours=$((total_seconds / 3600))
+  local minutes=$(((total_seconds % 3600) / 60))
+  local seconds=$((total_seconds % 60))
+
+  if ((hours > 0)); then
+    printf '%dh %dm %ds' "$hours" "$minutes" "$seconds"
+  elif ((minutes > 0)); then
+    printf '%dm %ds' "$minutes" "$seconds"
+  else
+    printf '%ds' "$seconds"
+  fi
+}
 
 lowercase() {
   printf '%s' "$1" | tr '[:upper:]' '[:lower:]'
@@ -62,19 +77,19 @@ apply_managed_settings() {
   local user_settings_dir
 
   if ! command -v python3 >/dev/null 2>&1; then
-    printf '%sERROR: python3 not found. Cannot merge VSCode settings.%s\n' "$RED" "$NC"
+    log_error "python3 not found. Cannot merge VSCode settings."
     return 1
   fi
 
   if [[ ! -f "$managed_settings_file" ]]; then
-    printf '%sERROR: %s not found. Please create it with VSCode settings.%s\n' "$RED" "$managed_settings_file" "$NC"
+    log_error "${managed_settings_file} not found. Please create it with VSCode settings."
     return 1
   fi
 
   user_settings_dir="$(dirname "$user_settings_file")"
   if [[ ! -d "$user_settings_dir" ]]; then
     if ! run_cmd mkdir -p "$user_settings_dir"; then
-      printf '%sERROR: Failed to create VSCode settings directory "%s".%s\n' "$RED" "$user_settings_dir" "$NC"
+      log_error "Failed to create VSCode settings directory \"${user_settings_dir}\"."
       return 1
     fi
   fi
@@ -82,7 +97,7 @@ apply_managed_settings() {
   if [[ ! -f "$user_settings_file" ]]; then
     printf '%s$ printf %s > %q%s\n' "$BLUE" '"{}\\n"' "$user_settings_file" "$NC"
     if ! printf '{}\n' > "$user_settings_file"; then
-      printf '%sERROR: Failed to initialize VSCode settings file "%s".%s\n' "$RED" "$user_settings_file" "$NC"
+      log_error "Failed to initialize VSCode settings file \"${user_settings_file}\"."
       return 1
     fi
   fi
@@ -101,7 +116,7 @@ if not isinstance(managed, dict):
 
 for key in sorted(managed):
     value = json.dumps(managed[key], ensure_ascii=True)
-    print(f"==> Managed setting: {key} = {value}")
+    print(f"ℹ INFO  Managed setting: {key} = {value}")
 
 with open(user_path, encoding="utf-8") as user_file:
     existing = json.load(user_file)
@@ -115,31 +130,81 @@ with open(user_path, "w", encoding="utf-8") as user_file:
     json.dump(merged, user_file, indent=2)
     user_file.write("\n")
 PY
-    printf '%sERROR: Failed to merge VSCode settings. Ensure both settings files contain valid JSON objects.%s\n' "$RED" "$NC"
+    log_error "Failed to merge VSCode settings. Ensure both settings files contain valid JSON objects."
     return 1
   fi
 
   return 0
 }
 
+print_structured_report() {
+  local status_label="$1"
+  local status_icon
+  local status_color
+
+  if [[ "$status_label" == "SUCCESS" ]]; then
+    status_icon="✔"
+    status_color="$LOG_SUCCESS"
+  else
+    status_icon="⚠"
+    status_color="$LOG_WARN"
+  fi
+
+  printf '\n%sFinal Status Report%s\n' "$LOG_HEADER" "$NC"
+  printf '%s──────────────────────────────────────────────────────────────────────────────%s\n' "$LOG_HEADER" "$NC"
+  printf '  %-24s %s\n' "Script" "VSCode Setup (macOS)"
+  printf '  %-24s %s\n' "Config" "$VSCODE_EXT_FILE"
+  printf '  %-24s %s\n' "Settings file" "$VSCODE_SETTINGS_FILE"
+  printf "  %-24s ${status_color}%s %s${NC}\n" "Status" "$status_icon" "$status_label"
+  printf '%s──────────────────────────────────────────────────────────────────────────────%s\n' "$LOG_HEADER" "$NC"
+  printf '  %-24s %d\n' "Requested" "$initial_requested_count"
+  printf '  %-24s %d\n' "Attempted" "$initial_requested_count"
+  printf '  %-24s %d\n' "Installed (net new)" "$install_count"
+  printf '  %-24s %d\n' "Already installed" "$skip_count"
+  printf '  %-24s %d\n' "Duplicates ignored" "$duplicate_count"
+  printf '  %-24s %d\n' "Invalid entries ignored" "$invalid_count"
+  printf '  %-24s %d\n' "Failed installs" "$fail_count"
+  printf '  %-24s %d\n' "Settings merge failures" "$settings_fail_count"
+  printf '  %-24s %s\n' "Duration" "$(format_duration $((SECONDS - SCRIPT_START_SECONDS)))"
+  printf '%s──────────────────────────────────────────────────────────────────────────────%s\n' "$LOG_HEADER" "$NC"
+
+  printf '%sNet New Extensions Installed%s\n' "$LOG_HEADER" "$NC"
+  if (( ${#net_new_extensions[@]} == 0 )); then
+    printf '  %s\n' "No net-new extensions were installed in this run."
+  else
+    local ext
+    for ext in "${net_new_extensions[@]}"; do
+      printf '  %s• %s%s\n' "$LOG_SUCCESS" "$ext" "$NC"
+    done
+  fi
+
+  printf '\n%sNext Steps%s\n' "$LOG_HEADER" "$NC"
+  if (( fail_count > 0 || settings_fail_count > 0 || invalid_count > 0 )); then
+    printf '  %s\n' "Review failed installs/setting merges and fix invalid IDs in config/vscode.txt."
+  else
+    printf '  %s\n' "No follow-up action required."
+  fi
+}
+
 if ! command -v code >/dev/null 2>&1; then
-  printf '%sERROR: VSCode CLI "code" not found. Please install it first.%s\n' "$RED" "$NC"
+  log_error "VSCode CLI \"code\" not found. Please install it first."
   exit 1
 fi
 
 if [[ ! -f "$VSCODE_EXT_FILE" ]]; then
-  printf '%sERROR: %s not found. Please create it with extension IDs.%s\n' "$RED" "$VSCODE_EXT_FILE" "$NC"
+  log_error "${VSCODE_EXT_FILE} not found. Please create it with extension IDs."
   exit 1
 fi
 
 if [[ ! -f "$VSCODE_SETTINGS_FILE" ]]; then
-  printf '%sERROR: %s not found. Please create it with VSCode settings.%s\n' "$RED" "$VSCODE_SETTINGS_FILE" "$NC"
+  log_error "${VSCODE_SETTINGS_FILE} not found. Please create it with VSCode settings."
   exit 1
 fi
 
+log_phase "DISCOVER" "Scanning local VSCode state and extension config"
 installed_count="$(code --list-extensions | wc -l | tr -d '[:space:]')"
-printf '%s==> Installed VSCode extensions detected: %s%s\n' "$MAGENTA" "$installed_count" "$NC"
-printf '%s\n==> Reading extensions from %s%s\n' "$MAGENTA" "$VSCODE_EXT_FILE" "$NC"
+log_info "Installed VSCode extensions detected: ${installed_count}"
+log_info "Reading extensions from ${VSCODE_EXT_FILE}"
 
 exts_to_install=()
 duplicate_count=0
@@ -154,14 +219,14 @@ while IFS= read -r ext || [[ -n "$ext" ]]; do
   fi
 
   if [[ ! "$ext" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*\.[A-Za-z0-9][A-Za-z0-9_.-]*(@[A-Za-z0-9_.-]+)?$ ]]; then
-    printf '%sWARN: Ignoring invalid extension ID "%s".%s\n' "$GOLD" "$ext" "$NC"
+    log_warn "Ignoring invalid extension ID \"${ext}\"."
     ((invalid_count++))
     continue
   fi
 
   ext="$(lowercase "$ext")"
   if [[ "$seen_exts" == *$'\n'"$ext"$'\n'* ]]; then
-    printf '%sWARN: Duplicate extension "%s" in config, ignoring.%s\n' "$GOLD" "$ext" "$NC"
+    log_warn "Duplicate extension \"${ext}\" in config. Ignoring duplicate entry."
     ((duplicate_count++))
     continue
   fi
@@ -170,58 +235,57 @@ while IFS= read -r ext || [[ -n "$ext" ]]; do
   exts_to_install+=("$ext")
 done < "$VSCODE_EXT_FILE"
 
-printf '%s\n==> Extensions to be installed from %s:%s\n' "$MAGENTA" "$VSCODE_EXT_FILE" "$NC"
-for ext in "${exts_to_install[@]}"; do
-  printf '%s%s%s\n' "$BLUE" "$ext" "$NC"
-done
-printf '%sTotal extensions found: %d%s\n\n' "$MAGENTA" "${#exts_to_install[@]}" "$NC"
+initial_requested_count="${#exts_to_install[@]}"
+log_info "Total extension IDs queued: ${initial_requested_count}"
 
 install_count=0
 skip_count=0
 fail_count=0
 settings_fail_count=0
+net_new_extensions=()
 
+log_phase "INSTALL" "Installing queued VSCode extensions"
 for ext in "${exts_to_install[@]}"; do
   if is_installed "$ext"; then
-    printf '%sWARN: Extension "%s" is already installed, skipping installation.%s\n' "$GOLD" "$ext" "$NC"
     ((skip_count++))
     continue
   fi
 
-  printf '%s==> Installing extension: %s%s\n' "$MAGENTA" "$ext" "$NC"
+  log_step "Installing extension: ${ext}"
   if run_cmd code --install-extension "$ext"; then
     if is_installed "$ext"; then
-      printf '%sSUCCESS: Installed "%s".%s\n' "$GREEN" "$ext" "$NC"
+      log_ok "Installed \"${ext}\"."
       ((install_count++))
+      net_new_extensions+=("$ext")
     else
-      printf '%sERROR: Command completed but "%s" was not found in the installed extension list.%s\n' "$RED" "$ext" "$NC"
+      log_error "Command completed but \"${ext}\" was not found in the installed extension list."
       ((fail_count++))
     fi
   else
-    printf '%sERROR: Failed to install "%s".%s\n' "$RED" "$ext" "$NC"
+    log_error "Failed to install \"${ext}\"."
     ((fail_count++))
   fi
   sleep 0.2
 done
 
-printf '%s\n==> Applying managed VSCode settings from %s%s\n' "$MAGENTA" "$VSCODE_SETTINGS_FILE" "$NC"
+log_phase "VERIFY" "Applying managed VSCode settings"
+log_step "Applying settings from ${VSCODE_SETTINGS_FILE}"
 if apply_managed_settings "$VSCODE_SETTINGS_FILE" "$VSCODE_USER_SETTINGS_FILE"; then
-  printf '%sSUCCESS: Managed VSCode settings applied to "%s".%s\n' "$GREEN" "$VSCODE_USER_SETTINGS_FILE" "$NC"
+  log_ok "Managed VSCode settings applied to \"${VSCODE_USER_SETTINGS_FILE}\"."
 else
   ((settings_fail_count++))
 fi
 
-printf '%s\n==> VSCode extension installation complete.%s\n' "$MAGENTA" "$NC"
-printf '%sInstalled: %d%s\n' "$GREEN" "$install_count" "$NC"
-printf '%sSkipped: %d%s\n' "$GOLD" "$skip_count" "$NC"
-printf '%sDuplicates ignored: %d%s\n' "$GOLD" "$duplicate_count" "$NC"
-printf '%sInvalid ignored: %d%s\n' "$GOLD" "$invalid_count" "$NC"
-printf '%sFailed: %d%s\n' "$RED" "$fail_count" "$NC"
-printf '%sSettings merge failures: %d%s\n' "$RED" "$settings_fail_count" "$NC"
+overall_status="SUCCESS"
+if ((fail_count > 0 || invalid_count > 0 || settings_fail_count > 0)); then
+  overall_status="COMPLETED WITH ISSUES"
+fi
+
+log_phase "SUMMARY" "Compiling final run report"
+print_structured_report "$overall_status"
 
 if ((fail_count > 0 || invalid_count > 0 || settings_fail_count > 0)); then
-  printf '%s\nERROR: VSCode setup completed with issues.%s\n' "$RED" "$NC"
   exit 1
 fi
 
-printf '%s\nAll done.%s\n' "$GREEN" "$NC"
+log_ok "VSCode setup completed successfully."

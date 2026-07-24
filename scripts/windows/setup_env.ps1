@@ -12,6 +12,12 @@
 #     https://learn.microsoft.com/en-us/windows/package-manager/winget/
 #   - Run PowerShell as Administrator for system-wide installations
 
+$brandingScript = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "branding.ps1"
+if (Test-Path $brandingScript) {
+    . $brandingScript
+    Show-EbkBanner -ScriptName (Split-Path -Leaf $MyInvocation.MyCommand.Path)
+}
+
 # ============================================================
 # CLI Tools - winget equivalents of brew formulae
 # ============================================================
@@ -88,30 +94,42 @@ $guiApps = @(
 # Helper Functions
 # ============================================================
 
-function Write-Step {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Magenta
-}
-
-function Write-Info {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Cyan
-}
-
-function Write-Ok {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Green
-}
-
-function Write-Warn {
-    param([string]$Message)
-    Write-Host "===> $Message" -ForegroundColor Yellow
-}
-
 # Check if a command exists in the current PATH
 function Test-CommandExists {
     param([string]$Command)
     return $null -ne (Get-Command $Command -ErrorAction SilentlyContinue)
+}
+
+$script:WingetInstalledIdCache = $null
+
+function Initialize-WingetInstalledCache {
+    if ($script:WingetInstalledIdCache) {
+        return
+    }
+
+    $script:WingetInstalledIdCache = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+    $listOutput = & $script:WingetExe list --accept-source-agreements 2>$null
+    foreach ($line in $listOutput) {
+        foreach ($token in ($line -split '\s+')) {
+            if ($token -match '^[A-Za-z0-9][A-Za-z0-9._-]+\.[A-Za-z0-9._-]+$') {
+                [void]$script:WingetInstalledIdCache.Add($token)
+            }
+        }
+    }
+}
+
+function Test-WingetInstalledCached {
+    param(
+        [string]$Id,
+        [string]$Name
+    )
+    if ($script:WingetInstalledIdCache -and $script:WingetInstalledIdCache.Contains($Id)) {
+        return $true
+    }
+    if ($Name -and $script:WingetInstalledIdCache -and $script:WingetInstalledIdCache.Contains($Name)) {
+        return $true
+    }
+    return $false
 }
 
 # Verify a winget install by querying the package list (with short retries)
@@ -124,11 +142,13 @@ function Test-WingetInstalled {
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
         $listOutput = & $script:WingetExe list --id $Id --exact 2>$null
         if ($listOutput -and ($listOutput | Select-String -SimpleMatch $Id)) {
+            if ($script:WingetInstalledIdCache) { [void]$script:WingetInstalledIdCache.Add($Id) }
             return $true
         }
         if ($Name) {
             $listOutput = & $script:WingetExe list --name $Name 2>$null
             if ($listOutput -and ($listOutput | Select-String -SimpleMatch $Name)) {
+                if ($script:WingetInstalledIdCache) { [void]$script:WingetInstalledIdCache.Add($Id) }
                 return $true
             }
         }
@@ -140,9 +160,9 @@ function Test-WingetInstalled {
 # Verify winget is available before proceeding
 function Assert-Winget {
     if (-not (Test-CommandExists "winget")) {
-        Write-Host "ERROR: winget (App Installer) is not installed." -ForegroundColor Red
-        Write-Host "Install it from the Microsoft Store:" -ForegroundColor Red
-        Write-Host "  https://www.microsoft.com/store/productId/9NBLGGH4NNS1" -ForegroundColor Yellow
+        Write-EbkError "winget (App Installer) is not installed."
+        Write-EbkError "Install it from the Microsoft Store:"
+        Write-Warn "https://www.microsoft.com/store/productId/9NBLGGH4NNS1"
         exit 1
     }
 
@@ -190,15 +210,21 @@ function Install-WingetApp {
         Write-Warn "$SkipCommand already available. Skipping $Description."
         return
     }
+    if (Test-WingetInstalledCached -Id $Id -Name $FallbackName) {
+        Write-Warn "Already installed: $Description - skipping."
+        return
+    }
     Write-Info "Installing: $Description ($Id)..."
 
     $exitCode = Invoke-WingetInstall -Id $Id -Source $Source -NoSilent:$NoSilent
     if ($exitCode -eq 0) {
+        if ($script:WingetInstalledIdCache) { [void]$script:WingetInstalledIdCache.Add($Id) }
         Write-Ok "Installed: $Description"
         return
     }
     if ($exitCode -eq -1978335189) {
         # 0x8A150023 = APPINSTALLER_CLI_ERROR_PACKAGE_ALREADY_INSTALLED
+        if ($script:WingetInstalledIdCache) { [void]$script:WingetInstalledIdCache.Add($Id) }
         Write-Warn "Already installed: $Description - skipping."
         return
     }
@@ -211,10 +237,12 @@ function Install-WingetApp {
         Write-Warn "Package not found for ID $Id. Trying by name: $FallbackName"
         $fallbackExit = Invoke-WingetInstall -Id $FallbackName -Source $Source -NoSilent:$NoSilent -UseName
         if ($fallbackExit -eq 0) {
+            if ($script:WingetInstalledIdCache) { [void]$script:WingetInstalledIdCache.Add($Id) }
             Write-Ok "Installed: $Description"
             return
         }
         if ($fallbackExit -eq -1978335189) {
+            if ($script:WingetInstalledIdCache) { [void]$script:WingetInstalledIdCache.Add($Id) }
             Write-Warn "Already installed: $Description - skipping."
             return
         }
@@ -234,10 +262,12 @@ function Install-WingetApp {
         Write-Warn "Install failed with --silent. Retrying without --silent..."
         $retryExit = Invoke-WingetInstall -Id $Id -Source $Source -NoSilent -UseName:$false
         if ($retryExit -eq 0) {
+            if ($script:WingetInstalledIdCache) { [void]$script:WingetInstalledIdCache.Add($Id) }
             Write-Ok "Installed: $Description"
             return
         }
         if ($retryExit -eq -1978335189) {
+            if ($script:WingetInstalledIdCache) { [void]$script:WingetInstalledIdCache.Add($Id) }
             Write-Warn "Already installed: $Description - skipping."
             return
         }
@@ -432,6 +462,8 @@ Assert-Winget
 
 Write-Info "Updating winget sources..."
 & $script:WingetExe source update
+Write-Info "Building installed package cache..."
+Initialize-WingetInstalledCache
 
 Write-Step "Installing CLI tools..."
 foreach ($tool in $cliTools) {
@@ -460,4 +492,4 @@ Set-JavaHome
 
 Invoke-Verify
 
-Write-Host "`n`nAwesome, all set!" -ForegroundColor Green
+Write-Ok "Awesome, all set!"

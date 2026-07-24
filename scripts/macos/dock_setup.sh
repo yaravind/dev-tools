@@ -1,5 +1,8 @@
 #!/bin/zsh
 
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
+
 SCRIPT_DIR="${0:A:h}"
 DOCK_FILE="${SCRIPT_DIR}/../../config/dock_apps.txt"
 DOCK_PLIST="$HOME/Library/Preferences/com.apple.dock.plist"
@@ -24,7 +27,7 @@ for arg in "$@"; do
       exit 0
       ;;
     *)
-      printf "\033[0;31m\nERROR: Unknown argument: %s\033[0m\n" "$arg"
+      ebk_log_error "Unknown argument: $arg"
       print_usage
       exit 1
       ;;
@@ -62,24 +65,24 @@ path_in_list() {
 
 # Rollback function
 rollback() {
-  printf "\033[0;31m\nERROR: %s\033[0m\n" "$1"
+  ebk_log_error "$1"
   if [ -f "$DOCK_PLIST_BAK" ]; then
-    printf "\nRolling back Dock to previous state...\n"
+    ebk_log_warn "Rolling back Dock to previous state..."
     run_cmd cp "$DOCK_PLIST_BAK" "$DOCK_PLIST"
     run_cmd killall Dock
-    printf "\nRollback complete.\n"
+    ebk_log_ok "Rollback complete."
   else
-    printf "\nNo backup found. Manual recovery may be required.\n"
+    ebk_log_warn "No backup found. Manual recovery may be required."
   fi
   exit 1
 }
 
 # Check if the app list file exists, else terminate with error
 if [ ! -f "$DOCK_FILE" ]; then
-  printf "\033[0;31m\nERROR: %s not found. Please run gen_dock_apps.sh to create it.\033[0m\n" "$DOCK_FILE"
+  ebk_log_error "${DOCK_FILE} not found. Please run gen_dock_apps.sh to create it."
   exit 1
 else
-  printf "\033[0;35m\n==> Reading from %s\033[0m\n" "$DOCK_FILE"
+  ebk_log_info "Reading from ${DOCK_FILE}"
 fi
 
 add_list=()
@@ -175,29 +178,29 @@ print_plan() {
 
 parse_dock_file
 if ! collect_current_dock_apps; then
-  printf "\033[0;33m\nWARN: dockutil is not available; unable to compare against the current Dock.\033[0m\n"
+  ebk_log_warn "dockutil is not available; unable to compare against the current Dock."
 fi
 
 print_plan
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
-  printf "\033[0;32m\nDry run complete. No Dock changes were made.\033[0m\n"
+  ebk_log_ok "Dry run complete. No Dock changes were made."
   exit 0
 fi
 
 printf "\nWould you like to proceed? (y/n): "
 read -r proceed
 if [[ ! "$proceed" =~ ^[yY]$ ]]; then
-  printf "\nAborted by user. No changes made.\n"
+  ebk_log_warn "Aborted by user. No changes made."
   exit 0
 fi
 
-printf "\033[0;35m\n==> Backing up current Dock to %s...\033[0m\n" "$DOCK_PLIST_BAK"
+ebk_log_phase "Backing up current Dock to ${DOCK_PLIST_BAK}"
 run_cmd cp "$DOCK_PLIST" "$DOCK_PLIST_BAK" || { rollback "Failed to backup Dock plist."; }
 
 #printf "\nUsing existing %s.\n" "$DOCK_FILE"
 
-printf "\033[0;35m\n==> Changing Dock settings.\033[0m\n"
+ebk_log_phase "Changing Dock settings"
 printf "\nTurning off Dock magnification...\n"
 run_cmd defaults write com.apple.dock magnification -bool false || rollback "Failed to set Dock magnification."
 
@@ -214,10 +217,10 @@ run_cmd defaults write com.apple.dock minimize-to-application -bool true || roll
 printf "\nSetting Dock auto-hide to false...\n"
 run_cmd defaults write com.apple.dock autohide -bool false || rollback "Failed to set Dock auto-hide."
 
-printf "\033[0;35m\n==> Removing all existing Dock apps...\033[0m\n"
+ebk_log_phase "Removing all existing Dock apps"
 run_cmd dockutil --remove all --no-restart || rollback "Failed to remove all Dock apps."
 
-printf "\033[0;35m\n==> Re-adding apps from %s...\033[0m\n" "$DOCK_FILE"
+ebk_log_phase "Re-adding apps from ${DOCK_FILE}"
 count=0
 skipped=0
 while IFS= read -r app; do
@@ -230,7 +233,7 @@ while IFS= read -r app; do
       # Check if the app is present in the Dock before removing
       if dockutil --list | grep -Fq "$app_to_remove"; then
         printf "\nRemoving %s from Dock...\n" "$app_to_remove"
-        run_cmd dockutil --remove "$app_to_remove" --no-restart 2>/dev/null || printf "\033[0;31m\nERROR: Failed to remove %s from Dock.\033[0m\n" "$app_to_remove"
+        run_cmd dockutil --remove "$app_to_remove" --no-restart 2>/dev/null || ebk_log_error "Failed to remove ${app_to_remove} from Dock."
       fi
     fi
     ((skipped++))
@@ -254,27 +257,27 @@ while IFS= read -r app; do
     run_cmd dockutil --add "$app_real" --no-restart || rollback "Failed to add $app_real to Dock."
     ((count++))
   else
-    printf "\033[0;33m\nWARN: %s does not exist, skipping.\033[0m\n" "$app_real"
+    ebk_log_warn "${app_real} does not exist, skipping."
     ((skipped++))
   fi
 done < "$DOCK_FILE"
 
-printf "\033[0;32m\nAdded %d apps to Dock. Skipped %d entries.\033[0m\n" "$count" "$skipped"
+ebk_log_ok "Added ${count} apps to Dock. Skipped ${skipped} entries."
 
 #printf "\nAdding 'Other' folder to Dock...\n"
 #run_cmd dockutil --add ~/Documents/Other --view grid --display folder --no-restart || rollback "Failed to add 'Other' folder to Dock."
 
-printf "\033[0;35m\n==> Restarting Dock to apply changes...\033[0m\n"
+ebk_log_phase "Restarting Dock to apply changes"
 run_cmd killall Dock || rollback "Failed to restart Dock."
-printf "\033[0;35m\n==> Dock setup complete.\033[0m\n"
+ebk_log_ok "Dock setup complete."
 
 # Ask user if they want to remove the backup
-printf "\033[0;35m\n==> Do you want to remove the Dock backup file %s? (y/n): \033[0m" "$DOCK_PLIST_BAK"
+printf "\nDo you want to remove the Dock backup file %s? (y/n): " "$DOCK_PLIST_BAK"
 read -r remove_bak
 if [[ "$remove_bak" =~ ^[yY]$ ]]; then
-  run_cmd rm "$DOCK_PLIST_BAK" && printf "\nBackup removed.\n"
+  run_cmd rm "$DOCK_PLIST_BAK" && ebk_log_ok "Backup removed."
 else
-  printf "\nBackup retained at %s.\n" "$DOCK_PLIST_BAK"
+  ebk_log_info "Backup retained at ${DOCK_PLIST_BAK}."
 fi
 
-printf "\n\n👌 Awesome, all set.\n"
+ebk_log_ok "Awesome, all set."

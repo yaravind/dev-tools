@@ -18,24 +18,15 @@ param(
     [switch]$DryRun
 )
 
-Set-Variable -Name ThemeHeaderColor -Value "DarkMagenta" -Option ReadOnly -Scope Script
-Set-Variable -Name ThemeBodyColor -Value "DarkGray" -Option ReadOnly -Scope Script
-Set-Variable -Name ThemeSuccessColor -Value "DarkCyan" -Option ReadOnly -Scope Script
-Set-Variable -Name ThemeWarnColor -Value "DarkYellow" -Option ReadOnly -Scope Script
-
-function Write-Step { param([string]$Message) ; Write-Host "===> $Message" -ForegroundColor $Script:ThemeHeaderColor }
-function Write-Info { param([string]$Message) ; Write-Host "===> $Message" -ForegroundColor $Script:ThemeBodyColor }
-function Write-Ok { param([string]$Message) ; Write-Host "===> $Message" -ForegroundColor $Script:ThemeSuccessColor }
-function Write-Warn { param([string]$Message) ; Write-Host "===> WARN: $Message" -ForegroundColor $Script:ThemeWarnColor }
-function Write-Err { param([string]$Message) ; Write-Host "ERROR: $Message" -ForegroundColor Red }
-
-function Print-Banner {
-    Write-Host ""
-    Write-Host "+------------------------------------------------------------------------------+" -ForegroundColor $Script:ThemeHeaderColor
-    Write-Host ("| {0,-76} |" -f "dev-tools") -ForegroundColor $Script:ThemeHeaderColor
-    Write-Host ("| {0,-76} |" -f "https://github.com/yaravind/dev-tools") -ForegroundColor $Script:ThemeHeaderColor
-    Write-Host "+------------------------------------------------------------------------------+" -ForegroundColor $Script:ThemeHeaderColor
-    Write-Host ""
+$brandingScript = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "branding.ps1"
+if (Test-Path $brandingScript) {
+    . $brandingScript
+    Show-EbkBanner -ScriptName (Split-Path -Leaf $MyInvocation.MyCommand.Path)
+    Initialize-EbkPaletteIfNeeded
+    $Script:ThemeHeaderColor = $script:EbPhase
+    $Script:ThemeBodyColor = $script:EbText
+    $Script:ThemeSuccessColor = $script:EbOk
+    $Script:ThemeWarnColor = $script:EbWarn
 }
 
 function Test-CommandExists {
@@ -277,7 +268,6 @@ if ($resolvedConfig) {
     exit 1
 }
 
-Print-Banner
 Print-ModeOptions
 $mode = Resolve-Mode
 Write-Info "Selected mode: --$mode"

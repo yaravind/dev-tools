@@ -12,48 +12,13 @@
 #   openai/openai-python
 #   cli/cli
 
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
+
 set -u
 
 SCRIPT_DIR="${0:A:h}"
 DEFAULT_REPO_LIST="${SCRIPT_DIR:h:h}/config/github-repos.txt"
-
-if [ -t 1 ]; then
-  RED=$'\033[0;31m'
-  GREEN=$'\033[0;32m'
-  YELLOW=$'\033[0;33m'
-  BLUE=$'\033[0;34m'
-  MAGENTA=$'\033[0;35m'
-  CYAN=$'\033[0;36m'
-  RESET=$'\033[0m'
-else
-  RED=""
-  GREEN=""
-  YELLOW=""
-  BLUE=""
-  MAGENTA=""
-  CYAN=""
-  RESET=""
-fi
-
-log_step() {
-  printf '%s===> %s%s\n' "$MAGENTA" "$1" "$RESET"
-}
-
-log_info() {
-  printf '%s===> %s%s\n' "$CYAN" "$1" "$RESET"
-}
-
-log_ok() {
-  printf '%s===> %s%s\n' "$GREEN" "$1" "$RESET"
-}
-
-log_warn() {
-  printf '%s===> %s%s\n' "$YELLOW" "$1" "$RESET"
-}
-
-log_error() {
-  printf '%sERROR: %s%s\n' "$RED" "$1" "$RESET" >&2
-}
 
 usage() {
   cat <<'EOF'

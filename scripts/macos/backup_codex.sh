@@ -1,5 +1,8 @@
 #!/bin/zsh
 
+source "${0:A:h}/branding.sh"
+ebk_print_banner "${0:A:t}"
+
 # Check if a backup directory argument was provided
 if [[ -z "$1" ]]; then
     echo "Error: Please provide a backup target directory."
