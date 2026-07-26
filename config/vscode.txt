@@ -13,7 +13,6 @@ mikestead.dotenv
 esbenp.prettier-vscode
 redhat.vscode-yaml
 usernamehw.errorlens
-gruntfuggly.todo-tree
 christian-kohler.path-intellisense
 yzhang.markdown-all-in-one
 davidanson.vscode-markdownlint

@@ -7,10 +7,10 @@ SCRIPT_DIR="${0:A:h}"
 SCRIPT_NAME="${0:t}"
 PYCHARM_PLUGIN_FILE="$(cd "${SCRIPT_DIR}/../../config" && pwd -P)/pycharm.txt"
 MODE="professional"
-THEME_HEADER=$'\033[38;5;63m'
-THEME_SUCCESS=$'\033[38;5;36m'
-THEME_WARN=$'\033[38;5;136m'
-THEME_BODY=$'\033[38;5;238m'
+THEME_HEADER="$EBK_PHASE_COLOR"
+THEME_SUCCESS="$EBK_OK_COLOR"
+THEME_WARN="$EBK_WARN_COLOR"
+THEME_BODY="$EBK_TEXT"
 RESET="$EBK_RESET"
 
 print_usage() {
@@ -371,7 +371,7 @@ while (( plugin_index <= ${#plugins_to_install[@]} )); do
       net_new_plugins+=("$plugin_id")
       ;;
     2)
-      log_warn "Plugin \"${plugin_id}\" is already installed. Skipping."
+      log_info "Plugin \"${plugin_id}\" is already installed. Skipping."
       ((skip_count++))
       ;;
     3)

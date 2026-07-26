@@ -102,26 +102,128 @@ apply_managed_settings() {
     fi
   fi
 
-  if ! run_cmd python3 - "$managed_settings_file" "$user_settings_file" <<'PY'; then
+  if ! EBK_INFO_COLOR="$EBK_INFO_COLOR" EBK_RESET="$EBK_RESET" run_cmd python3 - "$managed_settings_file" "$user_settings_file" <<'PY'; then
 import json
+import os
 import sys
 
 managed_path = sys.argv[1]
 user_path = sys.argv[2]
+info_color = os.environ.get("EBK_INFO_COLOR", "")
+reset_color = os.environ.get("EBK_RESET", "")
 
-with open(managed_path, encoding="utf-8") as managed_file:
-    managed = json.load(managed_file)
-if not isinstance(managed, dict):
-    raise SystemExit(f"ERROR: {managed_path} must contain a JSON object.")
+def strip_jsonc_comments(content: str) -> str:
+    result = []
+    in_string = False
+    in_line_comment = False
+    in_block_comment = False
+    escaped = False
+    i = 0
+    while i < len(content):
+        ch = content[i]
+        nxt = content[i + 1] if i + 1 < len(content) else ""
+
+        if in_line_comment:
+            if ch in "\r\n":
+                in_line_comment = False
+                result.append(ch)
+            i += 1
+            continue
+
+        if in_block_comment:
+            if ch == "*" and nxt == "/":
+                in_block_comment = False
+                i += 2
+            else:
+                i += 1
+            continue
+
+        if in_string:
+            result.append(ch)
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+            i += 1
+            continue
+
+        if ch == '"':
+            in_string = True
+            result.append(ch)
+            i += 1
+            continue
+
+        if ch == "/" and nxt == "/":
+            in_line_comment = True
+            i += 2
+            continue
+
+        if ch == "/" and nxt == "*":
+            in_block_comment = True
+            i += 2
+            continue
+
+        result.append(ch)
+        i += 1
+
+    return "".join(result)
+
+def strip_trailing_commas(content: str) -> str:
+    result = []
+    in_string = False
+    escaped = False
+    i = 0
+    while i < len(content):
+        ch = content[i]
+        if in_string:
+            result.append(ch)
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+            i += 1
+            continue
+
+        if ch == '"':
+            in_string = True
+            result.append(ch)
+            i += 1
+            continue
+
+        if ch == ",":
+            j = i + 1
+            while j < len(content) and content[j] in " \t\r\n":
+                j += 1
+            if j < len(content) and content[j] in "}]":
+                i += 1
+                continue
+
+        result.append(ch)
+        i += 1
+
+    return "".join(result)
+
+def load_jsonc_object(path: str):
+    with open(path, encoding="utf-8") as raw_file:
+        raw_content = raw_file.read()
+    sanitized = strip_jsonc_comments(raw_content)
+    sanitized = strip_trailing_commas(sanitized)
+    parsed = json.loads(sanitized)
+    if not isinstance(parsed, dict):
+        raise SystemExit(f"ERROR: {path} must contain a JSON object.")
+    return parsed
+
+managed = load_jsonc_object(managed_path)
 
 for key in sorted(managed):
     value = json.dumps(managed[key], ensure_ascii=True)
-    print(f"ℹ INFO  Managed setting: {key} = {value}")
+    print(f"{info_color}ℹ INFO  {reset_color}Managed setting: {key} = {value}{reset_color}")
 
-with open(user_path, encoding="utf-8") as user_file:
-    existing = json.load(user_file)
-if not isinstance(existing, dict):
-    raise SystemExit(f"ERROR: {user_path} must contain a JSON object.")
+existing = load_jsonc_object(user_path)
 
 merged = existing.copy()
 merged.update(managed)

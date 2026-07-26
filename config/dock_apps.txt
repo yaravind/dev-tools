@@ -1,36 +1,27 @@
-/Applications/Microsoft\ Outlook.app
-/Applications/Microsoft\ Teams.app
-/Applications/Microsoft\ Word.app
-/Applications/Microsoft\ Excel.app
-/Applications/Microsoft\ PowerPoint.app
+/Applications/Microsoft Outlook.app
+/Applications/Microsoft Teams.app
+/Applications/Microsoft Word.app
+/Applications/Microsoft Excel.app
+/Applications/Microsoft PowerPoint.app
 /Applications/OneDrive.app
-/Applications/Google\ Chrome.app
-SPACER
+/Applications/Google Chrome.app
 /System/Applications/Apps.app
 /System/Applications/Utilities/Screenshot.app
 /System/Applications/Preview.app
 /System/Applications/Calculator.app
-/System/Applications/System\ Settings.app
+/System/Applications/System Settings.app
 /System/Applications/Passwords.app
 /System/Applications/Utilities/Terminal.app
-/Applications/Microsoft\ 365\ Copilot.app
-SPACER
-$HOME/Applications/IntelliJ\ IDEA.app
-$HOME/Applications/PyCharm.app
-$HOME/Applications/Visual\ Studio\ Code.app
-$HOME/Applications/Tolaria.app
-SPACER
-$HOME/Applications/draw.io.app
-$HOME/Applications/Zed.app
-$HOME/Applications/DBeaver.app
-$HOME/Applications/Rancher\ Desktop.app
-SPACER
+/Applications/Microsoft 365 Copilot.app
+/Users/ayarram/Applications/IntelliJ IDEA.app
+/Users/ayarram/Applications/PyCharm.app
+/Users/ayarram/Applications/Visual Studio Code.app
+/Users/ayarram/Applications/Tolaria.app
+/Users/ayarram/Applications/draw.io.app
+/Users/ayarram/Applications/Zed.app
+/Users/ayarram/Applications/DBeaver.app
+/Users/ayarram/Applications/Rancher Desktop.app
 /Applications/ChatGPT.app
-$HOME/Applications/AgentSessions.app
-
---/Applications/TextEdit.app
---/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app
---/Applications/Microsoft\ Edge.app
---/Applications/Microsoft\ OneNote.app
---/Applications/Company\ Portal.app
---/Library/Application\ Support/Microsoft/MAU2.0/Microsoft\ AutoUpdate.app
+/Users/ayarram/Applications/AgentSessions.app
+/Applications/Privileges.app
+/System/Applications/Utilities/Activity Monitor.app

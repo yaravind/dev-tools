@@ -45,7 +45,7 @@ ebk_set_palette() {
   local theme="${1:-dark}"
   EBK_THEME_SELECTED="$theme"
 
-  if [[ -n "${NO_COLOR:-}" || ! -t 1 ]]; then
+  if [[ -n "${NO_COLOR:-}" || ( ! -t 1 && "${EBK_FORCE_COLOR:-0}" != "1" ) ]]; then
     EBK_PRIMARY=''
     EBK_ACCENT=''
     EBK_TEXT=''

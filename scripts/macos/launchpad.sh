@@ -30,10 +30,12 @@ typeset -A SELECTED
 typeset -A INCLUDED_BY_DEP
 typeset -A TASK_STATUS
 typeset -A TASK_LOG
+typeset -A TASK_EXIT
 
 clone_destination=""
 clone_repo_list=""
 codex_backup_path=""
+LAST_ERROR=""
 
 print_usage() {
   cat <<EOF
@@ -48,7 +50,7 @@ Profiles:
 
 Options:
   --dry-run, -n          Show the selected run plan without executing scripts
-  --continue-on-error    Continue after a selected script fails
+  --continue-on-error    Accepted for compatibility; non-critical tasks continue by default
   --yes, -y              Do not ask for final launchpad confirmation
   --clone-destination D  Destination for clone_github_repos.sh
   --clone-repo-list F    Repo list file for clone_github_repos.sh
@@ -496,6 +498,23 @@ task_allows_issues() {
   [[ "${TASK_SOFT_FAIL[$id]:-0}" == "1" ]]
 }
 
+task_is_critical() {
+  local id="$1"
+  case "$id" in
+    pre_setup|setup_env_classify|setup_env_non_admin|setup_env_admin)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+record_failure_reason() {
+  LAST_ERROR="$1"
+  log_error "$LAST_ERROR"
+}
+
 authorize_admin_for_task() {
   local id="$1"
   local answer
@@ -508,7 +527,7 @@ authorize_admin_for_task() {
   fi
 
   if [[ ! -t 0 ]]; then
-    log_error "Cannot request admin approval for ${TASK_LABEL[$id]} because stdin is not interactive."
+    record_failure_reason "Cannot request admin approval for ${TASK_LABEL[$id]} because stdin is not interactive."
     log_error "Run this task from an interactive terminal."
     return 1
   fi
@@ -526,7 +545,7 @@ authorize_admin_for_task() {
     return 0
   fi
 
-  log_error "Admin authentication failed for ${TASK_LABEL[$id]}."
+  record_failure_reason "Admin authentication failed for ${TASK_LABEL[$id]}."
   return 1
 }
 
@@ -534,7 +553,7 @@ require_command() {
   local command_name="$1"
   local task_label="$2"
   if ! command_exists "$command_name"; then
-    log_error "${task_label} requires '${command_name}' in PATH."
+    record_failure_reason "${task_label} requires '${command_name}' in PATH."
     return 1
   fi
   return 0
@@ -556,14 +575,14 @@ check_task_ready() {
     dock_setup)
       require_command dockutil "${TASK_LABEL[$id]}" || return 1
       [[ -f "${REPO_ROOT}/config/dock_apps.txt" ]] || {
-        log_error "Dock config not found: ${REPO_ROOT}/config/dock_apps.txt"
+        record_failure_reason "Dock config not found: ${REPO_ROOT}/config/dock_apps.txt"
         return 1
       }
       ;;
     default_apps)
       require_command duti "${TASK_LABEL[$id]}" || return 1
       [[ -f "${REPO_ROOT}/config/default_apps_macos.txt" ]] || {
-        log_error "Default apps config not found: ${REPO_ROOT}/config/default_apps_macos.txt"
+        record_failure_reason "Default apps config not found: ${REPO_ROOT}/config/default_apps_macos.txt"
         return 1
       }
       ;;
@@ -571,7 +590,7 @@ check_task_ready() {
       require_command jenv "${TASK_LABEL[$id]}" || return 1
       require_command xmllint "${TASK_LABEL[$id]}" || return 1
       [[ -x /usr/libexec/java_home ]] || {
-        log_error "jenv setup requires /usr/libexec/java_home."
+        record_failure_reason "jenv setup requires /usr/libexec/java_home."
         return 1
       }
       ;;
@@ -581,7 +600,7 @@ check_task_ready() {
       ;;
     restore_codex)
       if [[ -z "$codex_backup_path" || ! -d "$codex_backup_path" ]]; then
-        log_error "Codex backup folder not found: ${codex_backup_path}"
+        record_failure_reason "Codex backup folder not found: ${codex_backup_path}"
         return 1
       fi
       ;;
@@ -607,7 +626,7 @@ print_plan() {
   print_profile_details
   printf "Profile: %s\n" "$PROFILE"
   printf "Mode: %s\n" "$([[ "$DRY_RUN" -eq 1 ]] && printf dry-run || printf execute)"
-  printf "Continue on error: %s\n" "$([[ "$CONTINUE_ON_ERROR" -eq 1 ]] && printf yes || printf no)"
+  printf "Failure policy: continue after non-critical failures; stop after pre_setup.sh or setup_env.sh failures\n"
   printf "Logs: %s\n\n" "$RUN_ROOT"
 
   for id in "${TASK_ORDER[@]}"; do
@@ -647,6 +666,10 @@ confirm_plan() {
   [[ "$answer" =~ '^[Yy]$' ]]
 }
 
+strip_ansi_for_log() {
+  perl -pe 's/\e\][^\a]*(?:\a|\e\\)//g; s/\e\[[0-?]*[ -\/]*[@-~]//g'
+}
+
 run_task() {
   local id="$1"
   local log_file="${RUN_ROOT}/${id}.log"
@@ -655,52 +678,99 @@ run_task() {
 
   build_command "$id" || {
     TASK_STATUS[$id]="failed"
+    TASK_EXIT[$id]=1
     return 1
   }
 
   TASK_LOG[$id]="$log_file"
 
   log_step "Running ${TASK_LABEL[$id]}"
-  log_info "Log: ${log_file}"
+  log_info "Log file: ${log_file}"
+
+  mkdir -p "$RUN_ROOT" || return 1
+  {
+    printf 'Launchpad task log\n'
+    printf 'Task id: %s\n' "$id"
+    printf 'Task label: %s\n' "${TASK_LABEL[$id]}"
+    printf 'Started: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
+    printf 'Command: '
+    print_command "$id"
+    printf 'Log file: %s\n' "$log_file"
+    printf '\n'
+  } > "$log_file"
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
     TASK_STATUS[$id]="planned"
+    TASK_EXIT[$id]="-"
     printf "[dry-run] "
     print_command "$id"
+    {
+      printf 'Launchpad status: planned dry-run\n'
+      printf 'Finished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
+      printf 'Duration seconds: %d\n' $((SECONDS - started_at))
+      printf 'Exit code: planned\n'
+    } >> "$log_file"
     return 0
   fi
 
+  LAST_ERROR=""
   authorize_admin_for_task "$id"
   rc=$?
   if [[ "$rc" -eq 2 ]]; then
+    {
+      printf 'Launchpad status: skipped\n'
+      printf 'Reason: admin privileges were not approved for this step.\n'
+      printf 'Finished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
+      printf 'Duration seconds: %d\n' $((SECONDS - started_at))
+      printf 'Exit code: skipped\n'
+    } >> "$log_file"
+    TASK_EXIT[$id]="-"
     return 0
   elif [[ "$rc" -ne 0 ]]; then
     TASK_STATUS[$id]="failed"
+    TASK_EXIT[$id]="$rc"
+    {
+      printf 'Launchpad status: failed before script execution\n'
+      [[ -n "$LAST_ERROR" ]] && printf 'Error: %s\n' "$LAST_ERROR"
+      printf 'Finished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
+      printf 'Duration seconds: %d\n' $((SECONDS - started_at))
+      printf 'Exit code: %d\n' "$rc"
+    } >> "$log_file"
     return "$rc"
   fi
 
   if ! check_task_ready "$id"; then
     TASK_STATUS[$id]="failed"
+    TASK_EXIT[$id]=1
+    {
+      printf 'Launchpad status: failed readiness check\n'
+      [[ -n "$LAST_ERROR" ]] && printf 'Error: %s\n' "$LAST_ERROR"
+      printf 'Finished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
+      printf 'Duration seconds: %d\n' $((SECONDS - started_at))
+      printf 'Exit code: 1\n'
+    } >> "$log_file"
     return 1
   fi
 
-  mkdir -p "$RUN_ROOT" || return 1
-  {
-    printf 'Task: %s\n' "$id"
-    printf 'Started: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
-    printf 'Command: '
-    print_command "$id"
-    printf '\n'
-  } > "$log_file"
-
-  "${cmd[@]}" 2>&1 | tee -a "$log_file"
+  EBK_FORCE_COLOR=1 "${cmd[@]}" 2>&1 | tee >(strip_ansi_for_log >> "$log_file")
   rc=${pipestatus[1]}
+  TASK_EXIT[$id]="$rc"
 
   {
     printf '\nFinished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
     printf 'Duration seconds: %d\n' $((SECONDS - started_at))
     printf 'Exit code: %d\n' "$rc"
   } >> "$log_file"
+
+  if [[ "$id" == "dock_setup" && "$rc" -eq 75 ]]; then
+    TASK_STATUS[$id]="skipped"
+    {
+      printf 'Launchpad status: skipped\n'
+      printf 'Reason: user canceled the Dock changes after reviewing the plan.\n'
+    } >> "$log_file"
+    log_warn "${TASK_LABEL[$id]} skipped by user."
+    return 0
+  fi
 
   if [[ "$rc" -eq 0 ]]; then
     TASK_STATUS[$id]="success"
@@ -720,6 +790,7 @@ run_task() {
 run_selected_tasks() {
   local id
   local rc
+  local overall_rc=0
 
   if [[ "$(selected_task_count)" -eq 0 ]]; then
     log_warn "No tasks selected. Nothing to run."
@@ -730,11 +801,79 @@ run_selected_tasks() {
     [[ -n "${SELECTED[$id]:-}" ]] || continue
     run_task "$id"
     rc=$?
-    if [[ "$rc" -ne 0 && "$CONTINUE_ON_ERROR" -ne 1 ]]; then
-      log_error "Stopping after failure. Re-run with --continue-on-error to keep going."
-      return "$rc"
+    if [[ "$rc" -ne 0 ]]; then
+      [[ "$overall_rc" -eq 0 ]] && overall_rc="$rc"
+      if task_is_critical "$id"; then
+        log_error "Critical task failed; stopping because ${TASK_LABEL[$id]} runs pre_setup.sh or setup_env.sh."
+        return "$rc"
+      fi
+      log_warn "Recorded failure for ${TASK_LABEL[$id]}; continuing with the remaining selected tasks."
     fi
   done
+
+  return "$overall_rc"
+}
+
+print_log_error_excerpt() {
+  local log_file="$1"
+  local count=0
+  local line
+
+  if [[ -z "$log_file" || ! -f "$log_file" ]]; then
+    printf "      No log file was created for this task.\n"
+    return 0
+  fi
+
+  while IFS= read -r line; do
+    printf "      %s\n" "$line"
+    ((count++))
+    ((count >= 8)) && break
+  done < <(
+    perl -pe 's/\e\[[0-9;]*[[:alpha:]]//g' "$log_file" | awk '
+      {
+        lower = tolower($0)
+        if ($0 ~ /✖ ERROR/ ||
+            lower ~ /(^|[[:space:]])fatal:/ ||
+            lower ~ /(^|[[:space:]])error:/ ||
+            lower ~ /traceback/ ||
+            lower ~ /exception/ ||
+            lower ~ /status[[:space:]]+.*failed/ ||
+            lower ~ /launchpad status: failed/ ||
+            $0 ~ /[[:alnum:]_.]+Error:/) {
+          print
+        }
+      }
+    '
+  )
+
+  if ((count == 0)); then
+    printf "      No error-looking lines found; last log lines:\n"
+    tail -n 8 "$log_file" | sed 's/^/      /'
+  fi
+}
+
+print_problem_details() {
+  local id
+  local state
+  local shown=0
+
+  for id in "${TASK_ORDER[@]}"; do
+    state="${TASK_STATUS[$id]:-}"
+    [[ "$state" == "failed" || "$state" == "issues" ]] || continue
+    if ((shown == 0)); then
+      printf "\n"
+      log_warn "Captured problem details"
+      shown=1
+    fi
+    printf "  - %s (%s, exit %s)\n" "${TASK_LABEL[$id]}" "$state" "${TASK_EXIT[$id]:--}"
+    printf "    Log file: %s\n" "${TASK_LOG[$id]:-not-created}"
+    print_log_error_excerpt "${TASK_LOG[$id]:-}"
+  done
+}
+
+print_summary_table_header() {
+  printf "  %-24s %-10s %-6s %s\n" "Task" "Status" "Exit" "Log file"
+  printf "  %-24s %-10s %-6s %s\n" "------------------------" "----------" "------" "--------"
 }
 
 print_summary() {
@@ -748,6 +887,7 @@ print_summary() {
   local pending_count=0
 
   log_step "Launchpad summary"
+  print_summary_table_header
   for id in "${TASK_ORDER[@]}"; do
     [[ -n "${SELECTED[$id]:-}" ]] || continue
     task_state="${TASK_STATUS[$id]:-not-run}"
@@ -759,9 +899,11 @@ print_summary() {
       skipped) ((skipped_count++)) ;;
       *) ((pending_count++)) ;;
     esac
-    printf "  %-24s %s" "$id" "$task_state"
-    [[ -n "${TASK_LOG[$id]:-}" ]] && printf "  %s" "${TASK_LOG[$id]}"
-    printf "\n"
+    printf "  %-24s %-10s %-6s %s\n" \
+      "$id" \
+      "$task_state" \
+      "${TASK_EXIT[$id]:--}" \
+      "${TASK_LOG[$id]:--}"
   done
 
   printf "\n"
@@ -790,6 +932,8 @@ print_summary() {
       printf "  - %s: review %s\n" "${TASK_LABEL[$id]}" "${TASK_LOG[$id]}"
     done
   fi
+
+  print_problem_details
 }
 
 main() {

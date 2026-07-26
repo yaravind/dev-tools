@@ -6,17 +6,15 @@
 source "${0:A:h}/branding.sh"
 ebk_print_banner "${0:A:t}"
 
-# Import colors codes for text
-source "${0:A:h}/colors.sh"
-
-# Semantic log colors. Keep messages readable by meaning, not by raw color.
-INFO="${CYAN}"
-ACTION="${BLUE}"
-SUCCESS="${GREEN}"
-WARN="${YELLOW}"
-ERROR="${RED}"
-SECTION="${BMAGENTA}"
-MUTED="${BBLACK}"
+# Reuse the shared branding palette so log colors stay consistent with the banner.
+INFO="${EBK_INFO_COLOR}"
+ACTION="${EBK_INFO_COLOR}"
+SUCCESS="${EBK_OK_COLOR}"
+WARN="${EBK_WARN_COLOR}"
+ERROR="${EBK_ERROR_COLOR}"
+SECTION="${EBK_PHASE_COLOR}"
+MUTED="${EBK_MUTED}"
+RESET="${EBK_RESET}"
 SCRIPT_NAME="${0:A:t}"
 
 log_phase() {
@@ -184,6 +182,7 @@ failed_admin_casks=()
 admin_privilege_failures=()
 classification_warnings=()
 skipped_formulae=()
+homebrew_warning_count=0
 installed_formula_names_cache=$'\n'
 formula_cache_loaded=0
 
@@ -248,11 +247,19 @@ array_contains() {
   return 1
 }
 
+record_homebrew_warning() {
+  local warning_text="$1"
+  homebrew_warning_count=$((homebrew_warning_count + 1))
+  echo -e "${WARN}⚠ WARN  ${warning_text}${RESET}"
+}
+
 print_normalized_output() {
   local line
   while IFS= read -r line; do
     if [[ "$line" == Warning:* ]]; then
-      echo -e "${WARN}⚠ WARN  ${line#Warning: }${RESET}"
+      record_homebrew_warning "${line#Warning: }"
+    elif [[ "$line" == warning:* ]]; then
+      record_homebrew_warning "${line#warning: }"
     else
       printf '%s\n' "$line"
     fi
@@ -275,7 +282,10 @@ load_installed_formula_cache() {
   output="$(brew list --formula 2>&1)"
   while IFS= read -r line; do
     if [[ "$line" == Warning:* ]]; then
-      echo -e "${WARN}⚠ WARN  ${line#Warning: }${RESET}"
+      record_homebrew_warning "${line#Warning: }"
+      continue
+    elif [[ "$line" == warning:* ]]; then
+      record_homebrew_warning "${line#warning: }"
       continue
     fi
 
@@ -701,7 +711,7 @@ print_install_summary() {
   local status_color="${SUCCESS}"
   local elapsed_seconds=$((SECONDS - SCRIPT_START_SECONDS))
   local total_failures=$(( ${#failed_formulae[@]} + ${#failed_user_casks[@]} + ${#failed_admin_casks[@]} ))
-  local total_signals=$(( ${#admin_privilege_failures[@]} + ${#classification_warnings[@]} + ${#skipped_formulae[@]} ))
+  local total_signals=$(( ${#admin_privilege_failures[@]} + ${#classification_warnings[@]} + ${#skipped_formulae[@]} + homebrew_warning_count ))
 
   if (( total_failures > 0 )); then
     status_label="COMPLETED WITH ISSUES"
@@ -752,6 +762,11 @@ print_install_summary() {
     echo
     echo -e "${WARN}Skipped formulae${RESET}"
     print_items "$WARN" "${skipped_formulae[@]}"
+  fi
+
+  if (( homebrew_warning_count > 0 )); then
+    echo
+    echo -e "${WARN}Homebrew warnings observed: ${homebrew_warning_count}${RESET}"
   fi
 
   if [[ "${#classification_warnings[@]}" -gt 0 ]]; then

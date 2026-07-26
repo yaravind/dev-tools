@@ -48,7 +48,7 @@ ebk_detect_theme() {
 ebk_set_palette() {
   theme="${1:-dark}"
   EBK_THEME_SELECTED="$theme"
-  if [ -n "${NO_COLOR:-}" ] || [ ! -t 1 ]; then
+  if [ -n "${NO_COLOR:-}" ] || { [ ! -t 1 ] && [ "${EBK_FORCE_COLOR:-0}" != "1" ]; }; then
     EBK_PRIMARY=''
     EBK_ACCENT=''
     EBK_TEXT=''
@@ -159,7 +159,7 @@ ebk_print_banner() {
   ebk_print_box_line "$box_width" '     _                 _              _     ' "$EBK_ACCENT" ''
   ebk_print_box_line "$box_width" '  __| | _____   __    | |_ ___   ___ | |___ ' "$EBK_ACCENT" ''
   ebk_print_box_line "$box_width" ' / _` |/ _ \ \ / /____| __/ _ \ / _ \| / __|' "$EBK_ACCENT" ''
-  ebk_print_box_line "$box_width" '| (_| |  __/\ V /_____| || (_) | (_) | \__ \' "$EBK_ACCENT" ''
+  ebk_print_box_line "$box_width" "| (_| |  __/\ V /_____| || (_) | (_) | \__ \\" "$EBK_ACCENT" ''
   ebk_print_box_line "$box_width" ' \__,_|\___| \_/       \__\___/ \___/|_|___/' "$EBK_ACCENT" ''
   ebk_print_box_line "$box_width" "$tagline" "$EBK_TEXT" "$EBK_BOLD"
   printf '%s+--------------------------------------------------------------+%s\n' "$EBK_PRIMARY" "$EBK_RESET"

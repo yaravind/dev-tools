@@ -19,6 +19,7 @@ set -u
 
 SCRIPT_DIR="${0:A:h}"
 DEFAULT_REPO_LIST="${SCRIPT_DIR:h:h}/config/github-repos.txt"
+SCRIPT_START_SECONDS=$SECONDS
 
 usage() {
   cat <<'EOF'
@@ -38,6 +39,81 @@ Examples:
 EOF
 }
 
+command_exists() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+trim() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+print_normalized_output() {
+  local line
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" == Warning:* ]]; then
+      log_warn "${line#Warning: }"
+    elif [[ "$line" == warning:* ]]; then
+      log_warn "${line#warning: }"
+    else
+      printf '%s\n' "$line"
+    fi
+  done
+}
+
+format_duration() {
+  local total_seconds="$1"
+  local hours=$((total_seconds / 3600))
+  local minutes=$(((total_seconds % 3600) / 60))
+  local seconds=$((total_seconds % 60))
+
+  if (( hours > 0 )); then
+    printf '%dh %dm %ds' "$hours" "$minutes" "$seconds"
+  elif (( minutes > 0 )); then
+    printf '%dm %ds' "$minutes" "$seconds"
+  else
+    printf '%ds' "$seconds"
+  fi
+}
+
+print_structured_report() {
+  local status_label="$1"
+  local status_icon
+  local status_color
+
+  case "$status_label" in
+    SUCCESS)
+      status_icon="✔"
+      status_color="$EBK_OK_COLOR"
+      ;;
+    FAILED)
+      status_icon="✖"
+      status_color="$EBK_ERROR_COLOR"
+      ;;
+    *)
+      status_icon="⚠"
+      status_color="$EBK_WARN_COLOR"
+      ;;
+  esac
+
+  printf '\n%sFinal Status Report%s\n' "$EBK_PHASE_COLOR" "$EBK_RESET"
+  printf '%s──────────────────────────────────────────────────────────────────────────────%s\n' "$EBK_PHASE_COLOR" "$EBK_RESET"
+  printf '  %-24s %s\n' "Script" "Clone GitHub Repositories (macOS)"
+  printf '  %-24s %s\n' "Repo source" "$repo_list"
+  printf '  %-24s %s\n' "Destination" "$destination_dir"
+  printf "  %-24s ${status_color}%s %s${EBK_RESET}\n" "Status" "$status_icon" "$status_label"
+  printf '%s──────────────────────────────────────────────────────────────────────────────%s\n' "$EBK_PHASE_COLOR" "$EBK_RESET"
+  printf '  %-24s %d\n' "Total entries" "$total"
+  printf '  %-24s %d\n' "Cloned" "$cloned"
+  printf '  %-24s %d\n' "Skipped existing" "$skipped"
+  printf '  %-24s %d\n' "Failed clones" "$failed"
+  printf '  %-24s %d\n' "Invalid entries" "$invalid"
+  printf '  %-24s %s\n' "Duration" "$(format_duration $((SECONDS - SCRIPT_START_SECONDS)))"
+  printf '%s──────────────────────────────────────────────────────────────────────────────%s\n' "$EBK_PHASE_COLOR" "$EBK_RESET"
+}
+
 if [ "$#" -gt 2 ]; then
   usage >&2
   exit 2
@@ -46,7 +122,7 @@ fi
 repo_list="${1:-$DEFAULT_REPO_LIST}"
 destination_dir="${2:-.}"
 
-if ! command -v git >/dev/null 2>&1; then
+if ! command_exists git; then
   log_error "git is not installed or is not in PATH."
   exit 1
 fi
@@ -56,7 +132,10 @@ if [ "$repo_list" != "-" ] && [ ! -f "$repo_list" ]; then
   exit 1
 fi
 
-mkdir -p "$destination_dir" || exit 1
+if ! mkdir -p "$destination_dir"; then
+  log_error "Failed to create destination directory: $destination_dir"
+  exit 1
+fi
 
 total=0
 cloned=0
@@ -67,10 +146,9 @@ invalid=0
 clone_repo() {
   local line="$1"
   local repo repo_name clone_path
+  local clone_output
 
-  repo="${line%%#*}"
-  repo="${repo#"${repo%%[![:space:]]*}"}"
-  repo="${repo%"${repo##*[![:space:]]}"}"
+  repo="$(trim "${line%%#*}")"
 
   if [ -z "$repo" ]; then
     return 0
@@ -94,18 +172,29 @@ clone_repo() {
   fi
 
   log_info "Cloning $repo into $clone_path..."
-  if git clone "https://github.com/${repo}.git" "$clone_path"; then
+  if clone_output="$(git clone "https://github.com/${repo}.git" "$clone_path" 2>&1)"; then
+    if [[ -n "$clone_output" ]]; then
+      print_normalized_output <<< "$clone_output"
+    fi
     log_ok "Cloned $repo."
     cloned=$((cloned + 1))
   else
+    if [[ -n "$clone_output" ]]; then
+      print_normalized_output <<< "$clone_output"
+    fi
     log_error "Failed to clone $repo."
     failed=$((failed + 1))
   fi
 }
 
-log_step "Clone GitHub repositories"
-log_info "Repo list: $repo_list"
+log_step "DISCOVER"
+if [ "$repo_list" = "-" ]; then
+  log_info "Repo list: stdin"
+else
+  log_info "Repo list: $repo_list"
+fi
 log_info "Destination: $destination_dir"
+log_step "EXECUTE"
 
 if [ "$repo_list" = "-" ]; then
   while IFS= read -r line || [ -n "$line" ]; do
@@ -117,13 +206,14 @@ else
   done < "$repo_list"
 fi
 
-echo
-log_step "Summary"
-printf '  Total:   %s\n' "$total"
-printf '  Cloned:  %s\n' "$cloned"
-printf '  Skipped: %s\n' "$skipped"
-printf '  Failed:  %s\n' "$failed"
-printf '  Invalid: %s\n' "$invalid"
+log_step "SUMMARY"
+final_status="SUCCESS"
+if [ "$failed" -gt 0 ] || [ "$invalid" -gt 0 ]; then
+  final_status="FAILED"
+elif [ "$cloned" -eq 0 ] && [ "$skipped" -gt 0 ]; then
+  final_status="NO CHANGES"
+fi
+print_structured_report "$final_status"
 
 if [ "$failed" -gt 0 ] || [ "$invalid" -gt 0 ]; then
   exit 1

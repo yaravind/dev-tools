@@ -311,7 +311,7 @@ apply_mappings() {
   [[ "$DRY_RUN" -eq 1 ]] && log_warn "Dry run enabled. No changes will be applied."
 
   local line line_number=0
-  local apply_count=0 skip_count=0 fail_count=0 invalid_count=0
+  local apply_count=0 already_mapped_count=0 comment_count=0 fail_count=0 invalid_count=0
 
   while IFS= read -r line || [[ -n "$line" ]]; do
     ((line_number++))
@@ -320,7 +320,7 @@ apply_mappings() {
     trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
 
     if [[ -z "$trimmed" || "$trimmed" == \#* || "$trimmed" == //* ]]; then
-      ((skip_count++))
+      ((comment_count++))
       continue
     fi
 
@@ -341,8 +341,8 @@ apply_mappings() {
         current_handler="$(get_current_scheme_handler "$scheme")"
       fi
       if [[ "${current_handler:l}" == "${bundle_id:l}" ]]; then
-        log_warn "Scheme already mapped: ${scheme} -> ${bundle_id}"
-        ((skip_count++))
+        log_info "Scheme already mapped: ${scheme} -> ${bundle_id}"
+        ((already_mapped_count++))
         continue
       fi
       local -a cmd=(duti -s "$bundle_id" "$scheme")
@@ -357,7 +357,7 @@ apply_mappings() {
           current_handler="$(get_current_scheme_handler "$scheme")"
           if [[ "${current_handler:l}" == "${bundle_id:l}" ]]; then
             log_warn "Scheme mapping already in effect after duti error: ${scheme} -> ${bundle_id}"
-            ((skip_count++))
+            ((already_mapped_count++))
             continue
           fi
         fi
@@ -385,8 +385,8 @@ apply_mappings() {
         current_handler="$(get_current_uti_handler "$uti")"
       fi
       if [[ "${current_handler:l}" == "${bundle_id:l}" ]]; then
-        log_warn "UTI already mapped: ${uti} (${role}) -> ${bundle_id}"
-        ((skip_count++))
+        log_info "UTI already mapped: ${uti} (${role}) -> ${bundle_id}"
+        ((already_mapped_count++))
         continue
       fi
 
@@ -402,7 +402,7 @@ apply_mappings() {
           current_handler="$(get_current_uti_handler "$uti")"
           if [[ "${current_handler:l}" == "${bundle_id:l}" ]]; then
             log_warn "UTI mapping already in effect after duti error: ${uti} (${role}) -> ${bundle_id}"
-            ((skip_count++))
+            ((already_mapped_count++))
             continue
           fi
         fi
@@ -417,8 +417,13 @@ apply_mappings() {
   done < "$CONFIG_FILE"
 
   log_ok "Applied mappings: ${apply_count}"
-  log_warn "Skipped lines: ${skip_count}"
-  log_warn "Invalid lines: ${invalid_count}"
+  log_ok "Already mapped: ${already_mapped_count}"
+  log_info "Comment/blank lines: ${comment_count}"
+  if (( invalid_count > 0 )); then
+    log_warn "Invalid lines: ${invalid_count}"
+  else
+    log_ok "Invalid lines: ${invalid_count}"
+  fi
   if (( fail_count > 0 )); then
     log_error "Failed mappings: ${fail_count}"
   else
