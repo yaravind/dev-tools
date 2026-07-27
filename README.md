@@ -128,12 +128,20 @@ A lightweight bootstrap script (`scripts/macos/setup_env_min.sh`) is available f
 2. Open **PowerShell as Administrator**
 3. Allow script execution for this session: <kbd>Set-ExecutionPolicy Bypass -Scope Process -Force</kbd>
 4. cd <kbd>dev-tools</kbd>
-5. Run: <kbd>./scripts/windows/setup_env.ps1</kbd>
-6. Restart your terminal to apply PATH and environment variable changes
-7. Run <kbd>./scripts/windows/jenv_setup.ps1</kbd> to register installed JDKs with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows)
-8. Run <kbd>./scripts/windows/git_setup.ps1</kbd> to set up Git credentials (name and email)
-9. Run <kbd>./scripts/windows/intellij_setup.ps1</kbd> to install IntelliJ IDEA plugins from `config/intellij.txt`
-10. Run <kbd>./scripts/windows/pycharm_setup.ps1</kbd> to install PyCharm plugins from `config/pycharm.txt`
+5. Run the interactive launchpad and choose a setup profile: <kbd>./scripts/windows/launchpad.ps1</kbd>
+6. To preview without making changes, run: <kbd>./scripts/windows/launchpad.ps1 -DryRun</kbd>
+
+Manual mode is still available if you prefer one script at a time:
+
+1. Run: <kbd>./scripts/windows/setup_env.ps1</kbd>
+2. Restart your terminal to apply PATH and environment variable changes
+3. Run <kbd>./scripts/windows/jenv_setup.ps1</kbd> to register installed JDKs with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows)
+4. Run <kbd>./scripts/windows/git_setup.ps1</kbd> to set up Git credentials (name and email)
+5. Run <kbd>./scripts/windows/clone_github_repos.ps1</kbd> to clone repositories from `config/github-repos.txt`
+6. Run <kbd>./scripts/windows/powershell_profile_setup.ps1</kbd> to source the shared PowerShell profile config
+7. Run <kbd>./scripts/windows/vscode_setup.ps1 -Yes</kbd> to install VS Code extensions and managed settings from `config/vscode.txt` and `config/vscode_settings.json`
+8. Run <kbd>./scripts/windows/intellij_setup.ps1</kbd> to install IntelliJ IDEA plugins from `config/intellij.txt`
+9. Run <kbd>./scripts/windows/pycharm_setup.ps1</kbd> to install PyCharm plugins from `config/pycharm.txt`
 
 #### Minimal setup for Spark/Scala/Java development
 
@@ -169,9 +177,10 @@ A lightweight bootstrap script (`scripts/windows/setup_env_min.ps1`) is availabl
 5. Run the script picking one of the options, Interactive or Silent, as shown above
 6. Restart your terminal to apply PATH and `JAVA_HOME` changes
 7. Run <kbd>./scripts/windows/run_vscode_setup.ps1</kbd> to install required (and some optional) VS Code extensions. The list is in `config/vscode.txt` if you prefer to add or remove extensions.
-8. *(Optional)* Launch IntelliJ IDEA once to complete its first-run setup
-9. *(Optional)* Run <kbd>./scripts/windows/intellij_setup.ps1</kbd> to install IntelliJ plugins from `config/intellij.txt`
-10. *(Optional)* Run <kbd>./scripts/windows/pycharm_setup.ps1</kbd> to install PyCharm plugins from `config/pycharm.txt`
+8. *(Optional)* Run <kbd>./scripts/windows/powershell_profile_setup.ps1</kbd> to source the shared PowerShell profile config
+9. *(Optional)* Launch IntelliJ IDEA once to complete its first-run setup
+10. *(Optional)* Run <kbd>./scripts/windows/intellij_setup.ps1</kbd> to install IntelliJ plugins from `config/intellij.txt`
+11. *(Optional)* Run <kbd>./scripts/windows/pycharm_setup.ps1</kbd> to install PyCharm plugins from `config/pycharm.txt`
 
 > Running the above script might open a popup like below for your approval. Select **Yes**.
 > ![Windows approval notification](assets/win-ask-approval.png)

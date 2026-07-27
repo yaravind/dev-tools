@@ -1,0 +1,9 @@
+# Windows Taskbar apps to pin or unpin.
+#
+# One entry per line. Lines starting with "--" are removed.
+# Use AUMID:<id> for Microsoft Store apps.
+
+%LocalAppData%\Programs\Microsoft VS Code\Code.exe
+AUMID:Microsoft.WindowsTerminal_8wekyb3d8bbwe!App
+%ProgramFiles%\Git\git-bash.exe
+%ProgramFiles%\JetBrains\IntelliJ IDEA Community Edition\bin\idea64.exe

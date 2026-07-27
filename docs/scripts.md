@@ -33,10 +33,23 @@ This file documents the repository's helper scripts and what they do. For usage 
 | `scripts/macos/verify_codex_restore.sh` | Read-only diagnostics to verify restored `.codex` data integrity and related app profile/cache signals                                      |
 | `scripts/windows/setup_env.ps1`         | Primary bootstrap script — installs and configures tools using winget on Windows                                                            |
 | `scripts/windows/setup_env_min.ps1`     | Minimal Windows bootstrap script for Git, JDK, Maven, VS Code, and IntelliJ IDEA                                                             |
-| `scripts/windows/run_vscode_setup.ps1`  | Installs VS Code extensions listed in `config/vscode.txt` (runs `vscode_setup.ps1` with `-Yes`)                                               |
+| `scripts/windows/setup_env_min_rollback.ps1` | Rolls back minimal Windows bootstrap installs and user environment variables                                                            |
+| `scripts/windows/launchpad.ps1`       | Interactive Windows launchpad that lets users choose setup profiles or tasks, resolves dependencies, runs scripts in order, and writes per-step logs |
+| `scripts/windows/git_setup.ps1`         | Configures global Git identity, Git Credential Manager, and GitHub CLI account setup                                                         |
+| `scripts/windows/jenv_setup.ps1`        | Discovers installed JDKs and registers them with JEnv-for-Windows                                                                            |
+| `scripts/windows/maven_setup.ps1`       | Installs Apache Maven without relying on winget package availability                                                                         |
+| `scripts/windows/vscode_setup.ps1`      | Installs VS Code extensions from `config/vscode.txt` and applies managed settings from `config/vscode_settings.json`                         |
+| `scripts/windows/run_vscode_setup.ps1`  | Runs `vscode_setup.ps1` with `-Yes`                                                                                                          |
 | `scripts/windows/intellij_setup.ps1`    | Installs IntelliJ IDEA plugins from `config/intellij.txt` via IntelliJ CLI                                                                    |
 | `scripts/windows/pycharm_setup.ps1`     | Installs PyCharm plugins from `config/pycharm.txt` via PyCharm CLI                                                                             |
+| `scripts/windows/clone_github_repos.ps1` | Clones GitHub repositories listed in a file (`org/repo` format) into a destination directory                                               |
+| `scripts/windows/powershell_profile_setup.ps1` | Backs up and updates the user's PowerShell profile to source `config/Microsoft.PowerShell_profile.ps1`                              |
 | `scripts/windows/run_taskbar_setup.ps1` | Pins/unpins Windows Taskbar apps from `config/taskbar_apps.txt`                                                                               |
+| `scripts/windows/gen_taskbar_apps.ps1`  | Generates `config/taskbar_apps.txt` from current Windows Taskbar pinned shortcuts                                                             |
+| `scripts/windows/backup_codex.ps1`      | Backs up local `.codex` data to a specified target directory                                                                                  |
+| `scripts/windows/restore_codex.ps1`     | Restores a full `.codex` backup with a safety backup and rollback on failure                                                                 |
+| `scripts/windows/verify_codex_restore.ps1` | Read-only diagnostics to verify restored `.codex` data integrity and related app profile/cache signals                                   |
+| `scripts/windows/run_tests.ps1`         | Runs Windows script validation checks (syntax, config presence, and safe dry-run verification)                                               |
 
 
 > Tip: For Windows PowerShell scripts, run them from an elevated PowerShell session and use `-Help` to see runtime options such as `-DryRun`, `-Interactive`, and `-Silent`.

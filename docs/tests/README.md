@@ -29,4 +29,6 @@ Run the Windows script checks from PowerShell:
 
 The Windows dry-run checks:
 - Parse each PowerShell script for syntax errors.
-- Run safe `-DryRun` checks for Taskbar and VS Code setup.
+- Parse the repo-managed PowerShell profile config.
+- Run safe `-DryRun` checks for launchpad, profile, repo clone, Codex backup/restore, Git, jenv, VS Code, IntelliJ, PyCharm, minimal setup, rollback, and Taskbar setup when running on Windows.
+- Exit nonzero on missing scripts/configs, syntax failures, or dry-run failures.
