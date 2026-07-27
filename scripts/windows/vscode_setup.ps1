@@ -439,3 +439,4 @@ if ($script:FailCount -gt 0 -or $script:InvalidCount -gt 0 -or $script:SettingsF
 }
 
 Write-Ok "VS Code setup completed successfully."
+exit 0

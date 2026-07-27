@@ -184,26 +184,32 @@ function Configure-CredentialHelper {
 function Update-GlobalGitIdentity {
     Write-Step "CONFIGURE Updating global Git identity and credential helper"
 
+    if ($DryRun) {
+        $dryName = if (-not [string]::IsNullOrWhiteSpace($Name)) { $Name.Trim() } else { "<your name>" }
+        $dryEmail = if (-not [string]::IsNullOrWhiteSpace($Email)) { $Email.Trim() } else { "<your@email.com>" }
+        Write-Info "DryRun: would set global user.name to $dryName."
+        Write-Info "DryRun: would set global user.email to $dryEmail."
+        Configure-CredentialHelper
+        $script:ActionPerformed = 1
+        $script:SelectedAction = "update-global-identity"
+        return
+    }
+
     $fullName = Read-RequiredValue -Prompt "Type in your first and last name (no accent or special characters)" -CurrentValue $Name
     $gitEmail = Read-EmailValue -CurrentValue $Email
 
-    if ($DryRun) {
-        Write-Info "DryRun: would set global user.name to $fullName."
-        Write-Info "DryRun: would set global user.email to $gitEmail."
+    git config --global user.name "$fullName"
+    if ($LASTEXITCODE -eq 0) {
+        Write-Ok "Set global user.name to $fullName."
     } else {
-        git config --global user.name "$fullName"
-        if ($LASTEXITCODE -eq 0) {
-            Write-Ok "Set global user.name to $fullName."
-        } else {
-            Record-Failure "Failed to set global user.name."
-        }
+        Record-Failure "Failed to set global user.name."
+    }
 
-        git config --global user.email "$gitEmail"
-        if ($LASTEXITCODE -eq 0) {
-            Write-Ok "Set global user.email to $gitEmail."
-        } else {
-            Record-Failure "Failed to set global user.email."
-        }
+    git config --global user.email "$gitEmail"
+    if ($LASTEXITCODE -eq 0) {
+        Write-Ok "Set global user.email to $gitEmail."
+    } else {
+        Record-Failure "Failed to set global user.email."
     }
 
     Configure-CredentialHelper
@@ -361,3 +367,4 @@ if ($script:FailCount -gt 0) {
 }
 
 Write-Ok "Git setup complete."
+exit 0

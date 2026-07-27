@@ -416,3 +416,4 @@ if ($overallStatus -ne "SUCCESS") {
 }
 
 Write-Ok "PyCharm setup completed successfully."
+exit 0

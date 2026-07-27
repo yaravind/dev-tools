@@ -290,3 +290,4 @@ if ($script:FailCount -gt 0) {
 }
 
 Write-Ok "jenv setup complete."
+exit 0
