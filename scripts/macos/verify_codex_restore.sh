@@ -2,6 +2,7 @@
 # verify_codex_restore.sh
 # Read-only diagnostics for restored ChatGPT/Codex data on macOS.
 
+# shellcheck disable=SC1007
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)"
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/branding_bash.sh"
