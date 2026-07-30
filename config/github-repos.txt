@@ -19,3 +19,4 @@ The-Coca-Cola-Company/tccc-data-product-agent-skills
 yaravind/dev-tools
 yaravind/vibe-coding
 yaravind/pipeline-to-semantic-agent-classifier-lab
+yaravind/llm-wiki
