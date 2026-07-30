@@ -1,7 +1,7 @@
 # Developer Tools
 
 > **Engineer Bootstrap Kit**  
-> *Works on my machine. And yours.*
+> *Works after coffee.*
 
 [![Script Tests](https://github.com/yaravind/dev-tools/actions/workflows/script-tests.yml/badge.svg)](https://github.com/yaravind/dev-tools/actions/workflows/script-tests.yml)
 
@@ -86,7 +86,7 @@ Manual mode is still available if you prefer one script at a time:
 8. Run <kbd>zsh scripts/macos/macos_setup.sh --non-admin-only</kbd> or <kbd>zsh scripts/macos/macos_setup.sh --admin-only</kbd> to customize OS settings
 9. Run <kbd>zsh scripts/macos/default_apps_setup.sh</kbd> to apply default apps from `config/default_apps_macos.txt` (use `--discover` to inspect current UTI mappings)
 10. Run <kbd>zsh scripts/macos/jenv_setup.sh</kbd> to add JDKs to jenv
-11. Run <kbd>bash scripts/macos/vscode_setup.sh</kbd> to install VS Code extensions from `config/vscode.txt` and apply managed settings from `config/vscode_settings.json`
+11. Run <kbd>zsh scripts/macos/vscode_setup.sh</kbd> to install VS Code extensions from `config/vscode.txt` and apply managed settings from `config/vscode_settings.json`
 12. Run <kbd>zsh scripts/macos/intellij_setup.sh</kbd> to install IntelliJ IDEA plugins from `config/intellij.txt`
 13. Run <kbd>zsh scripts/macos/pycharm_setup.sh</kbd> to install PyCharm plugins from `config/pycharm.txt`
 

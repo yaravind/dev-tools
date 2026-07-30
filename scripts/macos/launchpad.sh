@@ -52,7 +52,7 @@ Options:
   --dry-run, -n          Show the selected run plan without executing scripts
   --continue-on-error    Accepted for compatibility; non-critical tasks continue by default
   --yes, -y              Do not ask for final launchpad confirmation
-  --clone-destination D  Destination for clone_github_repos.sh
+  --clone-destination D  Required destination directory when clone_repos is selected
   --clone-repo-list F    Repo list file for clone_github_repos.sh
   --codex-backup D       Backup folder for restore_codex.sh
   --help, -h             Show this help
@@ -377,11 +377,21 @@ prompt_task_values() {
     if [[ "$clone_answer" =~ '^[Nn]$' ]]; then
       unset 'SELECTED[clone_repos]'
       unset 'INCLUDED_BY_DEP[clone_repos]'
-    elif [[ -z "$clone_destination" ]]; then
-      printf "Directory to clone into [default: current directory]: "
-      read -r clone_destination
-      clone_destination="${clone_destination/#\~/$HOME}"
+    else
+      while [[ -z "$clone_destination" ]]; do
+        printf "Directory to clone into (required): "
+        read -r clone_destination
+        clone_destination="${clone_destination/#\~/$HOME}"
+        if [[ -z "$clone_destination" ]]; then
+          log_warn "A clone destination is required when clone_repos is selected."
+        fi
+      done
     fi
+  fi
+
+  if [[ -n "${SELECTED[clone_repos]:-}" && -z "$clone_destination" ]]; then
+    log_error "clone_repos needs --clone-destination."
+    exit 1
   fi
 
   if [[ -n "${SELECTED[restore_codex]:-}" && -z "$codex_backup_path" && ! -t 0 ]]; then
@@ -426,11 +436,7 @@ build_command() {
       ;;
     clone_repos)
       local repo_list_arg="${clone_repo_list:-${REPO_ROOT}/config/github-repos.txt}"
-      if [[ -n "$clone_destination" ]]; then
-        cmd=(zsh "${SCRIPT_DIR}/clone_github_repos.sh" "$repo_list_arg" "$clone_destination")
-      else
-        cmd=(zsh "${SCRIPT_DIR}/clone_github_repos.sh" "$repo_list_arg")
-      fi
+      cmd=(zsh "${SCRIPT_DIR}/clone_github_repos.sh" "$repo_list_arg" "$clone_destination")
       ;;
     zsh_plugins)
       cmd=(zsh "${SCRIPT_DIR}/zsh_plugins_setup.sh")
@@ -454,7 +460,7 @@ build_command() {
       cmd=(zsh "${SCRIPT_DIR}/jenv_setup.sh")
       ;;
     vscode_setup)
-      cmd=(bash "${SCRIPT_DIR}/vscode_setup.sh")
+      cmd=(zsh "${SCRIPT_DIR}/vscode_setup.sh")
       ;;
     intellij_setup)
       cmd=(zsh "${SCRIPT_DIR}/intellij_setup.sh")

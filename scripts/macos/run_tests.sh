@@ -31,6 +31,7 @@ scripts=(
 
 fail_count=0
 shellcheck_fail=0
+shellcheck_checked=0
 missing_count=0
 
 # ok_count was unused; keep counts derived from arrays and fail/missing totals.
@@ -51,8 +52,9 @@ done
 
 if command_exists shellcheck; then
   for script in "${scripts[@]}"; do
-    # Only lint bash/sh scripts
+    # ShellCheck does not support zsh. Lint only scripts with supported shells.
     if [ -f "$script" ] && grep -qE '^#! */bin/(bash|sh)' "$script"; then
+      ((shellcheck_checked++))
       if shellcheck -x "$script"; then
         log_ok "ShellCheck OK: $(basename "$script")"
       else
@@ -95,7 +97,11 @@ log_warn "Scripts failed: $fail_count"
 log_warn "Scripts missing: $missing_count"
 log_ok "Configs OK: $config_ok"
 log_warn "Configs missing: $config_missing"
-log_ok "ShellCheck OK: $(( ${#scripts[@]} - shellcheck_fail ))"
+if ((shellcheck_checked > 0)); then
+  log_ok "ShellCheck OK: $((shellcheck_checked - shellcheck_fail))"
+else
+  log_ok "ShellCheck OK: not applicable (no bash/sh scripts)"
+fi
 log_warn "ShellCheck failed: $shellcheck_fail"
 
 # Run the safe minimal setup verification for macOS (does not install anything)

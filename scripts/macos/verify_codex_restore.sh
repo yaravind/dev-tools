@@ -1,12 +1,10 @@
-#!/bin/sh
+#!/bin/zsh
 # verify_codex_restore.sh
 # Read-only diagnostics for restored ChatGPT/Codex data on macOS.
 
-# shellcheck disable=SC1007
-SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)"
-# shellcheck disable=SC1091
-. "$SCRIPT_DIR/branding_bash.sh"
-ebk_print_banner "$(basename "$0")"
+SCRIPT_DIR="${0:A:h}"
+source "$SCRIPT_DIR/branding.sh"
+ebk_print_banner "${0:A:t}"
 
 RED=$(printf '\033[0;31m'); GREEN=$(printf '\033[0;32m'); YELLOW=$(printf '\033[1;33m')
 BLUE=$(printf '\033[0;34m'); CYAN=$(printf '\033[0;36m'); NC=$(printf '\033[0m')

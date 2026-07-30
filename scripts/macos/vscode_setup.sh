@@ -1,11 +1,10 @@
-#!/bin/bash
+#!/bin/zsh
 
 set -o pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck disable=SC1091
-source "${SCRIPT_DIR}/branding_bash.sh"
-ebk_print_banner "$(basename "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="${0:A:h}"
+source "${SCRIPT_DIR}/branding.sh"
+ebk_print_banner "${0:A:t}"
 BLUE="$EBK_INFO_COLOR"
 NC="$EBK_RESET"
 

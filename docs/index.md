@@ -7,7 +7,7 @@ permalink: /docs/
 
 Use this section for deeper references and implementation notes.
 
-> **Engineer Bootstrap Kit** — *Works on my machine. And yours.*
+> **Engineer Bootstrap Kit** — *Works after coffee.*
 
 ## Core Guides
 

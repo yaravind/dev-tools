@@ -6,6 +6,37 @@ ebk_command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
+ebk_theme_from_rgb() {
+  local red="$1" green="$2" blue="$3"
+
+  if [[ "$red" =~ '^[0-9]+$' && "$green" =~ '^[0-9]+$' && "$blue" =~ '^[0-9]+$' ]]; then
+    if (( (red * 299 + green * 587 + blue * 114) / 1000 < 32768 )); then
+      printf 'dark\n'
+    else
+      printf 'light\n'
+    fi
+    return 0
+  fi
+
+  return 1
+}
+
+ebk_detect_apple_terminal_theme() {
+  local rgb red green blue
+
+  [[ "${TERM_PROGRAM:-}" == "Apple_Terminal" ]] || return 1
+  ebk_command_exists osascript || return 1
+
+  rgb="$(osascript -e 'tell application id "com.apple.Terminal" to if (count of windows) > 0 then get background color of selected tab of front window' 2>/dev/null)" || return 1
+  rgb="${rgb// /}"
+  red="${rgb%%,*}"
+  rgb="${rgb#*,}"
+  green="${rgb%%,*}"
+  blue="${rgb##*,}"
+
+  ebk_theme_from_rgb "$red" "$green" "$blue"
+}
+
 ebk_detect_theme() {
   local requested="${1:-${EBK_THEME:-auto}}"
   requested="${requested:l}"
@@ -27,6 +58,10 @@ ebk_detect_theme() {
       fi
       return 0
     fi
+  fi
+
+  if ebk_detect_apple_terminal_theme; then
+    return 0
   fi
 
   if ebk_command_exists defaults; then
@@ -64,7 +99,7 @@ ebk_set_palette() {
   if [[ "$theme" == "light" ]]; then
     EBK_PRIMARY=$(printf '\033[0;35m')   # royal purple
     EBK_ACCENT=$(printf '\033[0;32m')    # mint-green approximation
-    EBK_TEXT=$(printf '\033[0;30m')
+    EBK_TEXT=''
     EBK_MUTED=$(printf '\033[0;90m')
     EBK_BOLD=$(printf '\033[1m')
     EBK_PHASE_COLOR="$EBK_PRIMARY"
@@ -77,7 +112,7 @@ ebk_set_palette() {
   else
     EBK_PRIMARY=$(printf '\033[1;35m')   # bright royal purple
     EBK_ACCENT=$(printf '\033[1;32m')    # bright mint-green approximation
-    EBK_TEXT=$(printf '\033[0;37m')
+    EBK_TEXT=''
     EBK_MUTED=$(printf '\033[0;36m')
     EBK_BOLD=$(printf '\033[1m')
     EBK_PHASE_COLOR="$EBK_PRIMARY"
@@ -151,7 +186,7 @@ ebk_print_box_line() {
 ebk_print_banner() {
   local script_name="${1:-${0:t}}"
   local box_width=60
-  local tagline='Works on my machine. And yours.'
+  local tagline='Works after coffee.'
   local theme
   theme="$(ebk_detect_theme)"
   ebk_set_palette "$theme"
