@@ -184,8 +184,13 @@ function Configure-CredentialHelper {
 function Update-GlobalGitIdentity {
     Write-Step "CONFIGURE Updating global Git identity and credential helper"
 
-    $fullName = Read-RequiredValue -Prompt "Type in your first and last name (no accent or special characters)" -CurrentValue $Name
-    $gitEmail = Read-EmailValue -CurrentValue $Email
+    if ($DryRun -and ($Yes -or -not (Test-IsInteractiveInput))) {
+        $fullName = if (-not [string]::IsNullOrWhiteSpace($Name)) { $Name.Trim() } else { "First Last" }
+        $gitEmail = if (-not [string]::IsNullOrWhiteSpace($Email) -and $Email -match '^[^@\s]+@[^@\s]+\.[^@\s]+$') { $Email.Trim() } else { "you@example.com" }
+    } else {
+        $fullName = Read-RequiredValue -Prompt "Type in your first and last name (no accent or special characters)" -CurrentValue $Name
+        $gitEmail = Read-EmailValue -CurrentValue $Email
+    }
 
     if ($DryRun) {
         Write-Info "DryRun: would set global user.name to $fullName."

@@ -302,6 +302,11 @@ if "%1"=="use" (
 )
 exit /b 0
 '@
+        Set-Content -LiteralPath (Join-Path $mockRoot "java.bat") -Value @'
+@echo off
+echo mock java 1>&2
+exit /b 0
+'@
     } else {
         $mockJenv = Join-Path $mockRoot "jenv"
         Set-Content -LiteralPath $mockJenv -Value @'
@@ -337,8 +342,8 @@ exit 0
 echo "mock java"
 '
         chmod +x $mockJenv (Join-Path $mockRoot "java")
+        New-Item -ItemType File -Force -Path (Join-Path $mockRoot "java.bat") | Out-Null
     }
-    New-Item -ItemType File -Force -Path (Join-Path $mockRoot "java.bat") | Out-Null
 
     $env:JAVA_HOME = $mockJdk
     $env:PATH = "$mockRoot$([System.IO.Path]::PathSeparator)$previousPath"
