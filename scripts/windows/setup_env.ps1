@@ -33,37 +33,44 @@ $cliTools = @(
     @{ Id = "sharkdp.bat";           Description = "Clone of cat(1) with syntax highlighting and Git integration" },
     @{ Id = "OpenJS.NodeJS";         Description = "Cross-platform JavaScript runtime environment" },
     @{ Id = "JohnMacFarlane.Pandoc"; Description = "Swiss-army knife of markup format conversion" },
-    @{ Id = "ripgrip";               Description = "Render markdown in terminal with interactive preview"; FallbackName = "ripgrip" },
-    @{ Id = "GitHub.Copilot.CLI";    Description = "GitHub Copilot CLI - AI pair-programmer in the terminal" },
+    @{ Id = "BurntSushi.ripgrep.MSVC"; Description = "ripgrep - recursively searches directories for a regex pattern"; SkipCommand = "rg" },
     @{ Id = "Graphviz.Graphviz";     Description = "Convert dot files to images" }
 )
 
 # ============================================================
 # CLI Tools NOT available on Windows (documented for reference)
 # ============================================================
-# - htop:     No direct equivalent.
-#             Use Task Manager or `Get-Process | Sort-Object CPU -Descending` in PowerShell.
+# - direnv:   Cross-platform upstream, but no stable winget package was confirmed.
+#             Use manual GitHub release install, Scoop, or PowerShell profile/env tooling.
+# - htop:     Use Task Manager, Resource Monitor, Windows Terminal's command palette,
+#             or `Get-Process | Sort-Object CPU -Descending` in PowerShell.
 # - pipx:     Not in winget. Install via pip after Python is set up:
 #             `pip install pipx`
 # - maven:    Installed via .\scripts\maven_setup.ps1 (winget ID not reliable).
-# - trash:    No direct equivalent.
-#             Use the built-in Recycle Bin or the RecycleBin PowerShell module.
+# - trash:    Use the built-in Recycle Bin, Microsoft.PowerShell.Management Remove-Item
+#             with caution, or install a Recycle Bin helper module if desired.
 # - jenv:     Use JEnv-for-Windows (https://github.com/FelixSelter/JEnv-for-Windows).
 #             Installed below. Run jenv_setup.ps1 after this script to register JDKs.
-# - thefuck:  Not fully supported on Windows. Limited functionality only.
-# - lnav:     Not available on Windows.
-#             Consider BareTail (https://www.baremetalsoft.com/baretail/) or WSL.
+# - thefuck:  Use PowerShell Predictive IntelliSense/PSReadLine history suggestions;
+#             thefuck has limited Windows support.
+# - lnav:     Consider glogg, BareTail, PowerShell `Get-Content -Wait`, or WSL lnav.
 # - llm:      Not in winget. Install via pip after Python is set up:
 #             `pip install llm`
 # - dockutil: macOS Dock-specific. No Windows equivalent needed.
+# - duti:     macOS default-app association tool. Windows associations are policy/hash
+#             protected; handle separately through DISM XML or approved enterprise tooling.
 # - tree:     Built-in Windows command (`tree /F`). No installation required.
+# - pure:     Zsh prompt. Use Starship (`winget install Starship.Starship`) if a
+#             cross-shell prompt is wanted on Windows.
+# - antidote: Zsh plugin manager. Use PowerShell modules/profile setup on Windows.
+# - powershell: Installed below as a GUI/system package because winget manages it that way.
 
 # ============================================================
 # GUI Apps - winget equivalents of brew casks
 # ============================================================
 $guiApps = @(
     @{ Id = "Microsoft.OpenJDK.11";              Description = "Microsoft OpenJDK 11 (for Fabric Runtime 1.3)" },
-    @{ Id = "Microsoft.OpenJDK.17";              Description = "Microsoft OpenJDK 17 (for Apache Jena 5.4.x)" },
+    @{ Id = "Microsoft.OpenJDK.21";              Description = "Microsoft OpenJDK 21 (for Apache Jena 5.4.x)"; FallbackName = "Microsoft Build of OpenJDK 21" },
     @{ Id = "Microsoft.DotNet.SDK.9";            Description = ".NET SDK (for VS Code plugins related to Fabric and Synapse)" },
     @{ Id = "Git.GCM";                           Description = "Git Credential Manager (cross-platform Git credential storage)" },
     @{ Id = "JetBrains.IntelliJIDEA.Ultimate";   Description = "IntelliJ IDEA Ultimate" },
@@ -73,9 +80,11 @@ $guiApps = @(
     @{ Id = "Microsoft.VisualStudioCode";        Description = "Visual Studio Code" },
     @{ Id = "Microsoft.Azure.StorageExplorer";   Description = "Microsoft Azure Storage Explorer" },
     @{ Id = "JGraph.Draw";                       Description = "Draw.io - online diagram software" },
-    @{ Id = "dbeaver.dbeaver";                   Description = "DBeaver Community - Free Universal Database Tool" },
+    @{ Id = "dbeaver.dbeaver";                   Description = "DBeaver Community - Free Universal Database Tool"; FallbackName = "DBeaver" },
     @{ Id = "ZedIndustries.Zed";                 Description = "Zed - multiplayer code editor" },
     @{ Id = "Ollama.Ollama";                     Description = "Manage local LLMs" },
+    @{ Id = "SUSE.RancherDesktop";               Description = "Rancher Desktop - Kubernetes and container management on the desktop"; FallbackName = "Rancher Desktop" },
+    @{ Id = "Logitech.OptionsPlus";              Description = "Logi Options+ - Logitech device configuration" },
     @{ Id = "Microsoft.PowerShell";              Description = "PowerShell (latest stable version)"; SkipCommand = "pwsh" },
     @{ Id = "Obsidian.Obsidian";                 Description = "Note-taking app with Markdown support (fsnotes equivalent)" }
 )
@@ -85,14 +94,36 @@ $guiApps = @(
 # ============================================================
 # - appcleaner: macOS-specific. Use Windows built-in Programs and Features,
 #               or Revo Uninstaller (https://www.revouninstaller.com/).
+# - agent-sessions: No Windows package found; keep this macOS-only unless the vendor
+#                   publishes a Windows build.
+# - copilot-cli:    The standalone package is not reliably available through winget.
+#                   Prefer GitHub CLI plus `gh extension install github/gh-copilot`
+#                   if CLI Copilot is needed.
 # - fsnotes:    macOS-specific. Obsidian (included above) is a cross-platform alternative.
 # - go2shell:   macOS-specific. Windows 11 has "Open in Terminal" natively
 #               in File Explorer (right-click context menu).
+# - stats:      macOS menu bar monitor. Use Task Manager, Resource Monitor,
+#               Performance Monitor, or PowerToys Peek/Command Palette workflows.
+# - tolaria:    No Windows package found. Obsidian (included above) is the closest
+#               Markdown-first note alternative available through winget.
 # - zed:        Zed is now available via winget (ZedIndustries.Zed).
 
 # ============================================================
 # Helper Functions
 # ============================================================
+
+$script:InstallFailures = New-Object System.Collections.Generic.List[string]
+$script:InstallWarnings = New-Object System.Collections.Generic.List[string]
+
+function Record-InstallFailure {
+    param([string]$Message)
+    [void]$script:InstallFailures.Add($Message)
+}
+
+function Record-InstallWarning {
+    param([string]$Message)
+    [void]$script:InstallWarnings.Add($Message)
+}
 
 # Check if a command exists in the current PATH
 function Test-CommandExists {
@@ -255,6 +286,7 @@ function Install-WingetApp {
             return
         }
         Write-Warn "Could not install $Description (name: $FallbackName). Exit code: $fallbackExit"
+        Record-InstallFailure "$Description ($Id via fallback name '$FallbackName') failed with exit code $fallbackExit"
         return
     }
 
@@ -280,6 +312,7 @@ function Install-WingetApp {
             return
         }
         Write-Warn "Could not install $Description ($Id). Exit code: $retryExit"
+        Record-InstallFailure "$Description ($Id) failed after retry without --silent. Exit code: $retryExit"
         return
     }
 
@@ -289,6 +322,7 @@ function Install-WingetApp {
     }
 
     Write-Warn "Could not install $Description ($Id). Exit code: $exitCode"
+    Record-InstallFailure "$Description ($Id) failed with exit code $exitCode"
 }
 
 function Install-Maven {
@@ -306,9 +340,13 @@ function Install-Maven {
     $mavenScript = Join-Path $scriptDir "maven_setup.ps1"
     if (-not (Test-Path $mavenScript)) {
         Write-Warn "Maven installer not found at $mavenScript"
+        Record-InstallFailure "Apache Maven installer not found at $mavenScript"
         return
     }
     & $mavenScript
+    if ($LASTEXITCODE -ne 0) {
+        Record-InstallFailure "Apache Maven installer failed with exit code $LASTEXITCODE"
+    }
 }
 
 # Install pip-based tools that have no winget package (pipx and llm)
@@ -318,11 +356,18 @@ function Install-PipTools {
     if ($pip) {
         Write-Info "Installing pipx via $pip..."
         & $pip install pipx
+        if ($LASTEXITCODE -ne 0) {
+            Record-InstallFailure "pipx install failed with exit code $LASTEXITCODE"
+        }
         Write-Info "Installing llm via $pip..."
         & $pip install llm
+        if ($LASTEXITCODE -ne 0) {
+            Record-InstallFailure "llm install failed with exit code $LASTEXITCODE"
+        }
     } else {
         Write-Warn "pip not found. winget-installed Python may require a terminal restart."
         Write-Warn "After restarting, run: pip install pipx llm"
+        Record-InstallWarning "pipx and llm were not installed because pip is not available in this session."
     }
 }
 
@@ -366,6 +411,7 @@ function Set-JavaHome {
     } else {
         Write-Warn "No JDK found in standard locations. Set JAVA_HOME manually after installing a JDK."
         Write-Warn "Example: [Environment]::SetEnvironmentVariable('JAVA_HOME', 'C:\Program Files\Microsoft\jdk-17.x.x.x', 'User')"
+        Record-InstallWarning "JAVA_HOME was not set because no JDK was found in standard Windows locations."
     }
 }
 
@@ -410,6 +456,27 @@ function Install-JEnv {
         } else {
             Write-Warn "JEnv-for-Windows installer could not be downloaded."
             Write-Warn "Install manually: https://github.com/FelixSelter/JEnv-for-Windows"
+            Record-InstallFailure "JEnv-for-Windows installer could not be downloaded."
+        }
+    }
+}
+
+function Write-SetupSummary {
+    Write-Step "Windows setup summary"
+    Write-Host ("  Install failures: {0}" -f $script:InstallFailures.Count)
+    Write-Host ("  Warnings:         {0}" -f $script:InstallWarnings.Count)
+
+    if ($script:InstallFailures.Count -gt 0) {
+        Write-EbkError "Install failures recorded:"
+        foreach ($failure in $script:InstallFailures) {
+            Write-Host ("  - {0}" -f $failure)
+        }
+    }
+
+    if ($script:InstallWarnings.Count -gt 0) {
+        Write-Warn "Warnings recorded:"
+        foreach ($warning in $script:InstallWarnings) {
+            Write-Host ("  - {0}" -f $warning)
         }
     }
 }
@@ -446,7 +513,7 @@ function Invoke-Verify {
             Write-Warn "copilot found but '--version' failed: $_"
         }
     } else {
-        Write-Warn "copilot not found in PATH. To use Copilot CLI, install GitHub Copilot CLI or run the corresponding installer."
+        Write-Warn "copilot not found in PATH. If CLI Copilot is needed, use GitHub CLI with: gh extension install github/gh-copilot"
     }
 
     Write-Warn '*** Add `Set-Alias cat bat` to your PowerShell profile for bat-as-cat ***'
@@ -492,4 +559,11 @@ Set-JavaHome
 
 Invoke-Verify
 
+Write-SetupSummary
+if ($script:InstallFailures.Count -gt 0) {
+    Write-EbkError "Windows developer environment setup completed with issues."
+    exit 1
+}
+
 Write-Ok "Awesome, all set!"
+exit 0

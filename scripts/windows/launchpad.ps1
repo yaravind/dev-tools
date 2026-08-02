@@ -48,6 +48,10 @@ $script:TaskStatus = @{}
 $script:TaskExit = @{}
 $script:TaskLog = @{}
 
+function Test-CanPrompt {
+    return ([Environment]::UserInteractive -and -not [Console]::IsInputRedirected)
+}
+
 function Add-Task {
     param(
         [string]$Id,
@@ -226,7 +230,7 @@ function Prompt-OptionalTasks {
         Select-Task -Id "restore_codex"
     }
 
-    if ($Yes -or -not [Environment]::UserInteractive) {
+    if ($Yes -or -not (Test-CanPrompt)) {
         return
     }
 
@@ -239,7 +243,7 @@ function Prompt-OptionalTasks {
 }
 
 function Prompt-TaskValues {
-    if ($script:Selected.ContainsKey("clone_repos") -and [Environment]::UserInteractive -and -not $Yes) {
+    if ($script:Selected.ContainsKey("clone_repos") -and (Test-CanPrompt) -and -not $Yes) {
         Write-Step "Clone GitHub repositories"
         $answer = Read-Host "Clone repositories from config/github-repos.txt? (Y/n)"
         if ($answer -match '^[Nn]$') {
@@ -253,7 +257,7 @@ function Prompt-TaskValues {
     }
 
     if ($script:Selected.ContainsKey("restore_codex") -and -not $CodexBackup) {
-        if ($Yes -or -not [Environment]::UserInteractive) {
+        if ($Yes -or -not (Test-CanPrompt)) {
             Write-EbkError "Codex restore needs -CodexBackup when stdin is not interactive or -Yes is used."
             exit 1
         }
@@ -586,7 +590,8 @@ function Invoke-Task {
     }
 
     $env:EBK_FORCE_COLOR = "1"
-    & $command.File @($command.Args) 2>&1 | Tee-Object -FilePath $logFile -Append
+    $global:LASTEXITCODE = 0
+    & $command.File @($command.Args) 2>&1 | Tee-Object -FilePath $logFile -Append | Out-Host
     $rc = if ($null -ne $LASTEXITCODE) { $LASTEXITCODE } else { 0 }
     $script:TaskExit[$Id] = $rc
 
