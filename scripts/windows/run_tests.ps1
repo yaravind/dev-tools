@@ -217,8 +217,29 @@ try {
 
 try {
     Write-Info "DryRun: jenv_setup.ps1"
-    & (Join-Path $scriptDir "jenv_setup.ps1") -DryRun -Yes | Out-Null
-    Test-LastExitCode "jenv_setup.ps1" | Out-Null
+    $tempJdk = Join-Path ([System.IO.Path]::GetTempPath()) ("dev-tools-jdk-test-" + [Guid]::NewGuid().ToString("N"))
+    $tempJdkBin = Join-Path $tempJdk "bin"
+    $tempJava = Join-Path $tempJdkBin "java.exe"
+    $previousJavaHome = $env:JAVA_HOME
+    New-Item -ItemType Directory -Force -Path $tempJdkBin | Out-Null
+    New-Item -ItemType File -Force -Path $tempJava | Out-Null
+    $env:JAVA_HOME = $tempJdk
+
+    try {
+        $jenvOutput = @(& (Join-Path $scriptDir "jenv_setup.ps1") -DryRun -Yes *>&1)
+        Test-LastExitCode "jenv_setup.ps1" | Out-Null
+        $expectedName = Split-Path -Leaf $tempJdk
+        $expectedAdd = "jenv add `"$expectedName`" `"$tempJdk`""
+        $jenvOutputText = $jenvOutput -join "`n"
+        if ($jenvOutputText -match "jenv add -path") {
+            Add-DryRunFailure "jenv_setup.ps1 still uses invalid JEnv-for-Windows syntax: jenv add -path"
+        } elseif ($jenvOutputText -notmatch [regex]::Escape($expectedAdd)) {
+            Add-DryRunFailure "jenv_setup.ps1 did not emit expected JEnv-for-Windows syntax: $expectedAdd"
+        }
+    } finally {
+        $env:JAVA_HOME = $previousJavaHome
+        Remove-Item -LiteralPath $tempJdk -Recurse -Force -ErrorAction SilentlyContinue
+    }
 } catch {
     Add-DryRunFailure "DryRun FAILED: jenv_setup.ps1 - $_"
 }

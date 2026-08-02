@@ -46,6 +46,66 @@ function Refresh-SessionPath {
     $env:Path = ($parts -join ";")
 }
 
+function Get-JEnvRoot {
+    $command = Get-Command "jenv" -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $command) {
+        return $null
+    }
+
+    $sourcePath = $command.Source
+    if ([string]::IsNullOrWhiteSpace($sourcePath)) {
+        $sourcePath = $command.Path
+    }
+    if ([string]::IsNullOrWhiteSpace($sourcePath) -or -not (Test-Path -LiteralPath $sourcePath)) {
+        return $null
+    }
+
+    $parent = (Get-Item -LiteralPath $sourcePath).Directory
+    if (-not $parent) {
+        return $null
+    }
+
+    if (Test-Path -LiteralPath (Join-Path $parent.FullName "java.bat")) {
+        return $parent.FullName
+    }
+    if ($parent.Name -eq "src" -and $parent.Parent -and (Test-Path -LiteralPath (Join-Path $parent.Parent.FullName "java.bat"))) {
+        return $parent.Parent.FullName
+    }
+
+    return $parent.FullName
+}
+
+function Add-PathToFrontForSession {
+    param([string]$Path)
+
+    if ([string]::IsNullOrWhiteSpace($Path)) {
+        return
+    }
+
+    $pathParts = @($env:Path -split ";" | Where-Object {
+        -not [string]::IsNullOrWhiteSpace($_) -and $_.TrimEnd("\") -ine $Path.TrimEnd("\")
+    })
+    $env:Path = (@($Path) + $pathParts) -join ";"
+}
+
+function Initialize-JEnvProcessPath {
+    Write-Step "CONFIGURE Preparing JEnv PATH for this session"
+
+    if ($DryRun) {
+        Write-Info "DryRun: would prepend JEnv-for-Windows to this process PATH before running jenv commands."
+        return
+    }
+
+    $jenvRoot = Get-JEnvRoot
+    if ([string]::IsNullOrWhiteSpace($jenvRoot)) {
+        Write-Warn "Could not determine JEnv-for-Windows root. If JEnv prompts for PATH changes, rerun PowerShell as administrator once or put JEnv first in PATH manually."
+        return
+    }
+
+    Add-PathToFrontForSession -Path $jenvRoot
+    Write-Ok "JEnv-for-Windows is first in this process PATH: $jenvRoot"
+}
+
 function Install-JEnv {
     Write-Step "DISCOVER Checking for JEnv-for-Windows"
 
@@ -183,6 +243,19 @@ function Get-InstalledJdks {
     return @($jdks | Sort-Object FullName -Unique)
 }
 
+function New-JEnvNameFromJdkPath {
+    param([string]$JdkPath)
+
+    $normalizedPath = $JdkPath.TrimEnd("\", "/")
+    $name = Split-Path -Leaf $normalizedPath
+    if ([string]::IsNullOrWhiteSpace($name)) {
+        $name = "jdk"
+    }
+
+    $name = $name -replace '[^A-Za-z0-9._-]', '-'
+    return $name
+}
+
 function Add-JdkToJenv {
     param([string]$JdkPath)
 
@@ -191,19 +264,33 @@ function Add-JdkToJenv {
         return
     }
 
+    $jenvName = New-JEnvNameFromJdkPath -JdkPath $JdkPath
+
     if ($DryRun) {
-        Write-Info "DryRun: would run jenv add -path `"$JdkPath`""
+        Write-Info "DryRun: would run jenv add `"$jenvName`" `"$JdkPath`""
         $script:AddedCount++
         return
     }
 
-    Write-Info "Processing JDK: $JdkPath"
-    jenv add -path "$JdkPath"
-    if ($LASTEXITCODE -eq 0) {
-        Write-Ok "Successfully added: $JdkPath"
+    Write-Info "Processing JDK: $JdkPath as $jenvName"
+    $output = @(jenv add "$jenvName" "$JdkPath" 2>&1)
+    $exitCode = $LASTEXITCODE
+    $joinedOutput = ($output -join "`n")
+    if ($joinedOutput -match "Theres already a JEnv with the name") {
+        Write-Warn "JDK already registered in jenv as $jenvName; skipping."
+        return
+    }
+
+    if ($exitCode -eq 0) {
+        Write-Ok "Successfully added ${jenvName}: $JdkPath"
         $script:AddedCount++
     } else {
-        Record-Failure "Failed to add: $JdkPath (exit code: $LASTEXITCODE)"
+        foreach ($line in $output) {
+            if (-not [string]::IsNullOrWhiteSpace($line)) {
+                Write-Warn $line
+            }
+        }
+        Record-Failure "Failed to add: $JdkPath (exit code: $exitCode)"
     }
 }
 
@@ -330,6 +417,9 @@ function Print-StructuredReport {
 Write-Step "Starting jenv setup for Windows"
 
 $ok = Install-JEnv
+if ($ok) {
+    Initialize-JEnvProcessPath
+}
 
 $jdks = Get-InstalledJdks
 $script:DiscoveredCount = $jdks.Count
