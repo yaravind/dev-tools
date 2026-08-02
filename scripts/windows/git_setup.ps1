@@ -366,3 +366,4 @@ if ($script:FailCount -gt 0) {
 }
 
 Write-Ok "Git setup complete."
+exit 0
