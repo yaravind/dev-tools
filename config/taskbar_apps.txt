@@ -14,8 +14,8 @@ STARTMENU:IntelliJ IDEA Community*
 STARTMENU:PyCharm Professional*
 STARTMENU:PyCharm Community*
 STARTMENU:Azure Storage Explorer
-STARTMENU:draw.io
-STARTMENU:DBeaver
+STARTMENU:draw.io*
+STARTMENU:DBeaver*
 STARTMENU:Zed
 STARTMENU:Ollama
 STARTMENU:Rancher Desktop

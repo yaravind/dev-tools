@@ -189,6 +189,7 @@ function Resolve-StartMenuShortcut {
     }
 
     $matches = New-Object System.Collections.Generic.List[object]
+    $containsMatches = New-Object System.Collections.Generic.List[object]
     $hasWildcard = $needleWithExt.IndexOfAny([char[]]"*?") -ge 0
     foreach ($root in Get-StartMenuRoots) {
         Get-ChildItem -Path $root -Filter "*.lnk" -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
@@ -198,12 +199,17 @@ function Resolve-StartMenuShortcut {
                 ($hasWildcard -and ($_.Name -like $needleWithExt -or $_.BaseName -like $needle))
             ) {
                 [void]$matches.Add($_)
+            } elseif (-not $hasWildcard -and $_.BaseName -like "*$needle*") {
+                [void]$containsMatches.Add($_)
             }
         }
     }
 
     if ($matches.Count -eq 0) {
-        return $null
+        if ($containsMatches.Count -eq 0) {
+            return $null
+        }
+        $matches = $containsMatches
     }
 
     return ($matches | Sort-Object FullName | Select-Object -First 1).FullName
@@ -317,6 +323,15 @@ if ($DryRun) {
     }
     foreach ($entry in $parsed.Add) {
         Write-Info "Would add: $entry"
+        if ($entry.StartsWith("STARTMENU:", [StringComparison]::OrdinalIgnoreCase)) {
+            $shortcutName = $entry.Substring(10)
+            $shortcutPath = Resolve-StartMenuShortcut -Name $shortcutName
+            if ($shortcutPath) {
+                Write-Info "Resolved Start Menu shortcut: $shortcutPath"
+            } else {
+                Write-Warn "Start Menu shortcut not found in dry-run: $shortcutName"
+            }
+        }
     }
     exit 0
 }

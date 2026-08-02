@@ -88,18 +88,95 @@ function Install-JEnv {
 }
 
 function Get-InstalledJdks {
-    $searchPaths = @(
-        "C:\Program Files\Microsoft\jdk-*",
-        "C:\Program Files\Eclipse Adoptium\jdk-*",
-        "C:\Program Files\Java\jdk-*",
-        "C:\Program Files\BellSoft\LibericaJDK-*"
-    )
+    $candidatePaths = New-Object System.Collections.Generic.List[string]
 
-    $jdks = @()
-    foreach ($pattern in $searchPaths) {
-        $found = Get-Item -Path $pattern -ErrorAction SilentlyContinue
-        if ($found) {
-            $jdks += $found
+    function Add-JdkCandidate {
+        param([string]$PathPattern)
+
+        if ([string]::IsNullOrWhiteSpace($PathPattern)) {
+            return
+        }
+
+        $expandedPath = [Environment]::ExpandEnvironmentVariables($PathPattern.Trim())
+        if ([string]::IsNullOrWhiteSpace($expandedPath)) {
+            return
+        }
+
+        if ($expandedPath.IndexOfAny([char[]]"*?") -ge 0) {
+            Get-Item -Path $expandedPath -ErrorAction SilentlyContinue | ForEach-Object {
+                [void]$candidatePaths.Add($_.FullName)
+            }
+            return
+        }
+
+        $resolvedPath = Resolve-Path -LiteralPath $expandedPath -ErrorAction SilentlyContinue
+        if ($resolvedPath) {
+            [void]$candidatePaths.Add($resolvedPath.Path)
+        }
+    }
+
+    function Add-RegistryJdkCandidates {
+        $registryRoots = @(
+            "HKLM:\SOFTWARE\JavaSoft\JDK",
+            "HKLM:\SOFTWARE\JavaSoft\Java Development Kit",
+            "HKLM:\SOFTWARE\Microsoft\JDK",
+            "HKLM:\SOFTWARE\Eclipse Adoptium\JDK",
+            "HKLM:\SOFTWARE\WOW6432Node\JavaSoft\JDK",
+            "HKLM:\SOFTWARE\WOW6432Node\JavaSoft\Java Development Kit",
+            "HKLM:\SOFTWARE\WOW6432Node\Microsoft\JDK",
+            "HKLM:\SOFTWARE\WOW6432Node\Eclipse Adoptium\JDK"
+        )
+
+        foreach ($root in $registryRoots) {
+            if (-not (Test-Path -LiteralPath $root)) {
+                continue
+            }
+
+            Get-ChildItem -Path $root -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+                $properties = Get-ItemProperty -LiteralPath $_.PSPath -ErrorAction SilentlyContinue
+                foreach ($propertyName in @("JavaHome", "InstallationPath", "InstallLocation", "Path")) {
+                    if ($properties -and $properties.$propertyName) {
+                        Add-JdkCandidate -PathPattern $properties.$propertyName
+                    }
+                }
+            }
+        }
+    }
+
+    function Add-WingetJdkCandidates {
+        if (-not (Test-CommandExists "winget")) {
+            return
+        }
+
+        $wingetOutput = @(winget list --accept-source-agreements 2>$null)
+        foreach ($line in $wingetOutput) {
+            if ($line -match "Microsoft\.OpenJDK\.(\d+)") {
+                Add-JdkCandidate -PathPattern ("C:\Program Files\Microsoft\jdk-{0}*" -f $Matches[1])
+            } elseif ($line -match "EclipseAdoptium\.Temurin\.(\d+)\.JDK") {
+                Add-JdkCandidate -PathPattern ("C:\Program Files\Eclipse Adoptium\jdk-{0}*" -f $Matches[1])
+            } elseif ($line -match "Oracle\.JDK\.(\d+)") {
+                Add-JdkCandidate -PathPattern ("C:\Program Files\Java\jdk-{0}*" -f $Matches[1])
+            } elseif ($line -match "BellSoft\.LibericaJDK\.(\d+)") {
+                Add-JdkCandidate -PathPattern ("C:\Program Files\BellSoft\LibericaJDK-{0}*" -f $Matches[1])
+            }
+        }
+    }
+
+    Add-JdkCandidate -PathPattern $env:JAVA_HOME
+    Add-JdkCandidate -PathPattern "C:\Program Files\Microsoft\jdk-*"
+    Add-JdkCandidate -PathPattern "C:\Program Files\Eclipse Adoptium\jdk-*"
+    Add-JdkCandidate -PathPattern "C:\Program Files\Java\jdk-*"
+    Add-JdkCandidate -PathPattern "C:\Program Files\BellSoft\LibericaJDK-*"
+    Add-JdkCandidate -PathPattern "C:\Program Files\Zulu\zulu-*"
+    Add-JdkCandidate -PathPattern "C:\Program Files\Amazon Corretto\jdk*"
+    Add-RegistryJdkCandidates
+    Add-WingetJdkCandidates
+
+    $jdks = New-Object System.Collections.Generic.List[object]
+    foreach ($path in ($candidatePaths | Sort-Object -Unique)) {
+        $javaExe = Join-Path (Join-Path $path "bin") "java.exe"
+        if (Test-Path -LiteralPath $javaExe) {
+            [void]$jdks.Add((Get-Item -LiteralPath $path))
         }
     }
 
@@ -258,9 +335,9 @@ $jdks = Get-InstalledJdks
 $script:DiscoveredCount = $jdks.Count
 if ($jdks.Count -eq 0) {
     if ($DryRun) {
-        Write-Warn "DryRun: no JDKs found in standard Windows installation directories on this host."
+        Write-Warn "DryRun: no JDKs found from JAVA_HOME, registry, winget, or standard Windows installation directories on this host."
     } else {
-        Record-Failure "No JDKs found in standard installation directories. Install a JDK first, then rerun this script."
+        Record-Failure "No JDKs found from JAVA_HOME, registry, winget, or standard Windows installation directories. Install a JDK first, then rerun this script."
     }
 } else {
     Write-Step "CONFIGURE Adding discovered JDKs to jenv"
