@@ -126,14 +126,15 @@ A lightweight bootstrap script (`scripts/macos/setup_env_min.sh`) is available f
 
 1. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
 2. Open **PowerShell as Administrator**
-3. Allow script execution for this session: <kbd>Set-ExecutionPolicy Bypass -Scope Process -Force</kbd>
-4. cd <kbd>dev-tools</kbd>
-5. Run the interactive launchpad and choose a setup profile: <kbd>./scripts/windows/launchpad.ps1</kbd>
-6. To preview without making changes, run: <kbd>./scripts/windows/launchpad.ps1 -DryRun</kbd>
+3. cd <kbd>dev-tools</kbd>
+4. Run the interactive launchpad and choose a setup profile: <kbd>.\scripts\windows\launchpad.cmd</kbd>
+5. To preview without making changes, run: <kbd>.\scripts\windows\launchpad.cmd -DryRun</kbd>
+
+The `.cmd` launchers start PowerShell with a process-scoped execution-policy bypass. If you run `.ps1` files directly instead, use `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows\launchpad.ps1`.
 
 Manual mode is still available if you prefer one script at a time:
 
-1. Run: <kbd>./scripts/windows/setup_env.ps1</kbd>
+1. Run: <kbd>.\scripts\windows\setup_env.cmd</kbd>
 2. Restart your terminal to apply PATH and environment variable changes
 3. Run <kbd>./scripts/windows/jenv_setup.ps1</kbd> to register installed JDKs with [JEnv-for-Windows](https://github.com/FelixSelter/JEnv-for-Windows)
 4. Run <kbd>./scripts/windows/git_setup.ps1</kbd> to set up Git credentials (name and email)

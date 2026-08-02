@@ -1,6 +1,7 @@
 # launchpad.ps1 - Interactive Windows setup launchpad for the Engineer Bootstrap Kit
 #
 # Usage:
+#   .\scripts\windows\launchpad.cmd
 #   .\scripts\windows\launchpad.ps1
 #   .\scripts\windows\launchpad.ps1 -Profile full -DryRun
 #   .\scripts\windows\launchpad.ps1 -Profile ide-only -Yes

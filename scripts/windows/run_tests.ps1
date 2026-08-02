@@ -103,6 +103,28 @@ foreach ($script in $scripts) {
     }
 }
 
+$cmdWrappers = @(
+    "launchpad.cmd",
+    "setup_env.cmd"
+)
+
+foreach ($wrapper in $cmdWrappers) {
+    $path = Join-Path $scriptDir $wrapper
+    if (-not (Test-Path $path)) {
+        $script:MissingScripts++
+        Write-Warn "Missing launcher: $path"
+        continue
+    }
+
+    $content = Get-Content -Raw $path
+    if ($content -notmatch '(?i)-ExecutionPolicy\s+Bypass' -or $content -notmatch '(?i)-File\s+"%SCRIPT_DIR%') {
+        $script:SyntaxFailures++
+        Write-Warn "Launcher missing execution-policy bypass invocation: $wrapper"
+    } else {
+        Write-Ok "Launcher OK: $wrapper"
+    }
+}
+
 $profileConfig = Join-Path $repoRoot "config"
 $profileConfig = Join-Path $profileConfig "Microsoft.PowerShell_profile.ps1"
 if (Require-Config -Label "powershell_profile_setup.ps1" -Path $profileConfig) {

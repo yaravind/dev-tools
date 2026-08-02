@@ -4,8 +4,9 @@
 # developer tools on modern Windows (Windows 10/11) using winget.
 #
 # Usage: Run in PowerShell as Administrator:
-#   Set-ExecutionPolicy Bypass -Scope Process -Force
-#   .\scripts\setup_env.ps1
+#   .\scripts\windows\setup_env.cmd
+# Or, if running the .ps1 directly:
+#   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows\setup_env.ps1
 #
 # Pre-requisites:
 #   - Windows 10/11 with winget (App Installer) installed
