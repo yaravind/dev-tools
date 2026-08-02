@@ -46,8 +46,10 @@ if ($resolvedConfig) {
     exit 1
 }
 
-$TaskbarPinnedDir = Join-Path $env:APPDATA "Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"
-$BackupDir = Join-Path $env:TEMP ("taskbar_backup_{0}" -f (Get-Date -Format "yyyyMMddHHmmss"))
+$taskbarBaseDir = if ($env:APPDATA) { $env:APPDATA } else { [IO.Path]::GetTempPath() }
+$tempBaseDir = if ($env:TEMP) { $env:TEMP } else { [IO.Path]::GetTempPath() }
+$TaskbarPinnedDir = Join-Path $taskbarBaseDir "Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"
+$BackupDir = Join-Path $tempBaseDir ("taskbar_backup_{0}" -f (Get-Date -Format "yyyyMMddHHmmss"))
 
 function Assert-Admin {
     $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
@@ -162,6 +164,61 @@ function Remove-PinnedEntry {
     }
 
     return $removed
+}
+
+function Get-StartMenuRoots {
+    $roots = New-Object System.Collections.Generic.List[string]
+    if ($env:ProgramData) {
+        [void]$roots.Add((Join-Path $env:ProgramData "Microsoft\Windows\Start Menu\Programs"))
+    }
+    if ($env:APPDATA) {
+        [void]$roots.Add((Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"))
+    }
+    return $roots | Where-Object { Test-Path -LiteralPath $_ }
+}
+
+function Resolve-StartMenuShortcut {
+    param([string]$Name)
+
+    $needle = $Name.Trim()
+    if (-not $needle.EndsWith(".lnk", [StringComparison]::OrdinalIgnoreCase)) {
+        $needleWithExt = "$needle.lnk"
+    } else {
+        $needleWithExt = $needle
+        $needle = [IO.Path]::GetFileNameWithoutExtension($needle)
+    }
+
+    $matches = New-Object System.Collections.Generic.List[object]
+    $hasWildcard = $needleWithExt.IndexOfAny([char[]]"*?") -ge 0
+    foreach ($root in Get-StartMenuRoots) {
+        Get-ChildItem -Path $root -Filter "*.lnk" -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+            if (
+                $_.Name -ieq $needleWithExt -or
+                $_.BaseName -ieq $needle -or
+                ($hasWildcard -and ($_.Name -like $needleWithExt -or $_.BaseName -like $needle))
+            ) {
+                [void]$matches.Add($_)
+            }
+        }
+    }
+
+    if ($matches.Count -eq 0) {
+        return $null
+    }
+
+    return ($matches | Sort-Object FullName | Select-Object -First 1).FullName
+}
+
+function Pin-StartMenuShortcutToTaskbar {
+    param([string]$Name)
+
+    $shortcutPath = Resolve-StartMenuShortcut -Name $Name
+    if (-not $shortcutPath) {
+        Write-Warn "Start Menu shortcut not found: $Name"
+        return $false
+    }
+
+    return Pin-PathToTaskbar -AppPath $shortcutPath
 }
 
 function Pin-PathToTaskbar {
@@ -286,6 +343,17 @@ try {
             continue
         }
 
+        if ($entry.StartsWith("STARTMENU:", [StringComparison]::OrdinalIgnoreCase)) {
+            $shortcutName = $entry.Substring(10)
+            $shortcutPath = Resolve-StartMenuShortcut -Name $shortcutName
+            if ($shortcutPath) {
+                $removed += Remove-PinnedEntry -TargetPath $shortcutPath -Arguments "" -Name ([IO.Path]::GetFileNameWithoutExtension($shortcutPath))
+            } else {
+                $removed += Remove-PinnedEntry -TargetPath "" -Arguments "" -Name $shortcutName
+            }
+            continue
+        }
+
         $path = $entry
         $name = [IO.Path]::GetFileNameWithoutExtension($path)
         $removed += Remove-PinnedEntry -TargetPath $path -Arguments "" -Name $name
@@ -301,6 +369,12 @@ try {
         if ($entry.StartsWith("AUMID:", [StringComparison]::OrdinalIgnoreCase)) {
             $aumid = $entry.Substring(6)
             if (Pin-AumidToTaskbar -Aumid $aumid) { $added++ } else { $skipped++ }
+            continue
+        }
+
+        if ($entry.StartsWith("STARTMENU:", [StringComparison]::OrdinalIgnoreCase)) {
+            $shortcutName = $entry.Substring(10)
+            if (Pin-StartMenuShortcutToTaskbar -Name $shortcutName) { $added++ } else { $skipped++ }
             continue
         }
 

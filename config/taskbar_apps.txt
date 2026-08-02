@@ -2,8 +2,22 @@
 #
 # One entry per line. Lines starting with "--" are removed.
 # Use AUMID:<id> for Microsoft Store apps.
+# Use STARTMENU:<shortcut name> for installed Start Menu shortcuts.
+# Wildcards are supported for STARTMENU entries.
 
-%LocalAppData%\Programs\Microsoft VS Code\Code.exe
 AUMID:Microsoft.WindowsTerminal_8wekyb3d8bbwe!App
-%ProgramFiles%\Git\git-bash.exe
-%ProgramFiles%\JetBrains\IntelliJ IDEA Community Edition\bin\idea64.exe
+STARTMENU:PowerShell 7*
+STARTMENU:Git Bash
+STARTMENU:Visual Studio Code
+STARTMENU:IntelliJ IDEA Ultimate*
+STARTMENU:IntelliJ IDEA Community*
+STARTMENU:PyCharm Professional*
+STARTMENU:PyCharm Community*
+STARTMENU:Azure Storage Explorer
+STARTMENU:draw.io
+STARTMENU:DBeaver
+STARTMENU:Zed
+STARTMENU:Ollama
+STARTMENU:Rancher Desktop
+STARTMENU:Logi Options+
+STARTMENU:Obsidian
