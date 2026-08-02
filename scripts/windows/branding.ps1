@@ -35,7 +35,21 @@ function Set-EbkPalette {
         [string]$Theme
     )
 
+    $esc = [char]27
+    $script:EbReset = "$esc[0m"
+
     if ($Theme -eq "light") {
+        $script:EbPrimaryAnsi = "$esc[0;35m"
+        $script:EbAccentAnsi = "$esc[0;32m"
+        $script:EbTextAnsi = ""
+        $script:EbMutedAnsi = "$esc[0;90m"
+        $script:EbBoldAnsi = "$esc[1m"
+        $script:EbPhaseAnsi = $script:EbPrimaryAnsi
+        $script:EbInfoAnsi = "$esc[0;34m"
+        $script:EbOkAnsi = $script:EbAccentAnsi
+        $script:EbWarnAnsi = "$esc[0;33m"
+        $script:EbErrorAnsi = "$esc[0;31m"
+        $script:EbDebugAnsi = $script:EbMutedAnsi
         $script:EbPrimary = "Magenta"
         $script:EbAccent = "Green"
         $script:EbText = "Black"
@@ -43,13 +57,24 @@ function Set-EbkPalette {
         $script:EbPhase = $script:EbPrimary
         $script:EbInfo = "Blue"
         $script:EbOk = $script:EbAccent
-        $script:EbWarn = "DarkYellow"
+        $script:EbWarn = "Yellow"
         $script:EbError = "Red"
         $script:EbDebug = $script:EbMuted
     } else {
-        $script:EbPrimary = "DarkMagenta"
+        $script:EbPrimaryAnsi = "$esc[1;35m"
+        $script:EbAccentAnsi = "$esc[1;32m"
+        $script:EbTextAnsi = ""
+        $script:EbMutedAnsi = "$esc[0;36m"
+        $script:EbBoldAnsi = "$esc[1m"
+        $script:EbPhaseAnsi = $script:EbPrimaryAnsi
+        $script:EbInfoAnsi = "$esc[1;36m"
+        $script:EbOkAnsi = $script:EbAccentAnsi
+        $script:EbWarnAnsi = "$esc[1;33m"
+        $script:EbErrorAnsi = "$esc[1;31m"
+        $script:EbDebugAnsi = $script:EbMutedAnsi
+        $script:EbPrimary = "Magenta"
         $script:EbAccent = "Green"
-        $script:EbText = "Gray"
+        $script:EbText = "White"
         $script:EbMuted = "Cyan"
         $script:EbPhase = "Magenta"
         $script:EbInfo = "Cyan"
@@ -57,6 +82,31 @@ function Set-EbkPalette {
         $script:EbWarn = "Yellow"
         $script:EbError = "Red"
         $script:EbDebug = $script:EbMuted
+    }
+}
+
+function Test-EbkColorOutput {
+    if ($env:NO_COLOR) {
+        return $false
+    }
+    if ($env:EBK_FORCE_COLOR -eq "1") {
+        return $true
+    }
+
+    try {
+        return -not [Console]::IsOutputRedirected
+    } catch {
+        return $true
+    }
+}
+
+function Enable-EbkAnsiOutputRendering {
+    if (Get-Variable -Name PSStyle -Scope Global -ErrorAction SilentlyContinue) {
+        try {
+            $global:PSStyle.OutputRendering = "Ansi"
+        } catch {
+            # Older hosts may expose PSStyle without a writable OutputRendering property.
+        }
     }
 }
 
@@ -118,40 +168,146 @@ function Format-EbkLogLine {
     return ("{0} {1,-5} {2}" -f $Glyph, $Label, $Message)
 }
 
+function Format-EbkLogPrefix {
+    param(
+        [string]$Glyph,
+        [string]$Label
+    )
+
+    if ([string]::IsNullOrEmpty($Glyph)) {
+        return ("{0,-7} " -f $Label)
+    }
+
+    return ("{0} {1,-5} " -f $Glyph, $Label)
+}
+
+function Format-EbkAnsi {
+    param(
+        [string]$Color,
+        [string]$Text,
+        [string]$Weight = ""
+    )
+
+    if (-not (Test-EbkColorOutput)) {
+        return $Text
+    }
+
+    Enable-EbkAnsiOutputRendering
+    return ("{0}{1}{2}{3}" -f $Color, $Weight, $Text, $script:EbReset)
+}
+
+function Format-EbkAnsiLogLine {
+    param(
+        [string]$Color,
+        [string]$Glyph,
+        [string]$Label,
+        [string]$Message
+    )
+
+    if (-not (Test-EbkColorOutput)) {
+        return (Format-EbkLogLine -Glyph $Glyph -Label $Label -Message $Message)
+    }
+
+    Enable-EbkAnsiOutputRendering
+    return ("{0}{1}{2}{3}" -f $Color, (Format-EbkLogPrefix -Glyph $Glyph -Label $Label), $script:EbReset, $Message)
+}
+
+function Write-EbkLogLine {
+    param(
+        [string]$Color,
+        [string]$Glyph,
+        [string]$Label,
+        [string]$Message,
+        [switch]$ErrorStream
+    )
+
+    $line = Format-EbkAnsiLogLine -Color $Color -Glyph $Glyph -Label $Label -Message $Message
+    if ($ErrorStream) {
+        [Console]::Error.WriteLine($line)
+    } else {
+        Write-EbkStdout $line
+    }
+}
+
+function Write-EbkStdout {
+    param([string]$Text)
+
+    if ((Test-EbkColorOutput) -and $env:EBK_FORCE_COLOR -eq "1") {
+        try {
+            if ([Console]::IsOutputRedirected) {
+                [Console]::Out.WriteLine($Text)
+                return
+            }
+        } catch {
+            # Fall back to PowerShell pipeline output.
+        }
+    }
+
+    Write-Host $Text
+}
+
+function Write-EbkThemedHost {
+    param(
+        [string]$Text,
+        [string]$Color = "",
+        [string]$Weight = ""
+    )
+
+    Write-EbkStdout (Format-EbkAnsi -Color $Color -Text $Text -Weight $Weight)
+}
+
+function Write-EbkBoxLine {
+    param(
+        [int]$BoxWidth,
+        [string]$Line,
+        [string]$Color,
+        [string]$Weight = ""
+    )
+
+    $padded = $Line.PadRight($BoxWidth)
+    if (-not (Test-EbkColorOutput)) {
+        Write-EbkStdout ("| {0} |" -f $padded)
+        return
+    }
+
+    Enable-EbkAnsiOutputRendering
+    Write-EbkStdout ($script:EbPrimaryAnsi + "| " + $Color + $Weight + $padded + " " + $script:EbPrimaryAnsi + "|" + $script:EbReset)
+}
+
 function Write-EbkPhase {
     param([string]$Message)
     Initialize-EbkPaletteIfNeeded
     $glyphs = Get-EbkGlyphs
-    Write-Host ""
-    Write-Host (Format-EbkLogLine -Glyph $glyphs.Phase -Label "PHASE" -Message $Message) -ForegroundColor $script:EbPhase
+    Write-EbkStdout ""
+    Write-EbkLogLine -Color $script:EbPhaseAnsi -Glyph $glyphs.Phase -Label "PHASE" -Message $Message
 }
 
 function Write-EbkInfo {
     param([string]$Message)
     Initialize-EbkPaletteIfNeeded
     $glyphs = Get-EbkGlyphs
-    Write-Host (Format-EbkLogLine -Glyph $glyphs.Info -Label "INFO" -Message $Message) -ForegroundColor $script:EbInfo
+    Write-EbkLogLine -Color $script:EbInfoAnsi -Glyph $glyphs.Info -Label "INFO" -Message $Message
 }
 
 function Write-EbkOk {
     param([string]$Message)
     Initialize-EbkPaletteIfNeeded
     $glyphs = Get-EbkGlyphs
-    Write-Host (Format-EbkLogLine -Glyph $glyphs.Ok -Label "OK" -Message $Message) -ForegroundColor $script:EbOk
+    Write-EbkLogLine -Color $script:EbOkAnsi -Glyph $glyphs.Ok -Label "OK" -Message $Message
 }
 
 function Write-EbkWarn {
     param([string]$Message)
     Initialize-EbkPaletteIfNeeded
     $glyphs = Get-EbkGlyphs
-    Write-Host (Format-EbkLogLine -Glyph $glyphs.Warn -Label "WARN" -Message $Message) -ForegroundColor $script:EbWarn
+    Write-EbkLogLine -Color $script:EbWarnAnsi -Glyph $glyphs.Warn -Label "WARN" -Message $Message
 }
 
 function Write-EbkError {
     param([string]$Message)
     Initialize-EbkPaletteIfNeeded
     $glyphs = Get-EbkGlyphs
-    Write-Host (Format-EbkLogLine -Glyph $glyphs.Error -Label "ERROR" -Message $Message) -ForegroundColor $script:EbError
+    Write-EbkLogLine -Color $script:EbErrorAnsi -Glyph $glyphs.Error -Label "ERROR" -Message $Message -ErrorStream
 }
 
 function Write-EbkDebug {
@@ -159,7 +315,7 @@ function Write-EbkDebug {
     if ($env:EBK_DEBUG -ne "1") { return }
     Initialize-EbkPaletteIfNeeded
     $glyphs = Get-EbkGlyphs
-    Write-Host (Format-EbkLogLine -Glyph $glyphs.Debug -Label "DEBUG" -Message $Message) -ForegroundColor $script:EbDebug
+    Write-EbkLogLine -Color $script:EbDebugAnsi -Glyph $glyphs.Debug -Label "DEBUG" -Message $Message
 }
 
 # Backward-compatible aliases used by existing scripts.
@@ -198,14 +354,18 @@ function Show-EbkBanner {
         ' \__,_|\___| \_/       \__\___/ \___/|_|___/'
     )
 
-    Write-Host ""
-    Write-Host $border -ForegroundColor $script:EbPrimary
+    Write-EbkThemedHost -Text $border -Color $script:EbPrimaryAnsi
     foreach ($line in $artLines) {
-        $artLine = "| " + $line.PadRight($contentWidth) + " |"
-        Write-Host $artLine -ForegroundColor $script:EbAccent
+        Write-EbkBoxLine -BoxWidth $contentWidth -Line $line -Color $script:EbAccentAnsi
     }
-    $taglineLine = "| " + $tagline.PadRight($contentWidth) + " |"
-    Write-Host $taglineLine -ForegroundColor $script:EbText
-    Write-Host $border -ForegroundColor $script:EbPrimary
-    Write-EbkInfo ("{0} ({1} mode)" -f $ScriptName, $selectedTheme)
+    Write-EbkBoxLine -BoxWidth $contentWidth -Line $tagline -Color $script:EbTextAnsi -Weight $script:EbBoldAnsi
+    Write-EbkThemedHost -Text $border -Color $script:EbPrimaryAnsi
+    $glyphs = Get-EbkGlyphs
+    $bannerMessage = "{0} ({1} mode)" -f $ScriptName, $selectedTheme
+    if (Test-EbkColorOutput) {
+        Enable-EbkAnsiOutputRendering
+        Write-EbkStdout ($script:EbInfoAnsi + (Format-EbkLogPrefix -Glyph $glyphs.Info -Label "INFO") + $script:EbReset + $bannerMessage + $script:EbReset)
+    } else {
+        Write-EbkStdout (Format-EbkLogLine -Glyph $glyphs.Info -Label "INFO" -Message $bannerMessage)
+    }
 }

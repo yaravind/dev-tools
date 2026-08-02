@@ -23,10 +23,10 @@ if (Test-Path $brandingScript) {
     . $brandingScript
     Show-EbkBanner -ScriptName (Split-Path -Leaf $MyInvocation.MyCommand.Path)
     Initialize-EbkPaletteIfNeeded
-    $Script:ThemeHeaderColor = $script:EbPhase
-    $Script:ThemeBodyColor = $script:EbText
-    $Script:ThemeSuccessColor = $script:EbOk
-    $Script:ThemeWarnColor = $script:EbWarn
+    $Script:ThemeHeaderColor = $script:EbPhaseAnsi
+    $Script:ThemeBodyColor = $script:EbTextAnsi
+    $Script:ThemeSuccessColor = $script:EbOkAnsi
+    $Script:ThemeWarnColor = $script:EbWarnAnsi
 }
 
 function Test-CommandExists {
@@ -206,39 +206,39 @@ function Print-StructuredReport {
     $statusColor = if ($OverallStatus -eq "SUCCESS") { $Script:ThemeSuccessColor } else { $Script:ThemeWarnColor }
 
     Write-Host ""
-    Write-Host "Final Status Report" -ForegroundColor $Script:ThemeHeaderColor
-    Write-Host "──────────────────────────────────────────────────────────────────────────────" -ForegroundColor $Script:ThemeHeaderColor
-    Write-Host ("  {0,-24} {1}" -f "Script", "IntelliJ Plugin Setup (Windows)") -ForegroundColor $Script:ThemeBodyColor
-    Write-Host ("  {0,-24} {1}" -f "Mode", "--$Mode") -ForegroundColor $Script:ThemeBodyColor
-    Write-Host ("  {0,-24} {1}" -f "Config", $ConfigPath) -ForegroundColor $Script:ThemeBodyColor
-    Write-Host ("  {0,-24} {1}" -f "Launcher", $Launcher) -ForegroundColor $Script:ThemeBodyColor
-    Write-Host ("  {0,-24} {1} {2}" -f "Status", $statusIcon, $OverallStatus) -ForegroundColor $statusColor
-    Write-Host "──────────────────────────────────────────────────────────────────────────────" -ForegroundColor $Script:ThemeHeaderColor
-    Write-Host ("  {0,-24} {1}" -f "Requested", $InitialRequestedCount) -ForegroundColor $Script:ThemeBodyColor
-    Write-Host ("  {0,-24} {1}" -f "Attempted", $AttemptedCount) -ForegroundColor $Script:ThemeBodyColor
-    Write-Host ("  {0,-24} {1}" -f "Installed (net new)", $InstalledCount) -ForegroundColor $Script:ThemeBodyColor
-    Write-Host ("  {0,-24} {1}" -f "Already installed", $SkippedCount) -ForegroundColor $Script:ThemeBodyColor
-    Write-Host ("  {0,-24} {1}" -f "Auto dependencies queued", $AutoDependencyCount) -ForegroundColor $Script:ThemeBodyColor
-    Write-Host ("  {0,-24} {1}" -f "Unknown IDs", $UnknownCount) -ForegroundColor $Script:ThemeBodyColor
-    Write-Host ("  {0,-24} {1}" -f "Failed installs", $FailCount) -ForegroundColor $Script:ThemeBodyColor
-    Write-Host ("  {0,-24} {1}" -f "Edition skips", $EditionSkipCount) -ForegroundColor $Script:ThemeBodyColor
-    Write-Host ("  {0,-24} {1}" -f "Duplicates ignored", $DuplicateCount) -ForegroundColor $Script:ThemeBodyColor
-    Write-Host ("  {0,-24} {1}" -f "Invalid entries ignored", $InvalidCount) -ForegroundColor $Script:ThemeBodyColor
-    Write-Host "──────────────────────────────────────────────────────────────────────────────" -ForegroundColor $Script:ThemeHeaderColor
+    Write-EbkThemedHost -Text "Final Status Report" -Color $Script:ThemeHeaderColor
+    Write-EbkThemedHost -Text "──────────────────────────────────────────────────────────────────────────────" -Color $Script:ThemeHeaderColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Script", "IntelliJ Plugin Setup (Windows)") -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Mode", "--$Mode") -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Config", $ConfigPath) -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Launcher", $Launcher) -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1} {2}" -f "Status", $statusIcon, $OverallStatus) -Color $statusColor
+    Write-EbkThemedHost -Text "──────────────────────────────────────────────────────────────────────────────" -Color $Script:ThemeHeaderColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Requested", $InitialRequestedCount) -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Attempted", $AttemptedCount) -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Installed (net new)", $InstalledCount) -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Already installed", $SkippedCount) -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Auto dependencies queued", $AutoDependencyCount) -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Unknown IDs", $UnknownCount) -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Failed installs", $FailCount) -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Edition skips", $EditionSkipCount) -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Duplicates ignored", $DuplicateCount) -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Invalid entries ignored", $InvalidCount) -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text "──────────────────────────────────────────────────────────────────────────────" -Color $Script:ThemeHeaderColor
 
-    Write-Host "Net New Plugins Installed" -ForegroundColor $Script:ThemeHeaderColor
+    Write-EbkThemedHost -Text "Net New Plugins Installed" -Color $Script:ThemeHeaderColor
     if (-not $NetNewPlugins -or $NetNewPlugins.Count -eq 0) {
-        Write-Host "  No net-new plugins were installed in this run." -ForegroundColor $Script:ThemeBodyColor
+        Write-EbkThemedHost -Text "  No net-new plugins were installed in this run." -Color $Script:ThemeBodyColor
     } else {
-        foreach ($plugin in $NetNewPlugins) { Write-Host "  • $plugin" -ForegroundColor $Script:ThemeSuccessColor }
+        foreach ($plugin in $NetNewPlugins) { Write-EbkThemedHost -Text "  • $plugin" -Color $Script:ThemeSuccessColor }
     }
 
     Write-Host ""
-    Write-Host "Next Steps" -ForegroundColor $Script:ThemeHeaderColor
+    Write-EbkThemedHost -Text "Next Steps" -Color $Script:ThemeHeaderColor
     if (-not $DependencyOrder -or $DependencyOrder.Count -eq 0) {
-        Write-Host "  No missing dependencies were detected." -ForegroundColor $Script:ThemeBodyColor
+        Write-EbkThemedHost -Text "  No missing dependencies were detected." -Color $Script:ThemeBodyColor
     } else {
-        Write-Host "Suggested dependency entries to add to config/intellij.txt" -ForegroundColor $Script:ThemeHeaderColor
+        Write-EbkThemedHost -Text "Suggested dependency entries to add to config/intellij.txt" -Color $Script:ThemeHeaderColor
         Write-Host ("| {0,-40} | {1,-34} | {2,-40} |" -f "Plugin ID", "Required By", "Suggested Entry")
         Write-Host ("|-{0,-40}-|-{1,-34}-|-{2,-40}-|" -f ("-" * 40), ("-" * 34), ("-" * 40))
         foreach ($dep in $DependencyOrder) {
@@ -246,7 +246,7 @@ function Print-StructuredReport {
             $suggested = "community:$dep"
             Write-Host ("| {0,-40} | {1,-34} | {2,-40} |" -f $dep, $parent, $suggested)
         }
-        Write-Host "  Review and add the suggested entries if you want deterministic future installs." -ForegroundColor $Script:ThemeBodyColor
+        Write-EbkThemedHost -Text "  Review and add the suggested entries if you want deterministic future installs." -Color $Script:ThemeBodyColor
     }
 }
 
