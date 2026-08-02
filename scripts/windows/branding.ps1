@@ -67,42 +67,99 @@ function Initialize-EbkPaletteIfNeeded {
     }
 }
 
+function Test-EbkUnicodeOutput {
+    if ($env:EBK_ASCII -eq "1") {
+        return $false
+    }
+    if ($env:EBK_FORCE_UNICODE -eq "1") {
+        return $true
+    }
+
+    try {
+        return ([Console]::OutputEncoding.WebName -eq "utf-8")
+    } catch {
+        return $false
+    }
+}
+
+function Get-EbkGlyphs {
+    if (Test-EbkUnicodeOutput) {
+        return @{
+            Phase = [string][char]0x25C6
+            Info = [string][char]0x2139
+            Ok = [string][char]0x2713
+            Warn = [string][char]0x26A0
+            Error = [string][char]0x2716
+            Debug = [string][char]0x2022
+        }
+    }
+
+    return @{
+        Phase = ""
+        Info = ""
+        Ok = ""
+        Warn = ""
+        Error = ""
+        Debug = ""
+    }
+}
+
+function Format-EbkLogLine {
+    param(
+        [string]$Glyph,
+        [string]$Label,
+        [string]$Message
+    )
+
+    if ([string]::IsNullOrEmpty($Glyph)) {
+        return ("{0,-7} {1}" -f $Label, $Message)
+    }
+
+    return ("{0} {1,-5} {2}" -f $Glyph, $Label, $Message)
+}
+
 function Write-EbkPhase {
     param([string]$Message)
     Initialize-EbkPaletteIfNeeded
+    $glyphs = Get-EbkGlyphs
     Write-Host ""
-    Write-Host "◆ PHASE $Message" -ForegroundColor $script:EbPhase
+    Write-Host (Format-EbkLogLine -Glyph $glyphs.Phase -Label "PHASE" -Message $Message) -ForegroundColor $script:EbPhase
 }
 
 function Write-EbkInfo {
     param([string]$Message)
     Initialize-EbkPaletteIfNeeded
-    Write-Host "ℹ INFO  $Message" -ForegroundColor $script:EbInfo
+    $glyphs = Get-EbkGlyphs
+    Write-Host (Format-EbkLogLine -Glyph $glyphs.Info -Label "INFO" -Message $Message) -ForegroundColor $script:EbInfo
 }
 
 function Write-EbkOk {
     param([string]$Message)
     Initialize-EbkPaletteIfNeeded
-    Write-Host "✓ OK    $Message" -ForegroundColor $script:EbOk
+    $glyphs = Get-EbkGlyphs
+    Write-Host (Format-EbkLogLine -Glyph $glyphs.Ok -Label "OK" -Message $Message) -ForegroundColor $script:EbOk
 }
 
 function Write-EbkWarn {
     param([string]$Message)
     Initialize-EbkPaletteIfNeeded
-    Write-Host "⚠ WARN  $Message" -ForegroundColor $script:EbWarn
+    $glyphs = Get-EbkGlyphs
+    Write-Host (Format-EbkLogLine -Glyph $glyphs.Warn -Label "WARN" -Message $Message) -ForegroundColor $script:EbWarn
 }
 
 function Write-EbkError {
     param([string]$Message)
     Initialize-EbkPaletteIfNeeded
-    Write-Host "✖ ERROR $Message" -ForegroundColor $script:EbError
+    $glyphs = Get-EbkGlyphs
+    Write-Host (Format-EbkLogLine -Glyph $glyphs.Error -Label "ERROR" -Message $Message) -ForegroundColor $script:EbError
 }
 
 function Write-EbkDebug {
     param([string]$Message)
     if ($env:EBK_DEBUG -ne "1") { return }
     Initialize-EbkPaletteIfNeeded
-    Write-Host "• DEBUG $Message" -ForegroundColor $script:EbDebug
+    $glyphs = Get-EbkGlyphs
+    Write-Host (Format-EbkLogLine -Glyph $glyphs.Debug -Label "DEBUG" -Message $Message) -ForegroundColor $script:EbDebug
 }
 
 # Backward-compatible aliases used by existing scripts.
@@ -131,7 +188,7 @@ function Show-EbkBanner {
     $selectedTheme = Get-EbkTheme -Theme $Theme
     Set-EbkPalette -Theme $selectedTheme
     $contentWidth = 60
-    $tagline = "Works on my machine. And yours."
+    $tagline = "Works after coffee."
     $border = "+" + ("-" * ($contentWidth + 2)) + "+"
     $artLines = @(
         '     _                 _              _     ',
@@ -147,14 +204,8 @@ function Show-EbkBanner {
         $artLine = "| " + $line.PadRight($contentWidth) + " |"
         Write-Host $artLine -ForegroundColor $script:EbAccent
     }
-    if ($Host.UI.SupportsVirtualTerminal) {
-        $esc = [char]27
-        $taglineLine = "| " + $esc + "[1m" + $tagline.PadRight($contentWidth) + $esc + "[0m |"
-        Write-Host $taglineLine -ForegroundColor $script:EbText
-    } else {
-        $taglineLine = "| " + $tagline.PadRight($contentWidth) + " |"
-        Write-Host $taglineLine -ForegroundColor $script:EbText
-    }
+    $taglineLine = "| " + $tagline.PadRight($contentWidth) + " |"
+    Write-Host $taglineLine -ForegroundColor $script:EbText
     Write-Host $border -ForegroundColor $script:EbPrimary
     Write-EbkInfo ("{0} ({1} mode)" -f $ScriptName, $selectedTheme)
 }

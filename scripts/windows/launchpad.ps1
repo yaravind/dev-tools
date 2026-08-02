@@ -355,6 +355,43 @@ function Test-IsAdmin {
     }
 }
 
+function Resolve-AdminScope {
+    param([System.Collections.IDictionary]$Task)
+
+    $script:AdminBlockReason = ""
+    $script:AdminBlockFix = ""
+
+    if (-not $Task.Admin -or (Test-IsAdmin)) {
+        return 0
+    }
+
+    Write-Warn ("{0} is admin-scoped." -f $Task.Label)
+    if ($Task.AdminReason) {
+        Write-Info ("{0}" -f $Task.AdminReason)
+    }
+
+    if ($Yes -or -not [Environment]::UserInteractive) {
+        $script:AdminBlockReason = ("{0} installs or configures Windows components that require an elevated PowerShell session. Launchpad is running non-elevated, so continuing can trigger hidden prompts, failed installs, or a stalled child process." -f $Task.Label)
+        $script:AdminBlockFix = "Start PowerShell as Administrator, rerun this launchpad profile, or choose a profile without admin-scoped tasks such as ide-only."
+        Write-EbkError ("{0} requires an elevated PowerShell session." -f $Task.Label)
+        Write-EbkError ("Reason: {0}" -f $script:AdminBlockReason)
+        Write-EbkError ("Fix: {0}" -f $script:AdminBlockFix)
+        Write-EbkError "No child script was started."
+        return 1
+    }
+
+    $answer = Read-Host "Continue without elevated PowerShell? This may prompt, fail, or stall. (y/N)"
+    if ($answer -notmatch '^[Yy]$') {
+        $script:AdminBlockReason = "User did not approve running an admin-scoped task from a non-elevated PowerShell session."
+        $script:AdminBlockFix = "Rerun from an elevated PowerShell session or choose a profile without admin-scoped tasks."
+        Write-Warn ("Skipping {0} without elevated PowerShell." -f $Task.Label)
+        return 2
+    }
+
+    Write-Warn "Continuing without elevation because you explicitly confirmed it."
+    return 0
+}
+
 function Test-CommandExists {
     param([string]$Command)
     return $null -ne (Get-Command $Command -ErrorAction SilentlyContinue)
@@ -514,10 +551,31 @@ function Invoke-Task {
         return 0
     }
 
-    if ($task.Admin -and -not (Test-IsAdmin)) {
-        Write-Warn ("{0} is admin-scoped." -f $task.Label)
-        if ($task.AdminReason) { Write-Info $task.AdminReason }
-        Write-Warn "Current PowerShell session is not elevated. The child script may prompt, fail, or install only user-scoped items."
+    $adminStatus = Resolve-AdminScope -Task $task
+    if ($adminStatus -eq 2) {
+        $script:TaskStatus[$Id] = "skipped"
+        $script:TaskExit[$Id] = "-"
+        Add-Content -Path $logFile -Value "Launchpad status: skipped"
+        Add-Content -Path $logFile -Value ("Reason: {0}" -f $script:AdminBlockReason)
+        Add-Content -Path $logFile -Value ("Fix: {0}" -f $script:AdminBlockFix)
+        Add-Content -Path $logFile -Value "Child script started: no"
+        Add-Content -Path $logFile -Value ("Finished: {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz'))
+        Add-Content -Path $logFile -Value ("Duration seconds: {0}" -f [int]((Get-Date) - $started).TotalSeconds)
+        Add-Content -Path $logFile -Value "Exit code: skipped"
+        return 0
+    }
+    if ($adminStatus -ne 0) {
+        $script:TaskStatus[$Id] = "failed"
+        $script:TaskExit[$Id] = 1
+        Add-Content -Path $logFile -Value "Launchpad status: failed before script execution"
+        Add-Content -Path $logFile -Value "Error: elevated PowerShell session required."
+        Add-Content -Path $logFile -Value ("Reason: {0}" -f $script:AdminBlockReason)
+        Add-Content -Path $logFile -Value ("Fix: {0}" -f $script:AdminBlockFix)
+        Add-Content -Path $logFile -Value "Child script started: no"
+        Add-Content -Path $logFile -Value ("Finished: {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz'))
+        Add-Content -Path $logFile -Value ("Duration seconds: {0}" -f [int]((Get-Date) - $started).TotalSeconds)
+        Add-Content -Path $logFile -Value "Exit code: 1"
+        return 1
     }
 
     if (-not (Check-TaskReady -Id $Id)) {
