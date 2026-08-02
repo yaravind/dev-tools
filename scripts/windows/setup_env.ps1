@@ -80,7 +80,7 @@ $guiApps = @(
     @{ Id = "Microsoft.VisualStudioCode";        Description = "Visual Studio Code" },
     @{ Id = "Microsoft.Azure.StorageExplorer";   Description = "Microsoft Azure Storage Explorer" },
     @{ Id = "JGraph.Draw";                       Description = "Draw.io - online diagram software" },
-    @{ Id = "dbeaver.dbeaver";                   Description = "DBeaver Community - Free Universal Database Tool"; FallbackName = "DBeaver" },
+    @{ Id = "DBeaver.DBeaver.Community";         Description = "DBeaver Community - Free Universal Database Tool"; Source = "winget" },
     @{ Id = "ZedIndustries.Zed";                 Description = "Zed - multiplayer code editor" },
     @{ Id = "Ollama.Ollama";                     Description = "Manage local LLMs" },
     @{ Id = "SUSE.RancherDesktop";               Description = "Rancher Desktop - Kubernetes and container management on the desktop"; FallbackName = "Rancher Desktop" },
@@ -223,8 +223,8 @@ function Invoke-WingetInstall {
         $args += "--silent"
     }
 
-    & $script:WingetExe @args
-    return $LASTEXITCODE
+    & $script:WingetExe @args 2>&1 | Out-Host
+    return [int]$LASTEXITCODE
 }
 
 # Install a package via winget (idempotent - skips if already installed)

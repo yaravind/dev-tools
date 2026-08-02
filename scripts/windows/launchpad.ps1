@@ -521,6 +521,36 @@ function Confirm-Plan {
     return ($answer -match '^[Yy]$')
 }
 
+function Write-LaunchpadOutputLine {
+    param([AllowNull()][string]$Line)
+
+    if ($null -eq $Line) {
+        return
+    }
+
+    if (Get-Command Initialize-EbkPaletteIfNeeded -ErrorAction SilentlyContinue) {
+        Initialize-EbkPaletteIfNeeded
+    }
+
+    $color = $null
+    if ($Line -match '^\s*(?:\S+\s+)?(PHASE|INFO|OK|WARN|ERROR|DEBUG)\s+') {
+        switch ($matches[1]) {
+            "PHASE" { $color = $script:EbPhase }
+            "INFO" { $color = $script:EbInfo }
+            "OK" { $color = $script:EbOk }
+            "WARN" { $color = $script:EbWarn }
+            "ERROR" { $color = $script:EbError }
+            "DEBUG" { $color = $script:EbDebug }
+        }
+    }
+
+    if ($color) {
+        Write-Host $Line -ForegroundColor $color
+    } else {
+        Write-Host $Line
+    }
+}
+
 function Invoke-Task {
     param([string]$Id)
 
@@ -591,7 +621,11 @@ function Invoke-Task {
 
     $env:EBK_FORCE_COLOR = "1"
     $global:LASTEXITCODE = 0
-    & $command.File @($command.Args) 2>&1 | Tee-Object -FilePath $logFile -Append | Out-Host
+    & $command.File @($command.Args) 2>&1 | ForEach-Object {
+        $line = [string]$_
+        Add-Content -Path $logFile -Value $line
+        Write-LaunchpadOutputLine -Line $line
+    }
     $rc = if ($null -ne $LASTEXITCODE) { $LASTEXITCODE } else { 0 }
     $script:TaskExit[$Id] = $rc
 
