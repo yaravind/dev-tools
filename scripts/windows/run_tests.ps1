@@ -253,6 +253,97 @@ try {
     Add-DryRunFailure "DryRun FAILED: jenv_setup.ps1 - $_"
 }
 
+try {
+    Write-Info "MockRun: jenv_setup.ps1 accepts numbered JEnv choices"
+    $mockRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("dev-tools-mock-jenv-" + [Guid]::NewGuid().ToString("N"))
+    $mockJdk = Join-Path $mockRoot "jdk-21.0.12.8-hotspot"
+    $mockJdkBin = Join-Path $mockJdk "bin"
+    $previousJavaHome = $env:JAVA_HOME
+    $previousPath = $env:PATH
+    New-Item -ItemType Directory -Force -Path $mockJdkBin | Out-Null
+    New-Item -ItemType File -Force -Path (Join-Path $mockJdkBin "java.exe") | Out-Null
+
+    if ($IsWindows) {
+        Set-Content -LiteralPath (Join-Path $mockRoot "jenv.cmd") -Value @'
+@echo off
+if "%1"=="list" (
+  echo All available versions of java
+  echo.
+  echo name                  path
+  echo ----                  ----
+  echo -path                 C:\Program Files\Microsoft\jdk-11.0.30.7-hotspot
+  echo jdk-11.0.30.7-hotspot C:\Program Files\Microsoft\jdk-11.0.30.7-hotspot
+  echo jdk-17.0.20.8-hotspot C:\Program Files\Microsoft\jdk-17.0.20.8-hotspot
+  echo jdk-21.0.12.8-hotspot C:\Program Files\Microsoft\jdk-21.0.12.8-hotspot
+  echo All locally specified versions
+  exit /b 0
+)
+if "%1"=="add" exit /b 0
+if "%1"=="use" (
+  if "%2"=="jdk-21.0.12.8-hotspot" exit /b 0
+  exit /b 7
+)
+exit /b 0
+'@
+    } else {
+        $mockJenv = Join-Path $mockRoot "jenv"
+        Set-Content -LiteralPath $mockJenv -Value @'
+#!/usr/bin/env sh
+case "$1" in
+  list)
+    cat <<'EOF'
+All available versions of java
+
+name                  path
+----                  ----
+-path                 C:\Program Files\Microsoft\jdk-11.0.30.7-hotspot
+jdk-11.0.30.7-hotspot C:\Program Files\Microsoft\jdk-11.0.30.7-hotspot
+jdk-17.0.20.8-hotspot C:\Program Files\Microsoft\jdk-17.0.20.8-hotspot
+jdk-21.0.12.8-hotspot C:\Program Files\Microsoft\jdk-21.0.12.8-hotspot
+All locally specified versions
+EOF
+    exit 0
+    ;;
+  add)
+    exit 0
+    ;;
+  use)
+    if [ "$2" = "jdk-21.0.12.8-hotspot" ]; then
+      exit 0
+    fi
+    exit 7
+    ;;
+esac
+exit 0
+'@
+        Set-Content -LiteralPath (Join-Path $mockRoot "java") -Value '#!/usr/bin/env sh
+echo "mock java"
+'
+        chmod +x $mockJenv (Join-Path $mockRoot "java")
+    }
+    New-Item -ItemType File -Force -Path (Join-Path $mockRoot "java.bat") | Out-Null
+
+    $env:JAVA_HOME = $mockJdk
+    $env:PATH = "$mockRoot$([System.IO.Path]::PathSeparator)$previousPath"
+    $mockOutput = @(& (Join-Path $scriptDir "jenv_setup.ps1") -GlobalVersion 3 *>&1)
+    Test-LastExitCode "jenv_setup.ps1 mock JEnv choices" | Out-Null
+    $mockOutputText = $mockOutput -join "`n"
+    if ($mockOutputText -notmatch "Set global Java version to jdk-21\.0\.12\.8-hotspot") {
+        Add-DryRunFailure "jenv_setup.ps1 did not resolve numbered choice 3 to jdk-21.0.12.8-hotspot"
+    }
+    if ($mockOutputText -match "(?m)^\s+\d+\.\s+(-path|----)") {
+        Add-DryRunFailure "jenv_setup.ps1 displayed invalid JEnv choices from jenv list output"
+    }
+} catch {
+    Add-DryRunFailure "MockRun FAILED: jenv_setup.ps1 JEnv choice resolution - $_"
+} finally {
+    $env:JAVA_HOME = $previousJavaHome
+    $env:PATH = $previousPath
+    if ($mockRoot) {
+        Remove-Item -LiteralPath $mockRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 $vscodeConfig = Join-Path $repoRoot "config"
 $vscodeConfig = Join-Path $vscodeConfig "vscode.txt"
 if (Require-Config -Label "vscode_setup.ps1" -Path $vscodeConfig) {

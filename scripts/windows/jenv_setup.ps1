@@ -300,14 +300,94 @@ function Get-ManagedJenvVersions {
     }
 
     $output = @(jenv list 2>$null)
-    $versions = New-Object System.Collections.Generic.List[string]
+    $versions = New-Object System.Collections.Generic.List[object]
+    $inGlobalList = $false
     foreach ($line in $output) {
         $value = ($line -replace '^[\*\s]+', '').Trim()
-        if (-not [string]::IsNullOrWhiteSpace($value) -and $value -notmatch '^Available') {
-            [void]$versions.Add($value)
+        if ([string]::IsNullOrWhiteSpace($value)) {
+            continue
+        }
+        if ($value -match '^All available versions of java') {
+            $inGlobalList = $true
+            continue
+        }
+        if ($value -match '^All locally specified versions') {
+            break
+        }
+        if (-not $inGlobalList -or $value -match '^name\s+' -or $value -match '^-+\s+-+') {
+            continue
+        }
+
+        $name = $value
+        $path = ""
+        if ($value -match '^(\S+)\s+(.+)$') {
+            $name = $Matches[1]
+            $path = $Matches[2].Trim()
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($name) -and $name -ne "-path") {
+            [void]$versions.Add([PSCustomObject]@{
+                Name = $name
+                Path = $path
+            })
         }
     }
-    return @($versions)
+    return @($versions | Sort-Object Name -Unique)
+}
+
+function Resolve-JEnvVersionSelection {
+    param(
+        [string]$Selection,
+        [object[]]$Versions,
+        [switch]$RequireIndex
+    )
+
+    $value = $Selection.Trim()
+    if ($value -match '^\d+$') {
+        $index = [int]$value
+        if ($index -ge 1 -and $index -le $Versions.Count) {
+            return $Versions[$index - 1].Name
+        }
+
+        return $null
+    }
+
+    if ($RequireIndex) {
+        return $null
+    }
+
+    $exactName = @($Versions | Where-Object { $_.Name -eq $value })
+    if ($exactName.Count -eq 1) {
+        return $exactName[0].Name
+    }
+
+    $normalizedValue = $value.TrimEnd("\", "/")
+    $exactPath = @($Versions | Where-Object { $_.Path -and $_.Path.TrimEnd("\", "/") -eq $normalizedValue })
+    if ($exactPath.Count -eq 1) {
+        return $exactPath[0].Name
+    }
+
+    return $null
+}
+
+function Show-ManagedJenvChoices {
+    param([object[]]$Versions)
+
+    Write-Step "DISCOVER Available Java versions managed by jenv"
+    if ($Versions.Count -eq 0) {
+        Write-Warn "No managed JEnv versions were returned by 'jenv list'."
+        return
+    }
+
+    $index = 1
+    foreach ($version in $Versions) {
+        if ($version.Path) {
+            Write-Host ("  {0,2}. {1,-28} {2}" -f $index, $version.Name, $version.Path)
+        } else {
+            Write-Host ("  {0,2}. {1}" -f $index, $version.Name)
+        }
+        $index++
+    }
 }
 
 function Select-GlobalVersion {
@@ -323,31 +403,39 @@ function Select-GlobalVersion {
         return
     }
 
-    Write-Step "DISCOVER Available Java versions managed by jenv"
-    jenv list
+    Show-ManagedJenvChoices -Versions $versions
 
     if ($GlobalVersion) {
-        if ($versions -contains $GlobalVersion) {
-            $script:SelectedVersion = $GlobalVersion
+        $resolvedVersion = Resolve-JEnvVersionSelection -Selection $GlobalVersion -Versions $versions
+        if ($resolvedVersion) {
+            $script:SelectedVersion = $resolvedVersion
         } else {
-            Record-Failure "Version '$GlobalVersion' is not managed by jenv. Choose one from the list above."
+            Record-Failure "Selection '$GlobalVersion' is not a valid JEnv choice. Use the numbered list above or pass an exact JEnv name/path."
             return
         }
     } elseif ($Yes -or -not [Environment]::UserInteractive) {
         Write-Warn "No -GlobalVersion provided in non-interactive mode; skipping global Java version selection."
         return
     } else {
-        while ($true) {
-            $entered = Read-Host "Choose the version (from above) to set as global version"
+        $attempts = 0
+        while ($attempts -lt 5) {
+            $entered = Read-Host "Enter the number of the Java version to set as global"
+            $attempts++
             if ([string]::IsNullOrWhiteSpace($entered)) {
-                Write-Warn "No version entered."
+                Write-Warn "No selection entered."
                 continue
             }
-            if ($versions -contains $entered) {
-                $script:SelectedVersion = $entered
+            $resolvedVersion = Resolve-JEnvVersionSelection -Selection $entered -Versions $versions -RequireIndex
+            if ($resolvedVersion) {
+                $script:SelectedVersion = $resolvedVersion
                 break
             }
-            Write-Warn "Version '$entered' is not managed by jenv. Choose one from the list above."
+            Write-Warn "Selection '$entered' is not a valid number from the list above."
+        }
+
+        if (-not $script:SelectedVersion) {
+            Record-Failure "No valid JEnv version number was selected after 5 attempts."
+            return
         }
     }
 
