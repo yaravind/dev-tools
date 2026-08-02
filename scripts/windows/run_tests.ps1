@@ -217,6 +217,23 @@ if (-not $IsWindows) {
 }
 
 try {
+    Write-Info "StaticCheck: taskbar_setup.ps1 uses Taskbar verb and verifies pins"
+    $taskbarScriptPath = Join-Path $scriptDir "taskbar_setup.ps1"
+    $taskbarSource = Get-Content -Raw $taskbarScriptPath
+    if ($taskbarSource -notmatch 'InvokeVerb\("taskbarpin"\)') {
+        Add-DryRunFailure "taskbar_setup.ps1 does not invoke the Windows Taskbar pin verb."
+    }
+    if ($taskbarSource -notmatch 'function Test-PinnedEntry') {
+        Add-DryRunFailure "taskbar_setup.ps1 does not verify pinned entries after pinning."
+    }
+    if ($taskbarSource -match 'Copy-Item\s+-Path\s+\$shortcutPath\s+-Destination\s+\$destShortcut') {
+        Add-DryRunFailure "taskbar_setup.ps1 still treats copying a shortcut into the pinned folder as a successful pin."
+    }
+} catch {
+    Add-DryRunFailure "StaticCheck FAILED: taskbar_setup.ps1 Taskbar pin behavior - $_"
+}
+
+try {
     Write-Info "DryRun: git_setup.ps1"
     & (Join-Path $scriptDir "git_setup.ps1") -DryRun -Yes | Out-Null
     Test-LastExitCode "git_setup.ps1" | Out-Null

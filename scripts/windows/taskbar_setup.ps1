@@ -135,6 +135,99 @@ function Get-ShortcutTarget {
     }
 }
 
+function New-PinResult {
+    param(
+        [bool]$Success,
+        [bool]$Failure,
+        [string]$Message
+    )
+
+    return [pscustomobject]@{
+        Success = $Success
+        Failure = $Failure
+        Message = $Message
+    }
+}
+
+function Get-ShellFolderItem {
+    param([string]$Path)
+
+    $resolved = Resolve-Path -LiteralPath $Path -ErrorAction SilentlyContinue
+    if (-not $resolved) {
+        return $null
+    }
+
+    $folderPath = Split-Path -Parent $resolved.Path
+    $leaf = Split-Path -Leaf $resolved.Path
+    $shell = New-Object -ComObject Shell.Application
+    $folder = $shell.Namespace($folderPath)
+    if (-not $folder) {
+        return $null
+    }
+
+    return $folder.ParseName($leaf)
+}
+
+function Invoke-TaskbarPinVerb {
+    param([string]$Path)
+
+    $item = Get-ShellFolderItem -Path $Path
+    if (-not $item) {
+        return $false
+    }
+
+    try {
+        $item.InvokeVerb("taskbarpin")
+        return $true
+    } catch {
+        # Some Windows builds do not expose canonical verbs through InvokeVerb.
+    }
+
+    try {
+        foreach ($verb in $item.Verbs()) {
+            $verbName = ($verb.Name -replace "&", "").Trim()
+            if ($verbName -match "(?i)pin.*taskbar") {
+                $verb.DoIt()
+                return $true
+            }
+        }
+    } catch {
+        Write-DebugLog "Could not enumerate Taskbar verbs for $Path. $_"
+    }
+
+    return $false
+}
+
+function Test-PinnedEntry {
+    param(
+        [string]$TargetPath,
+        [string]$Arguments,
+        [string]$Name
+    )
+
+    if (-not (Test-Path $TaskbarPinnedDir)) {
+        return $false
+    }
+
+    $shortcuts = Get-ChildItem -Path $TaskbarPinnedDir -Filter "*.lnk" -ErrorAction SilentlyContinue
+    foreach ($shortcutFile in $shortcuts) {
+        $info = Get-ShortcutTarget -ShortcutPath $shortcutFile.FullName
+        if (-not $info) { continue }
+
+        if ($TargetPath -and $info.TargetPath -ieq $TargetPath) {
+            return $true
+        }
+        if ($Arguments -and $info.Arguments -match [Regex]::Escape($Arguments)) {
+            return $true
+        }
+        if ($Name -and $info.Name -ieq $Name) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
 function Remove-PinnedEntry {
     param(
         [string]$TargetPath,
@@ -215,13 +308,88 @@ function Resolve-StartMenuShortcut {
     return ($matches | Sort-Object FullName | Select-Object -First 1).FullName
 }
 
+function Get-AppInstallRoots {
+    $roots = New-Object System.Collections.Generic.List[string]
+    foreach ($root in @($env:ProgramFiles, ${env:ProgramFiles(x86)}, $env:LOCALAPPDATA, $env:ProgramData)) {
+        if ($root -and (Test-Path -LiteralPath $root)) {
+            [void]$roots.Add($root)
+        }
+    }
+    return $roots
+}
+
+function Resolve-InstalledAppPath {
+    param([string]$Name)
+
+    $patterns = @()
+    if ($Name -match "(?i)IntelliJ") {
+        if ($Name -match "(?i)Community") {
+            $patterns = @(
+                "JetBrains\IntelliJ IDEA Community Edition*\bin\idea64.exe",
+                "JetBrains\IntelliJ IDEA Community*\bin\idea64.exe"
+            )
+        } elseif ($Name -match "(?i)Ultimate") {
+            $patterns = @(
+                "JetBrains\IntelliJ IDEA Ultimate*\bin\idea64.exe",
+                "JetBrains\IntelliJ IDEA\bin\idea64.exe",
+                "JetBrains\IntelliJ IDEA*\bin\idea64.exe"
+            )
+        } else {
+            $patterns = @("JetBrains\IntelliJ IDEA*\bin\idea64.exe")
+        }
+    } elseif ($Name -match "(?i)PyCharm") {
+        if ($Name -match "(?i)Community") {
+            $patterns = @(
+                "JetBrains\PyCharm Community Edition*\bin\pycharm64.exe",
+                "JetBrains\PyCharm Community*\bin\pycharm64.exe"
+            )
+        } elseif ($Name -match "(?i)Professional") {
+            $patterns = @(
+                "JetBrains\PyCharm Professional*\bin\pycharm64.exe",
+                "JetBrains\PyCharm\bin\pycharm64.exe",
+                "JetBrains\PyCharm*\bin\pycharm64.exe"
+            )
+        } else {
+            $patterns = @("JetBrains\PyCharm*\bin\pycharm64.exe")
+        }
+    }
+
+    if ($patterns.Count -eq 0) {
+        return $null
+    }
+
+    $matches = New-Object System.Collections.Generic.List[object]
+    foreach ($root in Get-AppInstallRoots) {
+        foreach ($pattern in $patterns) {
+            Get-ChildItem -Path (Join-Path $root $pattern) -ErrorAction SilentlyContinue | ForEach-Object {
+                if ($Name -match "(?i)Ultimate|Professional" -and $_.FullName -match "(?i)Community") {
+                    return
+                }
+                [void]$matches.Add($_)
+            }
+        }
+    }
+
+    if ($matches.Count -eq 0) {
+        return $null
+    }
+
+    return ($matches | Sort-Object FullName | Select-Object -First 1).FullName
+}
+
 function Pin-StartMenuShortcutToTaskbar {
     param([string]$Name)
 
     $shortcutPath = Resolve-StartMenuShortcut -Name $Name
     if (-not $shortcutPath) {
-        Write-Warn "Start Menu shortcut not found: $Name"
-        return $false
+        $installedPath = Resolve-InstalledAppPath -Name $Name
+        if ($installedPath) {
+            Write-Info "Start Menu shortcut not found: $Name"
+            Write-Info "Resolved installed app path instead: $installedPath"
+            return Pin-PathToTaskbar -AppPath $installedPath
+        }
+
+        return New-PinResult -Success $false -Failure $false -Message "Start Menu shortcut not found: $Name"
     }
 
     return Pin-PathToTaskbar -AppPath $shortcutPath
@@ -231,8 +399,7 @@ function Pin-PathToTaskbar {
     param([string]$AppPath)
 
     if (-not (Test-Path $AppPath)) {
-        Write-Warn "$AppPath does not exist, skipping."
-        return $false
+        return New-PinResult -Success $false -Failure $false -Message "$AppPath does not exist, skipping."
     }
 
     if (-not (Test-Path $TaskbarPinnedDir)) {
@@ -242,19 +409,38 @@ function Pin-PathToTaskbar {
     $tempDir = Join-Path $env:TEMP "taskbar_pins"
     New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 
+    $pinSource = $AppPath
+    $targetPath = $AppPath
+    $arguments = ""
+    $name = [IO.Path]::GetFileNameWithoutExtension($AppPath)
+
     if ($AppPath.ToLower().EndsWith(".lnk")) {
-        $dest = Join-Path $TaskbarPinnedDir (Split-Path $AppPath -Leaf)
-        Copy-Item -Path $AppPath -Destination $dest -Force
-        return $true
+        $info = Get-ShortcutTarget -ShortcutPath $AppPath
+        if ($info) {
+            $targetPath = $info.TargetPath
+            $arguments = $info.Arguments
+            $name = $info.Name
+        }
+    } else {
+        $shortcutPath = Join-Path $tempDir ("{0}.lnk" -f $name)
+        Create-Shortcut -TargetPath $AppPath -Arguments "" -ShortcutPath $shortcutPath -WorkingDirectory (Split-Path $AppPath -Parent) -IconLocation $AppPath
+        $pinSource = $shortcutPath
     }
 
-    $name = [IO.Path]::GetFileNameWithoutExtension($AppPath)
-    $shortcutPath = Join-Path $tempDir ("{0}.lnk" -f $name)
-    Create-Shortcut -TargetPath $AppPath -Arguments "" -ShortcutPath $shortcutPath -WorkingDirectory (Split-Path $AppPath -Parent) -IconLocation $AppPath
+    if (Test-PinnedEntry -TargetPath $targetPath -Arguments $arguments -Name $name) {
+        return New-PinResult -Success $true -Failure $false -Message "Already pinned: $name"
+    }
 
-    $destShortcut = Join-Path $TaskbarPinnedDir (Split-Path $shortcutPath -Leaf)
-    Copy-Item -Path $shortcutPath -Destination $destShortcut -Force
-    return $true
+    if (-not (Invoke-TaskbarPinVerb -Path $pinSource)) {
+        return New-PinResult -Success $false -Failure $true -Message "Windows did not expose a Taskbar pin verb for $AppPath. This Windows build may block programmatic Taskbar pinning."
+    }
+
+    Start-Sleep -Milliseconds 750
+    if (Test-PinnedEntry -TargetPath $targetPath -Arguments $arguments -Name $name) {
+        return New-PinResult -Success $true -Failure $false -Message "Pinned: $name"
+    }
+
+    return New-PinResult -Success $false -Failure $true -Message "Taskbar pin command ran, but Windows did not report a pinned shortcut for $AppPath."
 }
 
 function Pin-AumidToTaskbar {
@@ -271,9 +457,20 @@ function Pin-AumidToTaskbar {
     $args = "shell:AppsFolder\$Aumid"
     Create-Shortcut -TargetPath "explorer.exe" -Arguments $args -ShortcutPath $shortcutPath -WorkingDirectory "" -IconLocation ""
 
-    $destShortcut = Join-Path $TaskbarPinnedDir (Split-Path $shortcutPath -Leaf)
-    Copy-Item -Path $shortcutPath -Destination $destShortcut -Force
-    return $true
+    if (Test-PinnedEntry -TargetPath "explorer.exe" -Arguments $args -Name "") {
+        return New-PinResult -Success $true -Failure $false -Message "Already pinned: $Aumid"
+    }
+
+    if (-not (Invoke-TaskbarPinVerb -Path $shortcutPath)) {
+        return New-PinResult -Success $false -Failure $true -Message "Windows did not expose a Taskbar pin verb for AUMID:$Aumid."
+    }
+
+    Start-Sleep -Milliseconds 750
+    if (Test-PinnedEntry -TargetPath "explorer.exe" -Arguments $args -Name "") {
+        return New-PinResult -Success $true -Failure $false -Message "Pinned: $Aumid"
+    }
+
+    return New-PinResult -Success $false -Failure $true -Message "Taskbar pin command ran, but Windows did not report a pinned shortcut for AUMID:$Aumid."
 }
 
 function Restart-Explorer {
@@ -329,7 +526,13 @@ if ($DryRun) {
             if ($shortcutPath) {
                 Write-Info "Resolved Start Menu shortcut: $shortcutPath"
             } else {
-                Write-Warn "Start Menu shortcut not found in dry-run: $shortcutName"
+                $installedPath = Resolve-InstalledAppPath -Name $shortcutName
+                if ($installedPath) {
+                    Write-Info "Start Menu shortcut not found in dry-run: $shortcutName"
+                    Write-Info "Resolved installed app path instead: $installedPath"
+                } else {
+                    Write-Warn "Start Menu shortcut not found in dry-run: $shortcutName"
+                }
             }
         }
     }
@@ -343,6 +546,7 @@ Backup-TaskbarPins
 $added = 0
 $skipped = 0
 $removed = 0
+$failed = 0
 
 try {
     foreach ($entry in $parsed.Remove) {
@@ -383,17 +587,47 @@ try {
 
         if ($entry.StartsWith("AUMID:", [StringComparison]::OrdinalIgnoreCase)) {
             $aumid = $entry.Substring(6)
-            if (Pin-AumidToTaskbar -Aumid $aumid) { $added++ } else { $skipped++ }
+            $result = Pin-AumidToTaskbar -Aumid $aumid
+            if ($result.Success) {
+                Write-Ok $result.Message
+                $added++
+            } elseif ($result.Failure) {
+                Write-EbkError $result.Message
+                $failed++
+            } else {
+                Write-Warn $result.Message
+                $skipped++
+            }
             continue
         }
 
         if ($entry.StartsWith("STARTMENU:", [StringComparison]::OrdinalIgnoreCase)) {
             $shortcutName = $entry.Substring(10)
-            if (Pin-StartMenuShortcutToTaskbar -Name $shortcutName) { $added++ } else { $skipped++ }
+            $result = Pin-StartMenuShortcutToTaskbar -Name $shortcutName
+            if ($result.Success) {
+                Write-Ok $result.Message
+                $added++
+            } elseif ($result.Failure) {
+                Write-EbkError $result.Message
+                $failed++
+            } else {
+                Write-Warn $result.Message
+                $skipped++
+            }
             continue
         }
 
-        if (Pin-PathToTaskbar -AppPath $entry) { $added++ } else { $skipped++ }
+        $result = Pin-PathToTaskbar -AppPath $entry
+        if ($result.Success) {
+            Write-Ok $result.Message
+            $added++
+        } elseif ($result.Failure) {
+            Write-EbkError $result.Message
+            $failed++
+        } else {
+            Write-Warn $result.Message
+            $skipped++
+        }
     }
 } catch {
     Write-EbkError "Taskbar update failed. $_"
@@ -406,4 +640,17 @@ Restart-Explorer
 Write-Ok "Added: $added"
 Write-Ok "Removed: $removed"
 Write-Warn "Skipped: $skipped"
+if ($failed -gt 0) {
+    Write-EbkError "Failed: $failed"
+    Write-EbkError "Taskbar setup could not pin every requested app. See the errors above for the Windows reason/fix."
+    exit 1
+}
+
+if ($parsed.Add.Count -gt 0 -and $added -eq 0) {
+    Write-EbkError "Failed: 0"
+    Write-EbkError "No requested Taskbar entries were pinned. Verify the apps are installed and the config names match Start Menu shortcuts or known install paths."
+    exit 1
+}
+
+Write-Ok "Failed: $failed"
 Write-Ok "Taskbar setup complete."
