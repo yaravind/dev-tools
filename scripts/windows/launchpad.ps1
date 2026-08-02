@@ -419,7 +419,8 @@ function Check-TaskReady {
             }
         }
         "clone_repos" {
-            if (-not (Test-Path -LiteralPath (if ($CloneRepoList) { $CloneRepoList } else { Join-Path $repoRoot "config\github-repos.txt" }))) {
+            $repoList = if ($CloneRepoList) { $CloneRepoList } else { Join-Path $repoRoot "config\github-repos.txt" }
+            if (-not (Test-Path -LiteralPath $repoList)) {
                 Write-EbkError "Repo list not found."
                 return $false
             }

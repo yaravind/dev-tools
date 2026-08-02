@@ -158,6 +158,15 @@ $repoListConfig = Join-Path $repoRoot "config"
 $repoListConfig = Join-Path $repoListConfig "github-repos.txt"
 if (Require-Config -Label "clone_github_repos.ps1" -Path $repoListConfig) {
     try {
+        Write-Info "DryRun: launchpad.ps1 full profile with clone task"
+        $cloneTarget = Join-Path ([System.IO.Path]::GetTempPath()) "dev-tools-launchpad-clone-test"
+        & (Join-Path $scriptDir "launchpad.ps1") -Profile full -DryRun -Yes -CloneRepoList $repoListConfig -CloneDestination $cloneTarget | Out-Null
+        Test-LastExitCode "launchpad.ps1 full profile" | Out-Null
+    } catch {
+        Add-DryRunFailure "DryRun FAILED: launchpad.ps1 full profile - $_"
+    }
+
+    try {
         Write-Info "DryRun: clone_github_repos.ps1"
         & (Join-Path $scriptDir "clone_github_repos.ps1") $repoListConfig "." -DryRun | Out-Null
         Test-LastExitCode "clone_github_repos.ps1" | Out-Null
