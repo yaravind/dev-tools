@@ -1,12 +1,13 @@
 # PyCharm plugin IDs (https://plugins.jetbrains.com)
 # One plugin ID per line. Blank lines and comments are ignored.
-# Prefix each line with `community:` or `professional:`
+# Prefix installable entries with `community:` or `professional:`.
+# Prefix non-installable documented entries with `bundled:` or `unavailable:`.
 
 # Community-compatible plugins
 community:com.github.copilot
 community:Key Promoter X
-community:org.jetbrains.plugins.github
-community:org.jetbrains.plugins.yaml
+bundled:org.jetbrains.plugins.github
+bundled:org.jetbrains.plugins.yaml
 community:com.intellij.mermaid
 community:mobi.hsz.idea.gitignore
 community:net.ashald.envfile
@@ -14,5 +15,5 @@ com.intellij.ml.llm
 io.agnix.jetbrains
 
 # Professional-only plugins (installed only in --professional mode)
-com.intellij.ml.llm.experimental
+unavailable:com.intellij.ml.llm.experimental
 ru.adelf.idea.dotenv

@@ -99,7 +99,7 @@ Use community mode when you are on IntelliJ Community Edition:
 zsh scripts/macos/intellij_setup.sh --community
 ```
 
-This script always prints available mode options first and prompts you to select a mode (`--ultimate` or `--community`). It reads plugin IDs from [config/intellij.txt](/Users/ayarram/Developer/dev-tools/config/intellij.txt), ignores blank/comment lines, validates IDs, and installs each plugin via IntelliJ's CLI (`idea installPlugins`). `--ultimate` installs both `community:` and `ultimate:` entries, while `--community` warns and skips `ultimate:` entries.
+This script always prints available mode options first and prompts you to select a mode (`--ultimate` or `--community`). It reads plugin IDs from [config/intellij.txt](/Users/ayarram/Developer/dev-tools/config/intellij.txt), ignores blank/comment lines, validates IDs, and installs each plugin via IntelliJ's CLI (`idea installPlugins`). `--ultimate` installs both `community:` and `ultimate:` entries, while `--community` warns and skips `ultimate:` entries. Use `bundled:` or `unavailable:` for documented plugin IDs that should not be installed through the JetBrains CLI.
 
 > Important: quit IntelliJ IDEA before running the script.
 
@@ -107,4 +107,4 @@ This script always prints available mode options first and prompts you to select
 
 1. Open the plugin page on JetBrains Marketplace.
 2. Scroll to **Additional Information**.
-3. Copy the **Plugin ID** value into [config/intellij.txt](/Users/ayarram/Developer/dev-tools/config/intellij.txt) and prefix it with either `community:` or `ultimate:`.
+3. Copy the **Plugin ID** value into [config/intellij.txt](/Users/ayarram/Developer/dev-tools/config/intellij.txt) and prefix it with `community:`, `ultimate:`, `bundled:`, or `unavailable:`.

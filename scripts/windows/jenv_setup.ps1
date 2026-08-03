@@ -460,7 +460,14 @@ function Verify-JEnvState {
     }
 
     if (Test-CommandExists "java") {
-        java -version
+        $javaOutput = @(java -version 2>&1)
+        $javaExitCode = $LASTEXITCODE
+        foreach ($line in $javaOutput) {
+            Write-Host $line
+        }
+        if ($javaExitCode -ne 0) {
+            Record-Failure "java -version failed after jenv setup with exit code $javaExitCode."
+        }
     } else {
         Record-Failure "java is not available in PATH after jenv setup."
     }
@@ -469,6 +476,17 @@ function Verify-JEnvState {
         Write-Ok "JAVA_HOME=$env:JAVA_HOME"
     } else {
         Write-Warn "JAVA_HOME is not set in this session. Restart PowerShell if JEnv-for-Windows changed user environment variables."
+    }
+
+    if ($IsWindows -and $script:SelectedVersion) {
+        $selected = @(Get-ManagedJenvVersions | Where-Object { $_.Name -eq $script:SelectedVersion } | Select-Object -First 1)
+        if ($selected.Count -gt 0 -and $selected[0].Path -and $env:JAVA_HOME) {
+            $expectedPath = $selected[0].Path.TrimEnd("\", "/")
+            $actualPath = $env:JAVA_HOME.TrimEnd("\", "/")
+            if ($actualPath -ine $expectedPath) {
+                Record-Failure "JAVA_HOME '$env:JAVA_HOME' does not match selected JEnv version '$script:SelectedVersion' at '$($selected[0].Path)'. Restart PowerShell or run jenv use again."
+            }
+        }
     }
 }
 
