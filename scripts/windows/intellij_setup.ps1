@@ -129,7 +129,7 @@ function Resolve-IntelliJCli {
 function Filter-PluginInstallOutput {
     param([string[]]$Lines)
     if (-not $Lines) { return @() }
-    $noisePattern = '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|^\s*plugin repositories:\s*\[null\]\s*$|^\s+at |^(java|kotlin)\.|^Caused by:|^WARNING:|^\s*$'
+    $noisePattern = '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|^\s*plugin repositories:\s*\[null\]\s*$|^\s+at |^(java|kotlin)\.|^Caused by:|^WARNING:|^You can resolve this by installing a distribution with the instructions below:$|^Use ''wsl\.exe --list --online'' to list available distributions$|^and ''wsl\.exe --install <Distro>'' to install\.$|^,\s*stderr=},\s*done in \d+\s*ms$|^\s*$'
     return @($Lines | Where-Object { $_ -notmatch $noisePattern })
 }
 
