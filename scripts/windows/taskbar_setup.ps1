@@ -508,17 +508,19 @@ Write-Step "Starting Taskbar setup (Windows)"
 Write-Info "Reading config: $ConfigPath"
 
 $parsed = Parse-Config -Path $ConfigPath
+$entriesToAdd = @($parsed["Add"])
+$entriesToRemove = @($parsed["Remove"])
 
-Write-Info "Items to add: $($parsed.Add.Count)"
-Write-Info "Items to remove: $($parsed.Remove.Count)"
+Write-Info "Items to add: $($entriesToAdd.Count)"
+Write-Info "Items to remove: $($entriesToRemove.Count)"
 
 if ($DryRun) {
     Write-Warn "DryRun enabled. No changes will be made."
     Write-Step "DryRun preview"
-    foreach ($entry in $parsed.Remove) {
+    foreach ($entry in $entriesToRemove) {
         Write-Info "Would remove: $entry"
     }
-    foreach ($entry in $parsed.Add) {
+    foreach ($entry in $entriesToAdd) {
         Write-Info "Would add: $entry"
         if ($entry.StartsWith("STARTMENU:", [StringComparison]::OrdinalIgnoreCase)) {
             $shortcutName = $entry.Substring(10)
@@ -549,7 +551,7 @@ $removed = 0
 $failed = 0
 
 try {
-    foreach ($entry in $parsed.Remove) {
+    foreach ($entry in $entriesToRemove) {
         if ($entry -match "^(?i)SPACER$") {
             Write-Warn "SPACER is not supported on Windows Taskbar. Skipping remove entry."
             $skipped++
@@ -578,7 +580,7 @@ try {
         $removed += Remove-PinnedEntry -TargetPath $path -Arguments "" -Name $name
     }
 
-    foreach ($entry in $parsed.Add) {
+    foreach ($entry in $entriesToAdd) {
         if ($entry -match "^(?i)SPACER$") {
             Write-Warn "SPACER is not supported on Windows Taskbar. Skipping."
             $skipped++
@@ -631,6 +633,12 @@ try {
     }
 } catch {
     Write-EbkError "Taskbar update failed. $_"
+    if ($_.InvocationInfo -and $_.InvocationInfo.PositionMessage) {
+        Write-EbkError $_.InvocationInfo.PositionMessage
+    }
+    if ($_.ScriptStackTrace) {
+        Write-EbkError "Stack trace: $($_.ScriptStackTrace)"
+    }
     Restore-TaskbarPins
     exit 1
 }
@@ -646,7 +654,7 @@ if ($failed -gt 0) {
     exit 1
 }
 
-if ($parsed.Add.Count -gt 0 -and $added -eq 0) {
+if ($entriesToAdd.Count -gt 0 -and $added -eq 0) {
     Write-EbkError "Failed: 0"
     Write-EbkError "No requested Taskbar entries were pinned. Verify the apps are installed and the config names match Start Menu shortcuts or known install paths."
     exit 1
