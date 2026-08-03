@@ -115,6 +115,7 @@ $guiApps = @(
 
 $script:InstallFailures = New-Object System.Collections.Generic.List[string]
 $script:InstallWarnings = New-Object System.Collections.Generic.List[string]
+$script:VerificationFailures = New-Object System.Collections.Generic.List[string]
 
 function Record-InstallFailure {
     param([string]$Message)
@@ -124,6 +125,12 @@ function Record-InstallFailure {
 function Record-InstallWarning {
     param([string]$Message)
     [void]$script:InstallWarnings.Add($Message)
+}
+
+function Record-VerificationFailure {
+    param([string]$Message)
+    Write-EbkError $Message
+    [void]$script:VerificationFailures.Add($Message)
 }
 
 # Check if a command exists in the current PATH
@@ -464,8 +471,9 @@ function Install-JEnv {
 
 function Write-SetupSummary {
     Write-Step "Windows setup summary"
-    Write-Host ("  Install failures: {0}" -f $script:InstallFailures.Count)
-    Write-Host ("  Warnings:         {0}" -f $script:InstallWarnings.Count)
+    Write-Host ("  Install failures:      {0}" -f $script:InstallFailures.Count)
+    Write-Host ("  Verification failures: {0}" -f $script:VerificationFailures.Count)
+    Write-Host ("  Warnings:              {0}" -f $script:InstallWarnings.Count)
 
     if ($script:InstallFailures.Count -gt 0) {
         Write-EbkError "Install failures recorded:"
@@ -480,6 +488,39 @@ function Write-SetupSummary {
             Write-Host ("  - {0}" -f $warning)
         }
     }
+
+    if ($script:VerificationFailures.Count -gt 0) {
+        Write-EbkError "Verification failures recorded:"
+        foreach ($failure in $script:VerificationFailures) {
+            Write-Host ("  - {0}" -f $failure)
+        }
+    }
+}
+
+function Invoke-VerificationCommand {
+    param(
+        [string]$Label,
+        [string]$Command,
+        [string[]]$Arguments = @(),
+        [string]$MissingMessage = ""
+    )
+
+    if (-not (Test-CommandExists $Command)) {
+        if (-not $MissingMessage) {
+            $MissingMessage = "$Label command '$Command' was not found in PATH."
+        }
+        Record-VerificationFailure $MissingMessage
+        return
+    }
+
+    $output = @(& $Command @Arguments 2>&1)
+    $exitCode = $LASTEXITCODE
+    foreach ($line in $output) {
+        Write-Host $line
+    }
+    if ($exitCode -ne 0) {
+        Record-VerificationFailure "$Label verification failed with exit code $exitCode."
+    }
 }
 
 # Verify that key tools installed correctly
@@ -490,21 +531,25 @@ function Invoke-Verify {
     & $script:WingetExe list
 
     Write-Info "Verify Git..."
-    if (Test-CommandExists "git") { git --version } else { Write-Warn "git not found in PATH. Restart your terminal." }
+    Invoke-VerificationCommand -Label "Git" -Command "git" -Arguments @("--version") -MissingMessage "git not found in PATH. Restart your terminal."
 
     Write-Info "Verify Java..."
-    if (Test-CommandExists "java") { java -version } else { Write-Warn "java not found in PATH. Restart your terminal." }
+    Invoke-VerificationCommand -Label "Java" -Command "java" -Arguments @("-version") -MissingMessage "java not found in PATH. Restart your terminal."
 
     Write-Info "Verify Maven..."
-    if (Test-CommandExists "mvn") { mvn -version } else { Write-Warn "mvn not found in PATH. Restart your terminal." }
+    Invoke-VerificationCommand -Label "Maven" -Command "mvn" -Arguments @("-version") -MissingMessage "mvn not found in PATH. Restart your terminal."
 
     Write-Info "Verify Python..."
-    if (Test-CommandExists "python") { python --version }
-    elseif (Test-CommandExists "python3") { python3 --version }
-    else { Write-Warn "python not found in PATH." }
+    if (Test-CommandExists "python") {
+        Invoke-VerificationCommand -Label "Python" -Command "python" -Arguments @("--version")
+    } elseif (Test-CommandExists "python3") {
+        Invoke-VerificationCommand -Label "Python" -Command "python3" -Arguments @("--version")
+    } else {
+        Record-VerificationFailure "python not found in PATH."
+    }
 
     Write-Info "Verify Node.js..."
-    if (Test-CommandExists "node") { node --version } else { Write-Warn "node not found in PATH. Restart your terminal." }
+    Invoke-VerificationCommand -Label "Node.js" -Command "node" -Arguments @("--version") -MissingMessage "node not found in PATH. Restart your terminal."
 
     Write-Info "Verify GitHub Copilot CLI..."
     if (Test-CommandExists "copilot") {
@@ -561,7 +606,7 @@ Set-JavaHome
 Invoke-Verify
 
 Write-SetupSummary
-if ($script:InstallFailures.Count -gt 0) {
+if (($script:InstallFailures.Count + $script:VerificationFailures.Count) -gt 0) {
     Write-EbkError "Windows developer environment setup completed with issues."
     exit 1
 }
