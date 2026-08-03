@@ -195,6 +195,7 @@ function Print-StructuredReport {
         [int]$UnknownCount,
         [int]$FailCount,
         [int]$EditionSkipCount,
+        [int]$DocumentedSkipCount,
         [int]$DuplicateCount,
         [int]$InvalidCount,
         [string[]]$NetNewPlugins,
@@ -222,6 +223,7 @@ function Print-StructuredReport {
     Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Unknown IDs", $UnknownCount) -Color $Script:ThemeBodyColor
     Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Failed installs", $FailCount) -Color $Script:ThemeBodyColor
     Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Edition skips", $EditionSkipCount) -Color $Script:ThemeBodyColor
+    Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Documented skips", $DocumentedSkipCount) -Color $Script:ThemeBodyColor
     Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Duplicates ignored", $DuplicateCount) -Color $Script:ThemeBodyColor
     Write-EbkThemedHost -Text ("  {0,-24} {1}" -f "Invalid entries ignored", $InvalidCount) -Color $Script:ThemeBodyColor
     Write-EbkThemedHost -Text "──────────────────────────────────────────────────────────────────────────────" -Color $Script:ThemeHeaderColor
@@ -281,6 +283,7 @@ $netNewPlugins = New-Object System.Collections.Generic.List[string]
 $duplicateCount = 0
 $invalidCount = 0
 $editionSkipCount = 0
+$documentedSkipCount = 0
 $autoDependencyCount = 0
 
 foreach ($line in Get-Content -Path $ConfigPath -ErrorAction Stop) {
@@ -290,9 +293,15 @@ foreach ($line in Get-Content -Path $ConfigPath -ErrorAction Stop) {
 
     $pluginEdition = "community"
     $pluginId = $entry
-    if ($entry -match '^(community|professional)\s*:\s*(.+)$') {
+    if ($entry -match '^(community|professional|bundled|unavailable)\s*:\s*(.+)$') {
         $pluginEdition = $Matches[1].ToLowerInvariant()
         $pluginId = $Matches[2].Trim()
+    }
+
+    if ($pluginEdition -in @("bundled", "unavailable")) {
+        Write-Warn "Skipping documented $pluginEdition plugin `"$pluginId`"."
+        $documentedSkipCount++
+        continue
     }
 
     if ($pluginEdition -eq "professional" -and $mode -eq "community") {
@@ -404,6 +413,7 @@ Print-StructuredReport `
     -UnknownCount $unknownCount `
     -FailCount $failCount `
     -EditionSkipCount $editionSkipCount `
+    -DocumentedSkipCount $documentedSkipCount `
     -DuplicateCount $duplicateCount `
     -InvalidCount $invalidCount `
     -NetNewPlugins @($netNewPlugins) `
