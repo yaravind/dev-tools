@@ -285,7 +285,7 @@ try {
 
     if ($IsWindows) {
         $mockJdkForBatch = $mockJdk -replace '/', '\'
-        Set-Content -LiteralPath (Join-Path $mockRoot "jenv.cmd") -Value @'
+        $jenvCmdContent = @'
 @echo off
 if "%1"=="list" (
   echo All available versions of java
@@ -306,6 +306,7 @@ if "%1"=="use" (
 )
 exit /b 0
 '@
+        Set-Content -LiteralPath (Join-Path $mockRoot "jenv.cmd") -Value $jenvCmdContent
         Set-Content -LiteralPath (Join-Path $mockRoot "java.bat") -Value @'
 @echo off
 echo mock java 1>&2
