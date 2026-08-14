@@ -23,11 +23,33 @@ Setting up a new machine is tedious. Hunting down the right tools, configuring s
 
 ## Setup Instructions
 
+Start with the macOS launchpad. It guides you through the available setup profiles and runs the right scripts in order.
+
+```console
+git clone https://github.com/yaravind/dev-tools.git
+cd dev-tools
+zsh scripts/macos/launchpad.sh
+```
+
+![macOS launchpad dark mode](assets/launchpad-dark.png)
+
+To preview the selected profile without making changes, run:
+
+```console
+zsh scripts/macos/launchpad.sh --dry-run
+```
+
+For script-by-script setup, platform-specific prerequisites, minimal Spark/Scala/Java setup, Windows setup, and rollback steps, see [Detailed Setup Instructions](#detailed-setup-instructions).
+
+## Detailed Setup Instructions
+
 - [macOS (Apple Silicon + Intel)](#macos-apple-silicon--intel)
-  - [Steps](#steps)
+  - [Full profile](#full-profile)
+  - [Manual mode](#manual-mode)
   - [Minimal setup for Spark/Scala/Java development](#minimal-setup-for-sparkscalajava-development)
 - [Windows (10/11)](#windows-1011)
-  - [Steps](#steps-1)
+  - [Launchpad](#launchpad)
+  - [Manual mode](#manual-mode-1)
   - [Minimal setup for Spark/Scala/Java development](#minimal-setup-for-sparkscalajava-development-1)
 
 ### macOS (Apple Silicon + Intel)
@@ -64,15 +86,17 @@ You can also install by just `git + Enter` in the shell.
 
 ![Xcode install](assets/xcode-install.png)
 
-#### Steps
+#### Full profile
 
 1. If your Mac is **managed (work or school)** then try to get an admin account and switch user. For e.g. if the admin
-   account is `admin_acct` then `su admin_acct` and enter the password for that account with higher privileges. Or you could use the 
+   account is `admin_acct` then `su admin_acct` and enter the password for that account with higher privileges.
 2. Install [Homebrew](https://brew.sh/) (**Pre-requisite**)
 3. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
 4. cd <kbd>dev-tools</kbd>
 5. Run the interactive launchpad and choose a setup profile: <kbd>zsh scripts/macos/launchpad.sh</kbd>
 6. To preview without making changes, run: <kbd>zsh scripts/macos/launchpad.sh --dry-run</kbd>
+
+#### Manual mode
 
 Manual mode is still available if you prefer one script at a time:
 
@@ -122,7 +146,7 @@ A lightweight bootstrap script (`scripts/macos/setup_env_min.sh`) is available f
 >   Windows 10
 > - PowerShell 5.1 or later (PowerShell 7+ recommended)
 
-#### Steps
+#### Launchpad
 
 1. Clone this repo: `git clone https://github.com/yaravind/dev-tools.git` or download as zip (**Pre-requisite**)
 2. Open **PowerShell as Administrator**
@@ -131,6 +155,8 @@ A lightweight bootstrap script (`scripts/macos/setup_env_min.sh`) is available f
 5. To preview without making changes, run: <kbd>.\scripts\windows\launchpad.cmd -DryRun</kbd>
 
 The `.cmd` launchers start PowerShell with a process-scoped execution-policy bypass. If you run `.ps1` files directly instead, use `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows\launchpad.ps1`.
+
+#### Manual mode
 
 Manual mode is still available if you prefer one script at a time:
 

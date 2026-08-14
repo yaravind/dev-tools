@@ -38,8 +38,11 @@ function Add-DryRunFailure {
 function Test-LastExitCode {
     param([string]$Label)
 
-    if ($global:LASTEXITCODE -ne 0 -and $null -ne $global:LASTEXITCODE) {
-        Add-DryRunFailure "$Label failed with exit code $global:LASTEXITCODE"
+    $exitCode = $global:LASTEXITCODE
+    $global:LASTEXITCODE = 0
+
+    if ($exitCode -ne 0 -and $null -ne $exitCode) {
+        Add-DryRunFailure "$Label failed with exit code $exitCode"
         return $false
     }
 
@@ -281,6 +284,7 @@ try {
     New-Item -ItemType File -Force -Path (Join-Path $mockJdkBin "java.exe") | Out-Null
 
     if ($IsWindows) {
+        $mockJdkForBatch = $mockJdk -replace '/', '\'
         Set-Content -LiteralPath (Join-Path $mockRoot "jenv.cmd") -Value @'
 @echo off
 if "%1"=="list" (
@@ -291,7 +295,7 @@ if "%1"=="list" (
   echo -path                 C:\Program Files\Microsoft\jdk-11.0.30.7-hotspot
   echo jdk-11.0.30.7-hotspot C:\Program Files\Microsoft\jdk-11.0.30.7-hotspot
   echo jdk-17.0.20.8-hotspot C:\Program Files\Microsoft\jdk-17.0.20.8-hotspot
-  echo jdk-21.0.12.8-hotspot C:\Program Files\Microsoft\jdk-21.0.12.8-hotspot
+'@ + "  echo jdk-21.0.12.8-hotspot $mockJdkForBatch`r`n" + @'
   echo All locally specified versions
   exit /b 0
 )

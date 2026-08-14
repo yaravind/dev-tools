@@ -1,7 +1,7 @@
 # IntelliJ IDEA plugin IDs (https://plugins.jetbrains.com)
 # One plugin ID per line. Blank lines and comments are ignored.
 # Prefix installable entries with `community:` or `ultimate:`.
-# Prefix non-installable documented entries with `bundled:` or `unavailable:`.
+# Use raw plugin IDs for entries that should be installed in both modes.
 
 # NOTES:
 # com.redhat.devtools.lsp4ij is needed by agnix
@@ -25,4 +25,4 @@ community:io.agnix.jetbrains
 
 # Ultimate-only plugins (installed only in --ultimate mode)
 ultimate:com.intellij.cron
-unavailable:com.intellij.ml.llm.experimental
+com.intellij.ml.llm.experimental
