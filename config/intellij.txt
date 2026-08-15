@@ -22,6 +22,7 @@ community:com.intellij.ml.llm
 community:com.fapiko.jetbrains.plugins.better_direnv
 community:com.redhat.devtools.lsp4ij
 community:io.agnix.jetbrains
+community:be.ajuvercr.swls
 
 # Ultimate-only plugins (installed only in --ultimate mode)
 ultimate:com.intellij.cron
