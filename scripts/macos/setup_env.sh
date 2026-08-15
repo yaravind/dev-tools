@@ -124,7 +124,7 @@ user_casks=(
   "dbeaver-community"         # Free Universal Database Tool
   "zed"                       # Multiplayer code editor
   "ollama"                    # Manage Local LLMs
-  #"protege"                   # OWL for ontologies and knowledge graph
+  "protege"                   # OWL for ontologies and knowledge graph
   #"bunch"                     # Automate tasks on your Mac
   #"alt-tab"                   # Alt-Tab is a window switcher for Mac
   #"hovrly"                    # Display and convert timezones time in different cities

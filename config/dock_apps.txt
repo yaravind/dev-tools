@@ -20,6 +20,7 @@
 /Users/ayarram/Applications/Tolaria.app
 /Users/ayarram/Applications/draw.io.app
 /Users/ayarram/Applications/Zed.app
+/Applications/Protégé.app
 /Users/ayarram/Applications/DBeaver.app
 /Users/ayarram/Applications/Rancher Desktop.app
 /Applications/ChatGPT.app
