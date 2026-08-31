@@ -17,6 +17,7 @@
 /Users/ayarram/Applications/IntelliJ IDEA.app
 /Users/ayarram/Applications/PyCharm.app
 /Users/ayarram/Applications/Visual Studio Code.app
+/Users/ayarram/Applications/Tad.app
 /Users/ayarram/Applications/Tolaria.app
 /Users/ayarram/Applications/draw.io.app
 /Users/ayarram/Applications/Zed.app
