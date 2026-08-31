@@ -7,7 +7,13 @@ ms-python.python
 ms-python.vscode-pylance
 ms-python.debugpy
 ms-azuretools.vscode-containers
-streetsidesoftware.code-spell-checker
+neonto.neonto
+ysgao.ontograph-lite
+stardog-union.stardog-rdf-grammars
+stardog-union.vscode-stardog-languages
+rdfox.rdfox-rdf
+faubulous.mentor
+regexflow.ontology-explorer
 tomoyukim.vscode-mermaid-editor
 mikestead.dotenv
 esbenp.prettier-vscode
