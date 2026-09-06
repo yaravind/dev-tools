@@ -94,7 +94,7 @@ formulae=(
   "llm"         # A CLI utility and Python library for interacting with Large Language Models. https://llm.datasette.io/en/stable/index.html
   "lnav"        # A robust log colorizer to tail logs:   tail -f your_log_file.log | ccze -A
   "powershell"  # PowerShell for Mac
-  #"hugo"        # Configurable fastest static site generator
+  "duckdb"      # DuckDB is an in-process SQL OLAP database management system
   "graphviz"    # Convert dot files to images
   "ripgrep"     # ripgrep recursively searches directories for a regex pattern while respecting your gitignore rules
   "dockutil"     # Command line tool for manipulating macOS Dock items to natively talk to Microsoft SQL Server and Sybase databases
