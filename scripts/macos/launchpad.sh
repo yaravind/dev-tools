@@ -33,7 +33,10 @@ typeset -A TASK_STATUS
 typeset -A TASK_LOG
 typeset -A TASK_EXIT
 typeset -A TASK_DURATION
+typeset -A TASK_CHILD_EXIT
 RUN_DURATION=""
+CURRENT_TASK=""
+typeset -F CURRENT_TASK_STARTED RUN_STARTED_AT
 
 clone_destination=""
 clone_repo_list=""
@@ -715,17 +718,75 @@ strip_ansi_for_log() {
   perl -pe 's/\e\][^\a]*(?:\a|\e\\)//g; s/\e\[[0-?]*[ -\/]*[@-~]//g'
 }
 
+capture_task_output() {
+  perl -e '
+    open my $log, ">>", $ARGV[0] or die "Cannot open task log: $!\n";
+    $| = 1;
+    while (my $line = <STDIN>) {
+      print STDOUT $line or die "Cannot display task output: $!\n";
+      $line =~ s/\e\][^\a]*(?:\a|\e\\)//g;
+      $line =~ s/\e\[[0-?]*[ -\/]*[@-~]//g;
+      print $log $line or die "Cannot write task log: $!\n";
+    }
+    close $log or die "Cannot close task log: $!\n";
+  ' "$1"
+}
+
+fail_task() {
+  local id="$1" message="$2" rc="${3:-1}"
+  TASK_STATUS[$id]="failed"
+  TASK_EXIT[$id]="$rc"
+  record_failure_reason "$message"
+  if [[ -n "${TASK_LOG[$id]:-}" && -f "${TASK_LOG[$id]}" ]]; then
+    printf 'Launchpad status: failed\nError: %s\n' "$message" >> "${TASK_LOG[$id]}" ||
+      log_error "Could not record failure in ${TASK_LOG[$id]}."
+  fi
+}
+
+handle_run_signal() {
+  local rc="$1"
+  trap - INT TERM EXIT
+  if [[ -n "$CURRENT_TASK" ]]; then
+    printf -v "TASK_DURATION[$CURRENT_TASK]" '%.5f' "$((SECONDS - CURRENT_TASK_STARTED))"
+    fail_task "$CURRENT_TASK" "Launchpad task interrupted or aborted." "$rc"
+    if [[ -n "${TASK_LOG[$CURRENT_TASK]:-}" && -f "${TASK_LOG[$CURRENT_TASK]}" ]]; then
+      printf 'Duration seconds: %s\n' "${TASK_DURATION[$CURRENT_TASK]}" >> "${TASK_LOG[$CURRENT_TASK]}" ||
+        log_error "Cannot finalize interrupted task log."
+    fi
+  fi
+  printf -v RUN_DURATION '%.5f' "$((SECONDS - RUN_STARTED_AT))"
+  print_summary
+  exit "$rc"
+}
+
 run_task() {
   local id="$1"
   local -F started_at="$SECONDS"
   local rc
 
+  CURRENT_TASK="$id"
+  CURRENT_TASK_STARTED="$started_at"
+  LAST_ERROR=""
+  unset "TASK_CHILD_EXIT[$id]" "TASK_LOG[$id]"
+  TASK_STATUS[$id]="running"
+  TASK_EXIT[$id]="-"
   run_task_impl "$id"
   rc=$?
+  if [[ "$rc" -ne 0 && "${TASK_STATUS[$id]:-}" != "failed" ]]; then
+    local failure_rc="${TASK_CHILD_EXIT[$id]:-$rc}"
+    (( failure_rc == 0 )) && failure_rc=1
+    fail_task "$id" "${LAST_ERROR:-Task preparation or logging failed for ${TASK_LABEL[$id]}.}" "$failure_rc"
+    rc="$failure_rc"
+  fi
   printf -v "TASK_DURATION[$id]" '%.5f' "$((SECONDS - started_at))"
   if [[ -n "${TASK_LOG[$id]:-}" && -f "${TASK_LOG[$id]}" ]]; then
-    printf 'Duration seconds: %s\n' "${TASK_DURATION[$id]}" >> "${TASK_LOG[$id]}"
+    if ! printf 'Duration seconds: %s\n' "${TASK_DURATION[$id]}" >> "${TASK_LOG[$id]}"; then
+      rc="${TASK_CHILD_EXIT[$id]:-1}"
+      (( rc == 0 )) && rc=1
+      fail_task "$id" "Cannot finalize task log: ${TASK_LOG[$id]}" "$rc"
+    fi
   fi
+  CURRENT_TASK=""
   return "$rc"
 }
 
@@ -733,10 +794,10 @@ run_task_impl() {
   local id="$1"
   local log_file="${RUN_ROOT}/${id}.log"
   local rc
+  local -a pipeline_codes
 
   build_command "$id" || {
-    TASK_STATUS[$id]="failed"
-    TASK_EXIT[$id]=1
+    fail_task "$id" "Cannot construct command for ${TASK_LABEL[$id]}."
     return 1
   }
 
@@ -745,7 +806,10 @@ run_task_impl() {
   log_step "Running ${TASK_LABEL[$id]}"
   log_info "Log file: ${log_file}"
 
-  mkdir -p "$RUN_ROOT" || return 1
+  mkdir -p "$RUN_ROOT" || {
+    fail_task "$id" "Cannot create log directory: $RUN_ROOT"
+    return 1
+  }
   {
     printf 'Launchpad task log\n'
     printf 'Task id: %s\n' "$id"
@@ -755,7 +819,10 @@ run_task_impl() {
     print_command "$id"
     printf 'Log file: %s\n' "$log_file"
     printf '\n'
-  } > "$log_file"
+  } > "$log_file" || {
+    fail_task "$id" "Cannot create task log: $log_file"
+    return 1
+  }
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
     TASK_STATUS[$id]="planned"
@@ -766,7 +833,7 @@ run_task_impl() {
       printf 'Launchpad status: planned dry-run\n'
       printf 'Finished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
       printf 'Exit code: planned\n'
-    } >> "$log_file"
+    } >> "$log_file" || return 1
     return 0
   fi
 
@@ -779,7 +846,7 @@ run_task_impl() {
       printf 'Reason: admin privileges were not approved for this step.\n'
       printf 'Finished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
       printf 'Exit code: skipped\n'
-    } >> "$log_file"
+    } >> "$log_file" || return 1
     TASK_EXIT[$id]="-"
     return 0
   elif [[ "$rc" -ne 0 ]]; then
@@ -790,7 +857,7 @@ run_task_impl() {
       [[ -n "$LAST_ERROR" ]] && printf 'Error: %s\n' "$LAST_ERROR"
       printf 'Finished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
       printf 'Exit code: %d\n' "$rc"
-    } >> "$log_file"
+    } >> "$log_file" || return 1
     return "$rc"
   fi
 
@@ -802,25 +869,32 @@ run_task_impl() {
       [[ -n "$LAST_ERROR" ]] && printf 'Error: %s\n' "$LAST_ERROR"
       printf 'Finished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
       printf 'Exit code: 1\n'
-    } >> "$log_file"
+    } >> "$log_file" || return 1
     return 1
   fi
 
-  EBK_FORCE_COLOR=1 "${cmd[@]}" 2>&1 | tee >(strip_ansi_for_log >> "$log_file")
-  rc=${pipestatus[1]}
+  EBK_FORCE_COLOR=1 "${cmd[@]}" 2>&1 | capture_task_output "$log_file"
+  pipeline_codes=("${pipestatus[@]}")
+  rc="${pipeline_codes[1]}"
+  TASK_CHILD_EXIT[$id]="$rc"
   TASK_EXIT[$id]="$rc"
+  if [[ "${pipeline_codes[2]}" -ne 0 ]]; then
+    (( rc == 0 )) && rc=1
+    fail_task "$id" "Task output capture failed; child exit code: ${TASK_CHILD_EXIT[$id]}." "$rc"
+    return "$rc"
+  fi
 
   {
     printf '\nFinished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
     printf 'Exit code: %d\n' "$rc"
-  } >> "$log_file"
+  } >> "$log_file" || return 1
 
   if [[ "$id" == "dock_setup" && "$rc" -eq 75 ]]; then
     TASK_STATUS[$id]="skipped"
     {
       printf 'Launchpad status: skipped\n'
       printf 'Reason: user skipped the Dock changes after reviewing the plan.\n'
-    } >> "$log_file"
+    } >> "$log_file" || return 1
     log_warn "${TASK_LABEL[$id]} skipped by user."
     return 0
   fi
@@ -829,7 +903,8 @@ run_task_impl() {
     if ! refresh_install_environment "$id"; then
       TASK_STATUS[$id]="failed"
       TASK_EXIT[$id]=1
-      printf 'Launchpad status: failed environment refresh\nError: %s\n' "$LAST_ERROR" >> "$log_file"
+      printf 'Launchpad status: failed environment refresh\nError: %s\n' "$LAST_ERROR" >> "$log_file" ||
+        log_error "Cannot write environment refresh failure to $log_file."
       return 1
     fi
     TASK_STATUS[$id]="success"
@@ -990,7 +1065,7 @@ print_summary() {
     log_warn "Tasks completed with issues"
     for id in "${TASK_ORDER[@]}"; do
       [[ "${TASK_STATUS[$id]:-}" == "issues" ]] || continue
-      printf "  - %s: review %s\n" "${TASK_LABEL[$id]}" "${TASK_LOG[$id]}"
+      printf "  - %s: review %s\n" "${TASK_LABEL[$id]}" "${TASK_LOG[$id]:-not-created}"
     done
   fi
 
@@ -999,7 +1074,7 @@ print_summary() {
     log_error "Tasks failed"
     for id in "${TASK_ORDER[@]}"; do
       [[ "${TASK_STATUS[$id]:-}" == "failed" ]] || continue
-      printf "  - %s: review %s\n" "${TASK_LABEL[$id]}" "${TASK_LOG[$id]}"
+      printf "  - %s: review %s\n" "${TASK_LABEL[$id]}" "${TASK_LOG[$id]:-not-created}"
     done
   fi
 
@@ -1023,10 +1098,14 @@ main() {
     exit 0
   fi
 
-  local -F run_started_at="$SECONDS"
+  RUN_STARTED_AT="$SECONDS"
+  trap 'handle_run_signal 130' INT
+  trap 'handle_run_signal 143' TERM
+  trap 'handle_run_signal $?' EXIT
   run_selected_tasks
   local rc=$?
-  printf -v RUN_DURATION '%.5f' "$((SECONDS - run_started_at))"
+  trap - INT TERM EXIT
+  printf -v RUN_DURATION '%.5f' "$((SECONDS - RUN_STARTED_AT))"
   print_summary
   return "$rc"
 }

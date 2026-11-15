@@ -15,6 +15,8 @@ Both launchpad summaries include a `Time (s)` column and overall execution time,
 
 After successful installation phases, launchpad refreshes its own tool environment before starting subsequent tasks. macOS resolves the Homebrew prefix and adds its binary directories; Windows merges persisted machine/user PATH entries with existing session entries and refreshes persisted JAVA_HOME. Refresh failures are reported as task failures.
 
+Launchpad treats log creation/write errors and child-start/output-capture errors as failures, not successful installs. Child exit codes are retained separately from infrastructure errors. Task timing is finalized on failure; Windows finalizes the overall summary in `finally`, and macOS prints an interrupted-run summary on SIGINT/SIGTERM (exit 130/143). Forced process termination cannot guarantee a final summary.
+
 In interactive terminals, these prompts prefill the default as editable text after the prompt. Press Enter to accept it, or edit it using Backspace/Delete and the arrow keys (Home/End move within the value). The Dock prompt prefills `skip`. Redirected input continues to accept a blank line for the default.
 
 On macOS, editable prompts use the terminal directly even when launchpad pipes child-script output into its logs. Prompt editing is not captured in those logs; script results are still logged.

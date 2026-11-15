@@ -49,6 +49,7 @@ $script:TaskStatus = @{}
 $script:TaskExit = @{}
 $script:TaskLog = @{}
 $script:TaskDuration = @{}
+$script:TaskChildExit = @{}
 $script:RunDuration = "-"
 
 function Test-CanPrompt {
@@ -591,14 +592,70 @@ function Invoke-Task {
     param([string]$Id)
 
     $timer = [System.Diagnostics.Stopwatch]::StartNew()
+    $ErrorActionPreference = "Stop"
+    $result = 1
+    $script:TaskChildExit.Remove($Id)
+    $script:TaskLog.Remove($Id)
+    $script:TaskStatus[$Id] = "running"
+    $script:TaskExit[$Id] = "-"
     try {
-        return (Invoke-TaskCore -Id $Id)
+        $result = Invoke-TaskCore -Id $Id
+    } catch {
+        Set-TaskFailure -Id $Id -Message "Task execution or logging failed: $_"
+        $result = $script:TaskExit[$Id]
     } finally {
         $timer.Stop()
         $script:TaskDuration[$Id] = $timer.Elapsed.TotalSeconds.ToString("F5", [Globalization.CultureInfo]::InvariantCulture)
         if ($script:TaskLog.ContainsKey($Id) -and (Test-Path -LiteralPath $script:TaskLog[$Id])) {
-            Add-Content -Path $script:TaskLog[$Id] -Value ("Duration seconds: {0}" -f $script:TaskDuration[$Id])
+            try {
+                Add-Content -LiteralPath $script:TaskLog[$Id] -Value ("Duration seconds: {0}" -f $script:TaskDuration[$Id]) -ErrorAction Stop
+            } catch {
+                Set-TaskFailure -Id $Id -Message "Cannot finalize task log: $_"
+                $result = $script:TaskExit[$Id]
+            }
         }
+    }
+    return $result
+}
+
+function Set-TaskFailure {
+    param([string]$Id, [string]$Message)
+    $script:TaskStatus[$Id] = "failed"
+    $rc = if ($script:TaskChildExit.ContainsKey($Id) -and $script:TaskChildExit[$Id] -ne 0) {
+        $script:TaskChildExit[$Id]
+    } else { 1 }
+    $script:TaskExit[$Id] = $rc
+    Write-EbkError $Message
+    if ($script:TaskLog.ContainsKey($Id) -and (Test-Path -LiteralPath $script:TaskLog[$Id])) {
+        try {
+            Add-Content -LiteralPath $script:TaskLog[$Id] -Value "Launchpad status: failed`nError: $Message" -ErrorAction Stop
+        } catch {
+            Write-EbkError "Could not record task failure in the log: $_"
+        }
+    }
+}
+
+function Invoke-ChildTask {
+    param([string]$Id, [hashtable]$Command, [string]$LogFile)
+    $application = Get-Command $Command.File -CommandType Application -ErrorAction Stop
+    $previousColor = $env:EBK_FORCE_COLOR
+    # Windows PowerShell represents native stderr as ErrorRecords, even for warnings.
+    $ErrorActionPreference = "Continue"
+    $PSNativeCommandUseErrorActionPreference = $false
+    try {
+        $env:EBK_FORCE_COLOR = "1"
+        $global:LASTEXITCODE = $null
+        & $application.Source @($Command.Args) 2>&1 | ForEach-Object {
+            $line = [string]$_
+            Add-Content -LiteralPath $LogFile -Value $line -ErrorAction Stop
+            Write-LaunchpadOutputLine -Line $line
+        }
+        if ($null -eq $LASTEXITCODE) { throw "Child process did not provide an exit code." }
+        $script:TaskChildExit[$Id] = $LASTEXITCODE
+        return $LASTEXITCODE
+    } finally {
+        $env:EBK_FORCE_COLOR = $previousColor
+        if ($null -ne $LASTEXITCODE) { $script:TaskChildExit[$Id] = $LASTEXITCODE }
     }
 }
 
@@ -666,14 +723,7 @@ function Invoke-TaskCore {
         return 1
     }
 
-    $env:EBK_FORCE_COLOR = "1"
-    $global:LASTEXITCODE = 0
-    & $command.File @($command.Args) 2>&1 | ForEach-Object {
-        $line = [string]$_
-        Add-Content -Path $logFile -Value $line
-        Write-LaunchpadOutputLine -Line $line
-    }
-    $rc = if ($null -ne $LASTEXITCODE) { $LASTEXITCODE } else { 0 }
+    $rc = Invoke-ChildTask -Id $Id -Command $command -LogFile $logFile
     $script:TaskExit[$Id] = $rc
 
     Add-Content -Path $logFile -Value ""
@@ -805,6 +855,21 @@ function Print-Summary {
     Print-ProblemDetails
 }
 
+function Invoke-LaunchpadRun {
+    $runTimer = [System.Diagnostics.Stopwatch]::StartNew()
+    $result = 1
+    try {
+        $result = Invoke-SelectedTasks
+    } catch {
+        Write-EbkError "Launchpad execution failed: $_"
+    } finally {
+        $runTimer.Stop()
+        $script:RunDuration = $runTimer.Elapsed.TotalSeconds.ToString("F5", [Globalization.CultureInfo]::InvariantCulture)
+        Print-Summary
+    }
+    return $result
+}
+
 Register-Tasks
 
 if (-not $Profile) {
@@ -825,9 +890,5 @@ if (-not (Confirm-Plan)) {
     exit 0
 }
 
-$runTimer = [System.Diagnostics.Stopwatch]::StartNew()
-$result = Invoke-SelectedTasks
-$runTimer.Stop()
-$script:RunDuration = $runTimer.Elapsed.TotalSeconds.ToString("F5", [Globalization.CultureInfo]::InvariantCulture)
-Print-Summary
+$result = Invoke-LaunchpadRun
 exit $result
