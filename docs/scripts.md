@@ -25,6 +25,8 @@ Each invocation exclusively reserves its log directory before displaying the run
 
 Windows child output uses one append-mode UTF-8 writer per invocation instead of opening the log for every line. Lines are flushed immediately, rendering is initialized once, and the writer is disposed even on failure. The previous color environment is restored after each child.
 
+Selected task commands are resolved once before the plan is displayed, including generated backup paths. The same executable and argument arrays are used for execution and logs; displayed commands use zsh escaping or PowerShell single-quoted literals with the call operator. Command text is never evaluated to execute a task.
+
 In interactive terminals, these prompts prefill the default as editable text after the prompt. Press Enter to accept it, or edit it using Backspace/Delete and the arrow keys (Home/End move within the value). The Dock prompt prefills `skip`. Redirected input continues to accept a blank line for the default.
 
 On macOS, editable prompts use the terminal directly even when launchpad pipes child-script output into its logs. Prompt editing is not captured in those logs; script results are still logged.

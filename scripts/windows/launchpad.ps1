@@ -53,6 +53,7 @@ $script:TaskLog = @{}
 $script:TaskDuration = @{}
 $script:TaskChildExit = @{}
 $script:TaskBlockReason = @{}
+$script:TaskCommands = @{}
 $script:RunDuration = "-"
 
 function Test-CanPrompt {
@@ -387,9 +388,26 @@ function Get-TaskCommand {
 function Format-Command {
     param([hashtable]$Command)
     $parts = @($Command.File) + @($Command.Args)
-    return ($parts | ForEach-Object {
-        if ($_ -match '\s') { '"' + ($_ -replace '"', '\"') + '"' } else { $_ }
-    }) -join " "
+    return "& " + (($parts | ForEach-Object {
+        "'" + ([string]$_).Replace("'", "''") + "'"
+    }) -join " ")
+}
+
+function Freeze-TaskCommands {
+    $script:TaskCommands = @{}
+    foreach ($id in $script:TaskOrder) {
+        if (-not $script:Selected.ContainsKey($id)) { continue }
+        $command = Get-TaskCommand -Id $id
+        $script:TaskCommands[$id] = @{ File = $command.File; Args = @($command.Args) }
+    }
+}
+
+function Get-ResolvedTaskCommand {
+    param([string]$Id)
+    if ($script:TaskCommands -and $script:TaskCommands.ContainsKey($Id)) {
+        return $script:TaskCommands[$Id]
+    }
+    return (Get-TaskCommand -Id $Id)
 }
 
 function Test-IsAdmin {
@@ -572,7 +590,7 @@ function Print-Plan {
     foreach ($id in $script:TaskOrder) {
         if (-not $script:Selected.ContainsKey($id)) { continue }
         $task = $script:Tasks[$id]
-        $command = Get-TaskCommand -Id $id
+        $command = Get-ResolvedTaskCommand -Id $id
         $labels = New-Object System.Collections.Generic.List[string]
         if ($task.Admin) { [void]$labels.Add("[admin]") }
         if ($task.SoftFail) { [void]$labels.Add("[continues-on-issues]") }
@@ -718,7 +736,7 @@ function Invoke-TaskCore {
     Write-Info "Log file: $logFile"
 
     New-Item -ItemType Directory -Path $runRoot -Force | Out-Null
-    $command = Get-TaskCommand -Id $Id
+    $command = Get-ResolvedTaskCommand -Id $Id
     @(
         "Launchpad task log"
         "Task id: $Id"
@@ -938,6 +956,7 @@ try {
     Prompt-OptionalTasks
     Prompt-TaskValues
     $runRoot = New-LaunchpadRunDirectory
+    Freeze-TaskCommands
     Print-Plan
     if (-not (Confirm-Plan)) {
         Write-Warn "Launchpad run canceled."

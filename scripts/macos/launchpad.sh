@@ -36,6 +36,7 @@ typeset -A TASK_EXIT
 typeset -A TASK_DURATION
 typeset -A TASK_CHILD_EXIT
 typeset -A TASK_BLOCK_REASON
+typeset -A TASK_COMMAND_FROZEN
 RUN_DURATION=""
 CURRENT_TASK=""
 typeset -F CURRENT_TASK_STARTED RUN_STARTED_AT
@@ -453,6 +454,31 @@ prompt_task_values() {
 }
 
 build_command() {
+  local id="$1" command_name="TASK_COMMAND_$1"
+  if [[ -n "${TASK_COMMAND_FROZEN[$id]:-}" ]]; then
+    cmd=("${(@P)command_name}")
+    return 0
+  fi
+  build_task_command "$id"
+}
+
+freeze_task_commands() {
+  local id command_name
+  TASK_COMMAND_FROZEN=()
+  for id in "${TASK_ORDER[@]}"; do
+    [[ -n "${SELECTED[$id]:-}" ]] || continue
+    build_task_command "$id" || {
+      log_error "Cannot construct selected task command: $id"
+      return 1
+    }
+    command_name="TASK_COMMAND_$id"
+    typeset -ga "$command_name"
+    set -A "$command_name" "${cmd[@]}"
+    TASK_COMMAND_FROZEN[$id]=1
+  done
+}
+
+build_task_command() {
   local id="$1"
   cmd=()
 
@@ -1181,6 +1207,7 @@ main() {
   prompt_optional_tasks || return 1
   prompt_task_values || return 1
   initialize_run_directory || return 1
+  freeze_task_commands || return 1
   print_plan || return 1
 
   confirm_plan

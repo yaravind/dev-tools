@@ -61,3 +61,30 @@ try {
     Remove-Item -LiteralPath $testRoot
 }
 Write-EbkOk "Launchpad streaming regression checks passed."
+
+$script:TaskOrder = @("backup_codex")
+$script:Selected = @{ backup_codex = $true }
+$script:TaskCommands = @{}
+$scriptDir = $PSScriptRoot
+$repoRoot = Split-Path -Parent (Split-Path -Parent $scriptDir)
+$CodexBackupTarget = ""
+$dateCalls = 0
+function Get-Date {
+    param($Format)
+    $script:dateCalls++
+    return "20260101-00000$script:dateCalls"
+}
+Freeze-TaskCommands
+$planned = Get-ResolvedTaskCommand -Id backup_codex
+$plannedText = Format-Command -Command $planned
+$executed = Get-ResolvedTaskCommand -Id backup_codex
+Assert-Advanced ($dateCalls -eq 1 -and (Format-Command -Command $executed) -eq $plannedText) "Generated backup destination changed after planning."
+Remove-Item Function:\Get-Date
+$arguments = @("", "path with spaces", "single'quote", 'double"quote', '$literal', "line`nbreak")
+$formatted = Format-Command -Command @{ File = "fake-command"; Args = $arguments }
+$parsed = [ScriptBlock]::Create($formatted).Ast.EndBlock.Statements[0].PipelineElements[0].CommandElements
+Assert-Advanced ($parsed.Count -eq $arguments.Count + 1) "Display changed argument count."
+foreach ($index in 0..($arguments.Count - 1)) {
+    Assert-Advanced ($parsed[$index + 1].Value -ceq $arguments[$index]) "PowerShell quoting changed argument $index."
+}
+Write-EbkOk "Launchpad frozen-command and quoting regression checks passed."
