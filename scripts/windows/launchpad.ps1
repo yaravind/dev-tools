@@ -607,10 +607,6 @@ function Write-LaunchpadOutputLine {
         return
     }
 
-    if (Get-Command Initialize-EbkPaletteIfNeeded -ErrorAction SilentlyContinue) {
-        Initialize-EbkPaletteIfNeeded
-    }
-
     $color = $null
     if ($Line -match '^\s*(?:\S+\s+)?(PHASE|INFO|OK|WARN|ERROR|DEBUG)\s+') {
         switch ($matches[1]) {
@@ -677,6 +673,11 @@ function Set-TaskFailure {
     }
 }
 
+function New-TaskLogWriter {
+    param([string]$LogFile)
+    return [IO.StreamWriter]::new($LogFile, $true, [Text.UTF8Encoding]::new($false))
+}
+
 function Invoke-ChildTask {
     param([string]$Id, [hashtable]$Command, [string]$LogFile)
     $application = Get-Command $Command.File -CommandType Application -ErrorAction Stop
@@ -684,12 +685,16 @@ function Invoke-ChildTask {
     # Windows PowerShell represents native stderr as ErrorRecords, even for warnings.
     $ErrorActionPreference = "Continue"
     $PSNativeCommandUseErrorActionPreference = $false
+    $writer = $null
     try {
+        Initialize-EbkPaletteIfNeeded
+        $writer = New-TaskLogWriter -LogFile $LogFile
+        $writer.AutoFlush = $true
         $env:EBK_FORCE_COLOR = "1"
         $global:LASTEXITCODE = $null
         & $application.Source @($Command.Args) 2>&1 | ForEach-Object {
             $line = [string]$_
-            Add-Content -LiteralPath $LogFile -Value $line -ErrorAction Stop
+            $writer.WriteLine($line)
             Write-LaunchpadOutputLine -Line $line
         }
         if ($null -eq $LASTEXITCODE) { throw "Child process did not provide an exit code." }
@@ -698,6 +703,7 @@ function Invoke-ChildTask {
     } finally {
         $env:EBK_FORCE_COLOR = $previousColor
         if ($null -ne $LASTEXITCODE) { $script:TaskChildExit[$Id] = $LASTEXITCODE }
+        if ($null -ne $writer) { $writer.Dispose() }
     }
 }
 
