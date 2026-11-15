@@ -17,6 +17,8 @@ After successful installation phases, launchpad refreshes its own tool environme
 
 Launchpad treats log creation/write errors and child-start/output-capture errors as failures, not successful installs. Child exit codes are retained separately from infrastructure errors. Task timing is finalized on failure; Windows finalizes the overall summary in `finally`, and macOS prints an interrupted-run summary on SIGINT/SIGTERM (exit 130/143). Forced process termination cannot guarantee a final summary.
 
+Both platforms stop after core setup failures, including minimal Java installation. `--continue-on-error` / `-ContinueOnError` remain accepted for compatibility but do not override critical failures; non-critical failures continue by default. Declared prerequisites must succeed (or be planned in dry-run mode). Unmet prerequisites produce a separate `blocked` status, reason, and count; blocked tasks are not executed or timed and make the run unsuccessful. Tasks unrelated to a non-critical failure can still run.
+
 In interactive terminals, these prompts prefill the default as editable text after the prompt. Press Enter to accept it, or edit it using Backspace/Delete and the arrow keys (Home/End move within the value). The Dock prompt prefills `skip`. Redirected input continues to accept a blank line for the default.
 
 On macOS, editable prompts use the terminal directly even when launchpad pipes child-script output into its logs. Prompt editing is not captured in those logs; script results are still logged.

@@ -15,6 +15,7 @@ param(
     [string]$Profile,
 
     [switch]$DryRun,
+    # Compatibility switch: non-critical failures already continue; critical failures always stop.
     [switch]$ContinueOnError,
     [switch]$Yes,
 
@@ -50,6 +51,7 @@ $script:TaskExit = @{}
 $script:TaskLog = @{}
 $script:TaskDuration = @{}
 $script:TaskChildExit = @{}
+$script:TaskBlockReason = @{}
 $script:RunDuration = "-"
 
 function Test-CanPrompt {
@@ -118,6 +120,28 @@ function Test-TaskExists {
     return $script:Tasks.ContainsKey($Id)
 }
 
+function Test-TaskDependencies {
+    param([string]$Id)
+    foreach ($dep in $script:Tasks[$Id].Deps) {
+        $state = if ($script:TaskStatus.ContainsKey($dep)) { $script:TaskStatus[$dep] } else { "not-run" }
+        if ($state -eq "success" -or ($DryRun -and $state -eq "planned")) { continue }
+        $script:TaskStatus[$Id] = "blocked"
+        $script:TaskExit[$Id] = "-"
+        $script:TaskBlockReason[$Id] = "Prerequisite $dep is $state."
+        Write-Warn ("{0} blocked: {1}" -f $script:Tasks[$Id].Label, $script:TaskBlockReason[$Id])
+        return $false
+    }
+    return $true
+}
+
+function Set-UnrunDependantsBlocked {
+    foreach ($id in $script:TaskOrder) {
+        if ($script:Selected.ContainsKey($id) -and -not $script:TaskStatus.ContainsKey($id)) {
+            [void](Test-TaskDependencies -Id $id)
+        }
+    }
+}
+
 function Select-Task {
     param(
         [string]$Id,
@@ -136,6 +160,8 @@ function Select-Task {
 
     if (-not $script:Selected.ContainsKey($Id) -and $ByDependency) {
         $script:IncludedByDep[$Id] = $true
+    } elseif (-not $ByDependency) {
+        $script:IncludedByDep.Remove($Id)
     }
     $script:Selected[$Id] = $true
 }
@@ -521,7 +547,7 @@ function Print-Plan {
     Print-ProfileDetails
     Write-Host ("Profile: {0}" -f $Profile)
     Write-Host ("Mode: {0}" -f $(if ($DryRun) { "dry-run" } else { "execute" }))
-    Write-Host "Failure policy: continue after non-critical failures; stop after setup_env.ps1 or setup_env_min.ps1 failures"
+    Write-Host "Failure policy: continue after non-critical failures; stop after core setup failures; block unmet prerequisites"
     Write-Host ("Logs: {0}" -f $runRoot)
     Write-Host ""
 
@@ -766,12 +792,17 @@ function Invoke-SelectedTasks {
     foreach ($id in $script:TaskOrder) {
         if (-not $script:Selected.ContainsKey($id)) { continue }
 
+        if (-not (Test-TaskDependencies -Id $id)) {
+            if ($overall -eq 0) { $overall = 1 }
+            continue
+        }
         $rc = Invoke-Task -Id $id
         if ($rc -ne 0) {
             if ($overall -eq 0) { $overall = $rc }
             $task = $script:Tasks[$id]
-            if ($task.Critical -and -not $ContinueOnError) {
+            if ($task.Critical) {
                 Write-EbkError ("Critical task failed; stopping because {0} runs core setup." -f $task.Label)
+                Set-UnrunDependantsBlocked
                 return $rc
             }
             Write-Warn ("Recorded failure for {0}; continuing with remaining selected tasks." -f $task.Label)
@@ -785,7 +816,7 @@ function Print-ProblemDetails {
     $shown = $false
     foreach ($id in $script:TaskOrder) {
         $state = if ($script:TaskStatus.ContainsKey($id)) { $script:TaskStatus[$id] } else { "" }
-        if ($state -notin @("failed", "issues")) { continue }
+        if ($state -notin @("failed", "issues", "blocked")) { continue }
 
         if (-not $shown) {
             Write-Host ""
@@ -796,6 +827,10 @@ function Print-ProblemDetails {
         $logFile = if ($script:TaskLog.ContainsKey($id)) { $script:TaskLog[$id] } else { "not-created" }
         $exit = if ($script:TaskExit.ContainsKey($id)) { $script:TaskExit[$id] } else { "-" }
         Write-Host ("  - {0} ({1}, exit {2})" -f $script:Tasks[$id].Label, $state, $exit)
+        if ($state -eq "blocked") {
+            Write-Host ("    Reason: {0}" -f $script:TaskBlockReason[$id])
+            continue
+        }
         Write-Host ("    Log file: {0}" -f $logFile)
 
         if (Test-Path -LiteralPath $logFile) {
@@ -819,6 +854,7 @@ function Print-Summary {
         issues = 0
         planned = 0
         skipped = 0
+        blocked = 0
         pending = 0
     }
 
@@ -834,6 +870,7 @@ function Print-Summary {
             "issues" { $counts.issues++ }
             "planned" { $counts.planned++ }
             "skipped" { $counts.skipped++ }
+            "blocked" { $counts.blocked++ }
             default { $counts.pending++ }
         }
         $exit = if ($script:TaskExit.ContainsKey($id)) { $script:TaskExit[$id] } else { "-" }
@@ -848,6 +885,7 @@ function Print-Summary {
     Write-Host ("  Failed:  {0}" -f $counts.failed)
     Write-Host ("  Planned: {0}" -f $counts.planned)
     Write-Host ("  Skipped: {0}" -f $counts.skipped)
+    Write-Host ("  Blocked: {0}" -f $counts.blocked)
     Write-Host ("  Not run: {0}" -f $counts.pending)
     Write-Host ("  Overall execution time (s): {0}" -f $script:RunDuration)
     Write-Host ("  Logs:    {0}" -f $runRoot)

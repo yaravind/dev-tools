@@ -86,3 +86,56 @@ signal_summary="$(zsh -c '
 [[ "$?" == 143 && "$signal_summary" == *"Launchpad summary"* && "$signal_summary" == *"failed"* ]] || exit 1
 [[ "$(print -r -- "$signal_summary" | grep -c 'PHASE Launchpad summary')" == 1 ]] || exit 1
 log_ok "Launchpad infrastructure regression checks passed."
+
+task_is_critical setup_env_min || exit 1
+SELECTED=()
+INCLUDED_BY_DEP=()
+select_with_deps setup_env_min || exit 1
+[[ "${INCLUDED_BY_DEP[pre_setup]:-}" == 1 ]] || exit 1
+select_with_deps pre_setup || exit 1
+[[ -z "${INCLUDED_BY_DEP[pre_setup]:-}" ]] || exit 1
+TASK_ORDER=(prereq dependant independent)
+SELECTED=(prereq 1 dependant 1 independent 1)
+TASK_LABEL=(prereq Prerequisite dependant Dependant independent Independent)
+TASK_DEPS=(dependant prereq)
+run_task() {
+  executed+=("$1")
+  if [[ "$1" == prereq ]]; then
+    TASK_STATUS[$1]="$prereq_state"
+    [[ "$prereq_state" == failed ]] && return 7
+  else
+    TASK_STATUS[$1]=success
+  fi
+  return 0
+}
+for prereq_state in success skipped failed issues planned; do
+  TASK_STATUS=()
+  TASK_EXIT=()
+  TASK_BLOCK_REASON=()
+  TASK_DURATION=()
+  executed=()
+  DRY_RUN=0
+  [[ "$prereq_state" == planned ]] && DRY_RUN=1
+  run_selected_tasks >/dev/null
+  rc=$?
+  if [[ "$prereq_state" == success || "$prereq_state" == planned ]]; then
+    [[ "$rc" == 0 && "${#executed}" == 3 ]] || exit 1
+  else
+    [[ "$rc" != 0 && "${TASK_STATUS[dependant]}" == blocked && "${executed[*]}" == "prereq independent" ]] || exit 1
+    [[ "${TASK_BLOCK_REASON[dependant]}" == "Prerequisite prereq is $prereq_state." && -z "${TASK_DURATION[dependant]:-}" ]] || exit 1
+  fi
+done
+TASK_ORDER=(setup_env_min dependant independent)
+SELECTED=(setup_env_min 1 dependant 1 independent 1)
+TASK_LABEL[setup_env_min]="Minimal setup"
+TASK_DEPS=(dependant setup_env_min)
+run_task() { executed+=("$1"); TASK_STATUS[$1]=failed; return 7; }
+for CONTINUE_ON_ERROR in 0 1; do
+  TASK_STATUS=()
+  executed=()
+  run_selected_tasks >/dev/null
+  [[ "$?" == 7 && "${#executed}" == 1 && "${TASK_STATUS[dependant]}" == blocked ]] || exit 1
+done
+summary="$(print_summary)"
+[[ "$summary" == *"Blocked: 1"* && "$summary" == *"Prerequisite setup_env_min is failed."* ]] || exit 1
+log_ok "Launchpad dependency and critical-policy regression checks passed."

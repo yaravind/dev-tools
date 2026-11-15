@@ -34,6 +34,7 @@ typeset -A TASK_LOG
 typeset -A TASK_EXIT
 typeset -A TASK_DURATION
 typeset -A TASK_CHILD_EXIT
+typeset -A TASK_BLOCK_REASON
 RUN_DURATION=""
 CURRENT_TASK=""
 typeset -F CURRENT_TASK_STARTED RUN_STARTED_AT
@@ -220,24 +221,22 @@ select_task() {
 
   if [[ -z "${SELECTED[$id]:-}" && "$by_dep" -eq 1 ]]; then
     INCLUDED_BY_DEP[$id]=1
+  elif [[ "$by_dep" -eq 0 ]]; then
+    unset "INCLUDED_BY_DEP[$id]"
   fi
   SELECTED[$id]=1
 }
 
 select_with_deps() {
-  local id="$1"
+  local id="$1" by_dep="${2:-0}"
   local dep
   local deps="${TASK_DEPS[$id]:-}"
 
   for dep in ${=deps}; do
-    select_with_deps "$dep"
-    if [[ -z "${SELECTED[$dep]:-}" ]]; then
-      INCLUDED_BY_DEP[$dep]=1
-      SELECTED[$dep]=1
-    fi
+    select_with_deps "$dep" 1 || return 1
   done
 
-  select_task "$id" 0
+  select_task "$id" "$by_dep"
 }
 
 select_profile_tasks() {
@@ -549,13 +548,38 @@ task_allows_issues() {
 task_is_critical() {
   local id="$1"
   case "$id" in
-    pre_setup|setup_env_classify|setup_env_non_admin|setup_env_admin)
+    pre_setup|setup_env_classify|setup_env_non_admin|setup_env_admin|setup_env_min)
       return 0
       ;;
     *)
       return 1
       ;;
   esac
+}
+
+check_task_dependencies() {
+  local id="$1" dep state
+  local deps="${TASK_DEPS[$id]:-}"
+  for dep in ${=deps}; do
+    state="${TASK_STATUS[$dep]:-not-run}"
+    if [[ "$state" == success || ( "$DRY_RUN" -eq 1 && "$state" == planned ) ]]; then
+      continue
+    fi
+    TASK_STATUS[$id]="blocked"
+    TASK_EXIT[$id]="-"
+    TASK_BLOCK_REASON[$id]="Prerequisite $dep is $state."
+    log_warn "${TASK_LABEL[$id]} blocked: ${TASK_BLOCK_REASON[$id]}"
+    return 1
+  done
+  return 0
+}
+
+mark_unrun_dependants() {
+  local id
+  for id in "${TASK_ORDER[@]}"; do
+    [[ -n "${SELECTED[$id]:-}" && -z "${TASK_STATUS[$id]:-}" ]] || continue
+    check_task_dependencies "$id" || true
+  done
 }
 
 record_failure_reason() {
@@ -674,7 +698,7 @@ print_plan() {
   print_profile_details
   printf "Profile: %s\n" "$PROFILE"
   printf "Mode: %s\n" "$([[ "$DRY_RUN" -eq 1 ]] && printf dry-run || printf execute)"
-  printf "Failure policy: continue after non-critical failures; stop after pre_setup.sh or setup_env.sh failures\n"
+  printf "Failure policy: continue after non-critical failures; stop after core setup failures; block unmet prerequisites\n"
   printf "Logs: %s\n\n" "$RUN_ROOT"
 
   for id in "${TASK_ORDER[@]}"; do
@@ -939,12 +963,17 @@ run_selected_tasks() {
 
   for id in "${TASK_ORDER[@]}"; do
     [[ -n "${SELECTED[$id]:-}" ]] || continue
+    if ! check_task_dependencies "$id"; then
+      [[ "$overall_rc" -eq 0 ]] && overall_rc=1
+      continue
+    fi
     run_task "$id"
     rc=$?
     if [[ "$rc" -ne 0 ]]; then
       [[ "$overall_rc" -eq 0 ]] && overall_rc="$rc"
       if task_is_critical "$id"; then
-        log_error "Critical task failed; stopping because ${TASK_LABEL[$id]} runs pre_setup.sh or setup_env.sh."
+        log_error "Critical task failed; stopping because ${TASK_LABEL[$id]} runs core setup."
+        mark_unrun_dependants
         return "$rc"
       fi
       log_warn "Recorded failure for ${TASK_LABEL[$id]}; continuing with the remaining selected tasks."
@@ -1002,13 +1031,17 @@ print_problem_details() {
 
   for id in "${TASK_ORDER[@]}"; do
     state="${TASK_STATUS[$id]:-}"
-    [[ "$state" == "failed" || "$state" == "issues" ]] || continue
+    [[ "$state" == "failed" || "$state" == "issues" || "$state" == "blocked" ]] || continue
     if ((shown == 0)); then
       printf "\n"
       log_warn "Captured problem details"
       shown=1
     fi
     printf "  - %s (%s, exit %s)\n" "${TASK_LABEL[$id]}" "$state" "${TASK_EXIT[$id]:--}"
+    if [[ "$state" == blocked ]]; then
+      printf "    Reason: %s\n" "${TASK_BLOCK_REASON[$id]}"
+      continue
+    fi
     printf "    Log file: %s\n" "${TASK_LOG[$id]:-not-created}"
     print_log_error_excerpt "${TASK_LOG[$id]:-}"
   done
@@ -1028,6 +1061,7 @@ print_summary() {
   local skipped_count=0
   local issues_count=0
   local pending_count=0
+  local blocked_count=0
 
   log_step "Launchpad summary"
   print_summary_table_header
@@ -1040,6 +1074,7 @@ print_summary() {
       issues) ((issues_count++)) ;;
       planned) ((planned_count++)) ;;
       skipped) ((skipped_count++)) ;;
+      blocked) ((blocked_count++)) ;;
       *) ((pending_count++)) ;;
     esac
     printf "  %-24s %-10s %-6s %12s %s\n" \
@@ -1056,6 +1091,7 @@ print_summary() {
   printf "  Failed:  %d\n" "$failed_count"
   printf "  Planned: %d\n" "$planned_count"
   printf "  Skipped: %d\n" "$skipped_count"
+  printf "  Blocked: %d\n" "$blocked_count"
   printf "  Not run: %d\n" "$pending_count"
   printf "  Overall execution time (s): %s\n" "${RUN_DURATION:--}"
   printf "  Logs:    %s\n" "$RUN_ROOT"

@@ -8,6 +8,8 @@ foreach ($statement in $ast.EndBlock.Statements) {
     }
 }
 
+$invokeSelectedOriginal = (Get-Command Invoke-SelectedTasks).ScriptBlock
+
 function Assert-Launchpad {
     param([bool]$Condition, [string]$Message)
     if (-not $Condition) { throw $Message }
@@ -50,6 +52,7 @@ $script:TaskExit = @{}
 $script:TaskLog = @{}
 $script:TaskDuration = @{}
 $script:TaskChildExit = @{}
+$script:TaskBlockReason = @{}
 Register-Tasks
 $testRoot = Join-Path ([IO.Path]::GetTempPath()) ("dev-tools-launchpad-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $testRoot | Out-Null
@@ -100,3 +103,54 @@ try {
     Remove-Item -LiteralPath (Join-Path $testRoot "logs"), $testRoot -Force
 }
 Write-EbkOk "Launchpad infrastructure regression checks passed."
+
+Set-Item Function:Invoke-SelectedTasks $invokeSelectedOriginal
+Assert-Launchpad $script:Tasks.setup_env_min.Critical "Minimal setup must be critical."
+$script:TaskOrder.Clear()
+$script:Tasks.Clear()
+$script:Selected.Clear()
+Add-Task -Id prereq -Label Prerequisite -Description "Mock prerequisite"
+Add-Task -Id dependant -Label Dependant -Description "Mock dependant" -Deps @("prereq")
+Add-Task -Id independent -Label Independent -Description "Mock independent"
+Select-Task -Id dependant
+Assert-Launchpad ($script:IncludedByDep.ContainsKey("prereq")) "Auto-selected prerequisite label is missing."
+Select-Task -Id prereq
+Assert-Launchpad (-not $script:IncludedByDep.ContainsKey("prereq")) "Explicit selection retained a dependency label."
+foreach ($id in $script:TaskOrder) { $script:Selected[$id] = $true }
+function Invoke-Task {
+    param([string]$Id)
+    $script:Executed.Add($Id)
+    if ($Id -eq "prereq") {
+        $script:TaskStatus[$Id] = $prereqState
+        if ($prereqState -eq "failed") { return 7 }
+    } else { $script:TaskStatus[$Id] = "success" }
+    return 0
+}
+foreach ($prereqState in @("success", "skipped", "failed", "issues", "planned")) {
+    $script:TaskStatus.Clear()
+    $script:TaskExit.Clear()
+    $script:TaskDuration.Clear()
+    $script:TaskBlockReason.Clear()
+    $script:Executed = New-Object System.Collections.Generic.List[string]
+    $DryRun = $prereqState -eq "planned"
+    $rc = Invoke-SelectedTasks
+    if ($prereqState -in @("success", "planned")) {
+        Assert-Launchpad ($rc -eq 0 -and $script:Executed.Count -eq 3) "Successful/planned prerequisite was blocked."
+    } else {
+        Assert-Launchpad ($rc -ne 0 -and $script:TaskStatus.dependant -eq "blocked") "Unmet prerequisite did not block its dependant."
+        Assert-Launchpad (($script:Executed -join " ") -eq "prereq independent") "Blocked task ran or independent task was stopped."
+        Assert-Launchpad (-not $script:TaskDuration.ContainsKey("dependant")) "Blocked task should not be timed."
+    }
+}
+$script:Tasks.prereq.Critical = $true
+$prereqState = "failed"
+foreach ($ContinueOnError in @($false, $true)) {
+    $script:TaskStatus.Clear()
+    $script:Executed.Clear()
+    $rc = Invoke-SelectedTasks
+    Assert-Launchpad ($rc -eq 7 -and $script:Executed.Count -eq 1 -and $script:TaskStatus.dependant -eq "blocked") "Critical failure policy differs with compatibility switch."
+}
+$summary = Print-Summary 6>&1
+Assert-Launchpad (($summary -join "`n") -match "Blocked: 1") "Blocked count is missing from summary."
+Assert-Launchpad (($summary -join "`n") -match "Prerequisite prereq is failed.") "Blocked reason is missing from summary."
+Write-EbkOk "Launchpad dependency and critical-policy regression checks passed."
