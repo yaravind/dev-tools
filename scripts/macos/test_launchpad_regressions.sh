@@ -75,6 +75,7 @@ signal_summary="$(zsh -c '
   prompt_optional_tasks() { return 0; }
   prompt_task_values() { return 0; }
   print_plan() { return 0; }
+  initialize_run_directory() { return 0; }
   confirm_plan() { return 0; }
   run_selected_tasks() {
     CURRENT_TASK=vscode_setup

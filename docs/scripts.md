@@ -21,6 +21,8 @@ Both platforms stop after core setup failures, including minimal Java installati
 
 Invalid profile and yes/no answers reprompt; EOF or canceled input stops preparation with a nonzero exit instead of choosing a broad profile or looping. `--yes` / `-Yes` skip only the final launchpad confirmation, not profile selection, child-script confirmations, or admin approval. They are not unattended-install flags. Use an explicit profile for redirected runs; cloning requires an explicit destination to opt in without an interactive terminal. Supplying a Codex backup selects restore on either platform, but does not bypass its destructive-operation confirmation. Windows admin-scoped tasks fail before child execution when approval cannot be requested and the launchpad is not elevated.
 
+Each invocation exclusively reserves its log directory before displaying the run plan: macOS uses a timestamp/PID plus a random suffix, and Windows uses a timestamp/PID plus a GUID. Concurrent runs cannot reuse a task-log directory. Allocation failure stops before task execution; canceling the final confirmation may leave an empty reserved directory.
+
 In interactive terminals, these prompts prefill the default as editable text after the prompt. Press Enter to accept it, or edit it using Backspace/Delete and the arrow keys (Home/End move within the value). The Dock prompt prefills `skip`. Redirected input continues to accept a blank line for the default.
 
 On macOS, editable prompts use the terminal directly even when launchpad pipes child-script output into its logs. Prompt editing is not captured in those logs; script results are still logged.

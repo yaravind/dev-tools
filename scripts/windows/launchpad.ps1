@@ -40,8 +40,8 @@ if ($resolvedRoot) {
     $repoRoot = Split-Path -Parent (Split-Path -Parent $scriptDir)
 }
 
-$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$runRoot = Join-Path $repoRoot ".run\launchpad\windows\$timestamp"
+$runParent = Join-Path $repoRoot ".run\launchpad\windows"
+$runRoot = $null
 
 $script:TaskOrder = New-Object System.Collections.Generic.List[string]
 $script:Tasks = @{}
@@ -551,6 +551,14 @@ function Print-ProfileDetails {
     }
 }
 
+function New-LaunchpadRunDirectory {
+    New-Item -ItemType Directory -Path $runParent -Force -ErrorAction Stop | Out-Null
+    $name = "{0}-{1}-{2}" -f (Get-Date -Format "yyyyMMdd-HHmmss"), $PID, [guid]::NewGuid().ToString("N")
+    $directory = Join-Path $runParent $name
+    New-Item -ItemType Directory -Path $directory -ErrorAction Stop | Out-Null
+    return $directory
+}
+
 function Print-Plan {
     Write-Step "Run plan"
     Print-ProfileDetails
@@ -923,6 +931,7 @@ try {
     Select-ProfileTasks -SelectedProfile $Profile
     Prompt-OptionalTasks
     Prompt-TaskValues
+    $runRoot = New-LaunchpadRunDirectory
     Print-Plan
     if (-not (Confirm-Plan)) {
         Write-Warn "Launchpad run canceled."

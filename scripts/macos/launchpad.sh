@@ -18,7 +18,8 @@ CONTINUE_ON_ERROR=0
 ASSUME_YES=0
 PROFILE=""
 
-RUN_ROOT="${REPO_ROOT}/.run/launchpad/$(date +%Y%m%d-%H%M%S)"
+RUN_PARENT="${REPO_ROOT}/.run/launchpad"
+RUN_ROOT=""
 
 typeset -a TASK_ORDER
 typeset -A TASK_LABEL
@@ -720,6 +721,18 @@ selected_task_count() {
   printf '%d\n' "$count"
 }
 
+initialize_run_directory() {
+  RUN_ROOT=""
+  if ! mkdir -p "$RUN_PARENT"; then
+    log_error "Cannot create launchpad log parent: $RUN_PARENT"
+    return 1
+  fi
+  if ! RUN_ROOT="$(mktemp -d "${RUN_PARENT}/$(date +%Y%m%d-%H%M%S)-$$.XXXXXX")"; then
+    log_error "Cannot reserve a unique launchpad log directory under $RUN_PARENT."
+    return 1
+  fi
+}
+
 print_plan() {
   local id
   local index=1
@@ -776,12 +789,22 @@ capture_task_output() {
   perl -e '
     open my $log, ">>", $ARGV[0] or die "Cannot open task log: $!\n";
     $| = 1;
-    while (my $line = <STDIN>) {
-      print STDOUT $line or die "Cannot display task output: $!\n";
+    my $pending = "";
+    my $write_log = sub {
+      my ($line) = @_;
       $line =~ s/\e\][^\a]*(?:\a|\e\\)//g;
       $line =~ s/\e\[[0-?]*[ -\/]*[@-~]//g;
       print $log $line or die "Cannot write task log: $!\n";
+    };
+    while (1) {
+      my $read = sysread STDIN, my $chunk, 8192;
+      defined $read or die "Cannot read task output: $!\n";
+      last if $read == 0;
+      print STDOUT $chunk or die "Cannot display task output: $!\n";
+      $pending .= $chunk;
+      while ($pending =~ s/^(.*?\n)//s) { $write_log->($1); }
     }
+    $write_log->($pending) if length $pending;
     close $log or die "Cannot close task log: $!\n";
   ' "$1"
 }
@@ -1157,6 +1180,7 @@ main() {
   select_profile_tasks "$PROFILE" || return 1
   prompt_optional_tasks || return 1
   prompt_task_values || return 1
+  initialize_run_directory || return 1
   print_plan || return 1
 
   confirm_plan
