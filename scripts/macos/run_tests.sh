@@ -133,6 +133,10 @@ if ! zsh "${SCRIPT_DIR}/test_jenv_setup.sh"; then
   log_error "jenv regression checks failed."
   ((fail_count++))
 fi
+if ! zsh "${SCRIPT_DIR}/test_launchpad_timing.sh"; then
+  log_error "Launchpad timing regression checks failed."
+  ((fail_count++))
+fi
 if ((fail_count > 0 || shellcheck_fail > 0)); then
   exit 1
 fi

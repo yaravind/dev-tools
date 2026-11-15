@@ -11,6 +11,8 @@ The launchpads default to the full profile; repository cloning is opt-in, and Co
 
 Final launchpad confirmation defaults to `y` on both platforms. The macOS per-step admin approval also defaults to `y`; edit it to `n` to skip that admin-scoped step. This does not bypass sudo authentication.
 
+Both launchpad summaries include a `Time (s)` column and overall execution time, in seconds with five decimal places. Per-task time includes preparation, prompts, and execution (or dry-run planning); tasks never reached show `-`. Each task log records the same duration. Overall time covers the task execution phase, including skipped attempts and between-task overhead, but excludes initial profile selection and final confirmation.
+
 In interactive terminals, these prompts prefill the default as editable text after the prompt. Press Enter to accept it, or edit it using Backspace/Delete and the arrow keys (Home/End move within the value). The Dock prompt prefills `skip`. Redirected input continues to accept a blank line for the default.
 
 On macOS, editable prompts use the terminal directly even when launchpad pipes child-script output into its logs. Prompt editing is not captured in those logs; script results are still logged.

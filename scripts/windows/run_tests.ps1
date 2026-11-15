@@ -151,8 +151,24 @@ if (Require-Config -Label "powershell_profile_setup.ps1" -Path $profileConfig) {
 
 try {
     Write-Info "DryRun: launchpad.ps1"
-    & (Join-Path $scriptDir "launchpad.ps1") -Profile ide-only -DryRun -Yes | Out-Null
+    $launchpadOutput = & (Join-Path $scriptDir "launchpad.ps1") -Profile ide-only -DryRun -Yes 6>&1
     Test-LastExitCode "launchpad.ps1" | Out-Null
+    $launchpadText = ($launchpadOutput | ForEach-Object { "$_" }) -join "`n"
+    if ($launchpadText -notmatch 'Time \(s\)' -or
+        $launchpadText -notmatch 'Overall execution time \(s\): [0-9]+\.[0-9]{5}') {
+        throw "Launchpad summary is missing five-decimal execution timing."
+    }
+    $timedRows = [regex]::Matches($launchpadText, '(?m)^  (vscode_setup|intellij_setup|pycharm_setup)\s+planned\s+-\s+([0-9]+\.[0-9]{5})\s+(.+)$')
+    if ($timedRows.Count -ne 3) {
+        throw "Expected three timed launchpad dry-run tasks."
+    }
+    foreach ($row in $timedRows) {
+        $durationLines = @(Get-Content -LiteralPath $row.Groups[3].Value.Trim() |
+            Where-Object { $_ -like "Duration seconds:*" })
+        if ($durationLines.Count -ne 1 -or $durationLines[0] -ne "Duration seconds: $($row.Groups[2].Value)") {
+            throw "Launchpad log duration does not match its summary."
+        }
+    }
 } catch {
     Add-DryRunFailure "DryRun FAILED: launchpad.ps1 - $_"
 }

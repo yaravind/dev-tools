@@ -4,6 +4,7 @@
 
 set -u
 set -o pipefail
+typeset -F SECONDS
 
 SCRIPT_DIR="${0:A:h}"
 REPO_ROOT="${SCRIPT_DIR:h:h}"
@@ -31,6 +32,8 @@ typeset -A INCLUDED_BY_DEP
 typeset -A TASK_STATUS
 typeset -A TASK_LOG
 typeset -A TASK_EXIT
+typeset -A TASK_DURATION
+RUN_DURATION=""
 
 clone_destination=""
 clone_repo_list=""
@@ -686,8 +689,21 @@ strip_ansi_for_log() {
 
 run_task() {
   local id="$1"
+  local -F started_at="$SECONDS"
+  local rc
+
+  run_task_impl "$id"
+  rc=$?
+  printf -v "TASK_DURATION[$id]" '%.5f' "$((SECONDS - started_at))"
+  if [[ -n "${TASK_LOG[$id]:-}" && -f "${TASK_LOG[$id]}" ]]; then
+    printf 'Duration seconds: %s\n' "${TASK_DURATION[$id]}" >> "${TASK_LOG[$id]}"
+  fi
+  return "$rc"
+}
+
+run_task_impl() {
+  local id="$1"
   local log_file="${RUN_ROOT}/${id}.log"
-  local started_at="$SECONDS"
   local rc
 
   build_command "$id" || {
@@ -721,7 +737,6 @@ run_task() {
     {
       printf 'Launchpad status: planned dry-run\n'
       printf 'Finished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
-      printf 'Duration seconds: %d\n' $((SECONDS - started_at))
       printf 'Exit code: planned\n'
     } >> "$log_file"
     return 0
@@ -735,7 +750,6 @@ run_task() {
       printf 'Launchpad status: skipped\n'
       printf 'Reason: admin privileges were not approved for this step.\n'
       printf 'Finished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
-      printf 'Duration seconds: %d\n' $((SECONDS - started_at))
       printf 'Exit code: skipped\n'
     } >> "$log_file"
     TASK_EXIT[$id]="-"
@@ -747,7 +761,6 @@ run_task() {
       printf 'Launchpad status: failed before script execution\n'
       [[ -n "$LAST_ERROR" ]] && printf 'Error: %s\n' "$LAST_ERROR"
       printf 'Finished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
-      printf 'Duration seconds: %d\n' $((SECONDS - started_at))
       printf 'Exit code: %d\n' "$rc"
     } >> "$log_file"
     return "$rc"
@@ -760,7 +773,6 @@ run_task() {
       printf 'Launchpad status: failed readiness check\n'
       [[ -n "$LAST_ERROR" ]] && printf 'Error: %s\n' "$LAST_ERROR"
       printf 'Finished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
-      printf 'Duration seconds: %d\n' $((SECONDS - started_at))
       printf 'Exit code: 1\n'
     } >> "$log_file"
     return 1
@@ -772,7 +784,6 @@ run_task() {
 
   {
     printf '\nFinished: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
-    printf 'Duration seconds: %d\n' $((SECONDS - started_at))
     printf 'Exit code: %d\n' "$rc"
   } >> "$log_file"
 
@@ -895,8 +906,8 @@ print_problem_details() {
 }
 
 print_summary_table_header() {
-  printf "  %-24s %-10s %-6s %s\n" "Task" "Status" "Exit" "Log file"
-  printf "  %-24s %-10s %-6s %s\n" "------------------------" "----------" "------" "--------"
+  printf "  %-24s %-10s %-6s %12s %s\n" "Task" "Status" "Exit" "Time (s)" "Log file"
+  printf "  %-24s %-10s %-6s %12s %s\n" "------------------------" "----------" "------" "------------" "--------"
 }
 
 print_summary() {
@@ -922,10 +933,11 @@ print_summary() {
       skipped) ((skipped_count++)) ;;
       *) ((pending_count++)) ;;
     esac
-    printf "  %-24s %-10s %-6s %s\n" \
+    printf "  %-24s %-10s %-6s %12s %s\n" \
       "$id" \
       "$task_state" \
       "${TASK_EXIT[$id]:--}" \
+      "${TASK_DURATION[$id]:--}" \
       "${TASK_LOG[$id]:--}"
   done
 
@@ -936,6 +948,7 @@ print_summary() {
   printf "  Planned: %d\n" "$planned_count"
   printf "  Skipped: %d\n" "$skipped_count"
   printf "  Not run: %d\n" "$pending_count"
+  printf "  Overall execution time (s): %s\n" "${RUN_DURATION:--}"
   printf "  Logs:    %s\n" "$RUN_ROOT"
 
   if (( issues_count > 0 )); then
@@ -976,8 +989,10 @@ main() {
     exit 0
   fi
 
+  local -F run_started_at="$SECONDS"
   run_selected_tasks
   local rc=$?
+  printf -v RUN_DURATION '%.5f' "$((SECONDS - run_started_at))"
   print_summary
   return "$rc"
 }

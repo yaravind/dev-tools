@@ -48,6 +48,8 @@ $script:IncludedByDep = @{}
 $script:TaskStatus = @{}
 $script:TaskExit = @{}
 $script:TaskLog = @{}
+$script:TaskDuration = @{}
+$script:RunDuration = "-"
 
 function Test-CanPrompt {
     return ([Environment]::UserInteractive -and -not [Console]::IsInputRedirected)
@@ -559,10 +561,24 @@ function Write-LaunchpadOutputLine {
 function Invoke-Task {
     param([string]$Id)
 
+    $timer = [System.Diagnostics.Stopwatch]::StartNew()
+    try {
+        return (Invoke-TaskCore -Id $Id)
+    } finally {
+        $timer.Stop()
+        $script:TaskDuration[$Id] = $timer.Elapsed.TotalSeconds.ToString("F5", [Globalization.CultureInfo]::InvariantCulture)
+        if ($script:TaskLog.ContainsKey($Id) -and (Test-Path -LiteralPath $script:TaskLog[$Id])) {
+            Add-Content -Path $script:TaskLog[$Id] -Value ("Duration seconds: {0}" -f $script:TaskDuration[$Id])
+        }
+    }
+}
+
+function Invoke-TaskCore {
+    param([string]$Id)
+
     $task = $script:Tasks[$Id]
     $logFile = Join-Path $runRoot "$Id.log"
     $script:TaskLog[$Id] = $logFile
-    $started = Get-Date
 
     Write-Step ("Running {0}" -f $task.Label)
     Write-Info "Log file: $logFile"
@@ -585,7 +601,6 @@ function Invoke-Task {
         Write-Host ("[dry-run] {0}" -f (Format-Command -Command $command))
         Add-Content -Path $logFile -Value "Launchpad status: planned dry-run"
         Add-Content -Path $logFile -Value ("Finished: {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz'))
-        Add-Content -Path $logFile -Value ("Duration seconds: {0}" -f [int]((Get-Date) - $started).TotalSeconds)
         Add-Content -Path $logFile -Value "Exit code: planned"
         return 0
     }
@@ -599,7 +614,6 @@ function Invoke-Task {
         Add-Content -Path $logFile -Value ("Fix: {0}" -f $script:AdminBlockFix)
         Add-Content -Path $logFile -Value "Child script started: no"
         Add-Content -Path $logFile -Value ("Finished: {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz'))
-        Add-Content -Path $logFile -Value ("Duration seconds: {0}" -f [int]((Get-Date) - $started).TotalSeconds)
         Add-Content -Path $logFile -Value "Exit code: skipped"
         return 0
     }
@@ -612,7 +626,6 @@ function Invoke-Task {
         Add-Content -Path $logFile -Value ("Fix: {0}" -f $script:AdminBlockFix)
         Add-Content -Path $logFile -Value "Child script started: no"
         Add-Content -Path $logFile -Value ("Finished: {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz'))
-        Add-Content -Path $logFile -Value ("Duration seconds: {0}" -f [int]((Get-Date) - $started).TotalSeconds)
         Add-Content -Path $logFile -Value "Exit code: 1"
         return 1
     }
@@ -636,7 +649,6 @@ function Invoke-Task {
 
     Add-Content -Path $logFile -Value ""
     Add-Content -Path $logFile -Value ("Finished: {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz'))
-    Add-Content -Path $logFile -Value ("Duration seconds: {0}" -f [int]((Get-Date) - $started).TotalSeconds)
     Add-Content -Path $logFile -Value ("Exit code: {0}" -f $rc)
 
     if ($rc -eq 0) {
@@ -723,8 +735,8 @@ function Print-Summary {
     }
 
     Write-Step "Launchpad summary"
-    Write-Host ("  {0,-24} {1,-10} {2,-6} {3}" -f "Task", "Status", "Exit", "Log file")
-    Write-Host ("  {0,-24} {1,-10} {2,-6} {3}" -f "------------------------", "----------", "------", "--------")
+    Write-Host ("  {0,-24} {1,-10} {2,-6} {3,12} {4}" -f "Task", "Status", "Exit", "Time (s)", "Log file")
+    Write-Host ("  {0,-24} {1,-10} {2,-6} {3,12} {4}" -f "------------------------", "----------", "------", "------------", "--------")
     foreach ($id in $script:TaskOrder) {
         if (-not $script:Selected.ContainsKey($id)) { continue }
         $state = if ($script:TaskStatus.ContainsKey($id)) { $script:TaskStatus[$id] } else { "not-run" }
@@ -738,7 +750,8 @@ function Print-Summary {
         }
         $exit = if ($script:TaskExit.ContainsKey($id)) { $script:TaskExit[$id] } else { "-" }
         $log = if ($script:TaskLog.ContainsKey($id)) { $script:TaskLog[$id] } else { "-" }
-        Write-Host ("  {0,-24} {1,-10} {2,-6} {3}" -f $id, $state, $exit, $log)
+        $duration = if ($script:TaskDuration.ContainsKey($id)) { $script:TaskDuration[$id] } else { "-" }
+        Write-Host ("  {0,-24} {1,-10} {2,-6} {3,12} {4}" -f $id, $state, $exit, $duration, $log)
     }
 
     Write-Host ""
@@ -748,6 +761,7 @@ function Print-Summary {
     Write-Host ("  Planned: {0}" -f $counts.planned)
     Write-Host ("  Skipped: {0}" -f $counts.skipped)
     Write-Host ("  Not run: {0}" -f $counts.pending)
+    Write-Host ("  Overall execution time (s): {0}" -f $script:RunDuration)
     Write-Host ("  Logs:    {0}" -f $runRoot)
 
     Print-ProblemDetails
@@ -773,6 +787,9 @@ if (-not (Confirm-Plan)) {
     exit 0
 }
 
+$runTimer = [System.Diagnostics.Stopwatch]::StartNew()
 $result = Invoke-SelectedTasks
+$runTimer.Stop()
+$script:RunDuration = $runTimer.Elapsed.TotalSeconds.ToString("F5", [Globalization.CultureInfo]::InvariantCulture)
 Print-Summary
 exit $result
