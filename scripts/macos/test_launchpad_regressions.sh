@@ -139,3 +139,47 @@ done
 summary="$(print_summary)"
 [[ "$summary" == *"Blocked: 1"* && "$summary" == *"Prerequisite setup_env_min is failed."* ]] || exit 1
 log_ok "Launchpad dependency and critical-policy regression checks passed."
+
+if ! printf 'typo\n3\n' | (PROFILE=""; prompt_profile >/dev/null && [[ "$PROFILE" == ide-only ]]); then
+  log_error "Invalid profile input did not reprompt."
+  exit 1
+fi
+if ! printf '\n' | (PROFILE=""; prompt_profile >/dev/null && [[ "$PROFILE" == full ]]); then
+  log_error "Blank profile input did not retain its default."
+  exit 1
+fi
+PROFILE=""
+prompt_profile </dev/null >/dev/null
+[[ "$?" == 1 && -z "$PROFILE" ]] || exit 1
+DRY_RUN=0
+ASSUME_YES=0
+printf 'invalid\nyes\n' | (confirm_plan >/dev/null) || exit 1
+printf '\n' | (confirm_plan >/dev/null) || exit 1
+printf 'no\n' | (confirm_plan >/dev/null)
+[[ "$?" == 1 ]] || exit 1
+confirm_plan </dev/null >/dev/null
+[[ "$?" == 2 ]] || exit 1
+read_launchpad_line "Required path: " </dev/null >/dev/null
+[[ "$?" == 1 ]] || exit 1
+ASSUME_YES=1
+confirm_plan </dev/null >/dev/null || exit 1
+TASK_ORDER=()
+SELECTED=()
+INCLUDED_BY_DEP=()
+register_tasks
+select_profile_tasks full
+clone_destination=""
+prompt_task_values </dev/null || exit 1
+[[ -z "${SELECTED[clone_repos]:-}" ]] || exit 1
+clone_destination="$test_root"
+select_with_deps clone_repos
+prompt_task_values </dev/null || exit 1
+[[ "${SELECTED[clone_repos]:-}" == 1 ]] || exit 1
+codex_backup_path="$test_root"
+prompt_optional_tasks </dev/null || exit 1
+[[ "${SELECTED[restore_codex]:-}" == 1 ]] || exit 1
+PROFILE=ide-only
+prompt_optional_tasks() { return 1; }
+main >/dev/null
+[[ "$?" == 1 ]] || exit 1
+log_ok "Launchpad prompt and EOF regression checks passed."

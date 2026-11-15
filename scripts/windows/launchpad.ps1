@@ -17,6 +17,7 @@ param(
     [switch]$DryRun,
     # Compatibility switch: non-critical failures already continue; critical failures always stop.
     [switch]$ContinueOnError,
+    # Skip final launchpad confirmation only; child/admin prompts remain independent.
     [switch]$Yes,
 
     [string]$CloneDestination,
@@ -199,6 +200,18 @@ function Select-ProfileTasks {
     }
 }
 
+function Read-LaunchpadConfirmation {
+    param([string]$Prompt, [string]$DefaultValue)
+    while ($true) {
+        $answer = Read-EbkDefault -Prompt $Prompt -DefaultValue $DefaultValue
+        switch ($answer.Trim().ToLowerInvariant()) {
+            { $_ -in @("y", "yes") } { return $true }
+            { $_ -in @("n", "no") } { return $false }
+            default { Write-Warn "Enter y or n." }
+        }
+    }
+}
+
 function Prompt-Profile {
     Write-Step "Choose setup profile"
     Write-Host "  1. full         - winget full tools, Git, repos, shell, Taskbar, Java, IDEs"
@@ -206,17 +219,17 @@ function Prompt-Profile {
     Write-Host "  3. ide-only     - VS Code, IntelliJ, and PyCharm plugin setup only"
     Write-Host "  4. personalize  - PowerShell profile and Taskbar"
     Write-Host "  5. custom       - Choose individual tasks"
-    $choice = Read-EbkDefault -Prompt "Select profile [1-5] (default: 1 - full)" -DefaultValue "1"
-
-    switch ($choice.Trim().ToLowerInvariant()) {
-        { $_ -in @("", "1", "full") } { return "full" }
-        { $_ -in @("2", "minimal-java") } { return "minimal-java" }
-        { $_ -in @("3", "ide-only") } { return "ide-only" }
-        { $_ -in @("4", "personalize") } { return "personalize" }
-        { $_ -in @("5", "custom") } { return "custom" }
-        default {
-            Write-Warn "Unknown selection '$choice'; using full."
-            return "full"
+    while ($true) {
+        $choice = Read-EbkDefault -Prompt "Select profile [1-5] (default: 1 - full)" -DefaultValue "1"
+        switch ($choice.Trim().ToLowerInvariant()) {
+            { $_ -in @("", "1", "full") } { return "full" }
+            { $_ -in @("2", "minimal-java") } { return "minimal-java" }
+            { $_ -in @("3", "ide-only") } { return "ide-only" }
+            { $_ -in @("4", "personalize") } { return "personalize" }
+            { $_ -in @("5", "custom") } { return "custom" }
+            default {
+                Write-Warn "Unknown selection '$choice'; choose a profile from 1 to 5."
+            }
         }
     }
 }
@@ -230,7 +243,7 @@ function Prompt-CustomTasks {
         $i++
     }
 
-    $selection = Read-Host "Enter comma-separated numbers or ids (example: 1,3,vscode_setup)"
+    $selection = Read-EbkLine -Prompt "Enter comma-separated numbers or ids (example: 1,3,vscode_setup)"
     if ([string]::IsNullOrWhiteSpace($selection)) {
         Write-Warn "No custom tasks selected."
         return
@@ -239,8 +252,8 @@ function Prompt-CustomTasks {
     foreach ($token in ($selection -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })) {
         $id = $token
         if ($token -match '^\d+$') {
-            $index = [int]$token
-            if ($index -lt 1 -or $index -gt $script:TaskOrder.Count) {
+            $index = 0
+            if (-not [int]::TryParse($token, [ref]$index) -or $index -lt 1 -or $index -gt $script:TaskOrder.Count) {
                 Write-Warn "Ignoring invalid task number: $token"
                 continue
             }
@@ -260,29 +273,30 @@ function Prompt-OptionalTasks {
         Select-Task -Id "restore_codex"
     }
 
-    if ($Yes -or -not (Test-CanPrompt)) {
+    if (-not (Test-CanPrompt)) {
         return
     }
 
     if (-not $script:Selected.ContainsKey("restore_codex")) {
-        $answer = Read-EbkDefault -Prompt "Restore a Codex backup as part of this run? (y/N)" -DefaultValue "n"
-        if ($answer -match '^[Yy]$') {
+        if (Read-LaunchpadConfirmation -Prompt "Restore a Codex backup as part of this run? (y/N)" -DefaultValue "n") {
             Select-Task -Id "restore_codex"
         }
     }
 }
 
 function Prompt-TaskValues {
-    if ($script:Selected.ContainsKey("clone_repos") -and (Test-CanPrompt) -and -not $Yes) {
+    if ($script:Selected.ContainsKey("clone_repos") -and -not (Test-CanPrompt) -and -not $CloneDestination) {
+        $script:Selected.Remove("clone_repos")
+        $script:IncludedByDep.Remove("clone_repos")
+        Write-Info "Repository cloning not selected; provide -CloneDestination to opt in with redirected input."
+    }
+    if ($script:Selected.ContainsKey("clone_repos") -and (Test-CanPrompt)) {
         Write-Step "Clone GitHub repositories"
-        $answer = Read-EbkDefault -Prompt "Clone repositories from config/github-repos.txt? (y/N)" -DefaultValue "n"
-        if ($answer -notmatch '^[Yy]$') {
+        if (-not (Read-LaunchpadConfirmation -Prompt "Clone repositories from config/github-repos.txt? (y/N)" -DefaultValue "n")) {
             $script:Selected.Remove("clone_repos")
-            if (-not [string]::IsNullOrWhiteSpace($answer) -and $answer -notmatch '^[Nn]$') {
-                Write-Warn "Unrecognized response '$answer'; skipping repository cloning."
-            }
+            $script:IncludedByDep.Remove("clone_repos")
         } elseif (-not $CloneDestination) {
-            $value = Read-Host "Directory to clone into [default: current directory]"
+            $value = Read-EbkLine -Prompt "Directory to clone into [default: current directory]"
             if (-not [string]::IsNullOrWhiteSpace($value)) {
                 $script:CloneDestinationOverride = $value
             }
@@ -290,12 +304,11 @@ function Prompt-TaskValues {
     }
 
     if ($script:Selected.ContainsKey("restore_codex") -and -not $CodexBackup) {
-        if ($Yes -or -not (Test-CanPrompt)) {
-            Write-EbkError "Codex restore needs -CodexBackup when stdin is not interactive or -Yes is used."
-            exit 1
+        if (-not (Test-CanPrompt)) {
+            throw "Codex restore needs -CodexBackup when stdin is not interactive."
         }
         while (-not $script:CodexBackupOverride) {
-            $value = Read-Host "Codex backup folder to restore from"
+            $value = Read-EbkLine -Prompt "Codex backup folder to restore from"
             if ([string]::IsNullOrWhiteSpace($value)) {
                 Write-Warn "A backup path is required for Codex restore."
             } else {
@@ -331,7 +344,6 @@ function Get-TaskCommand {
         }
         "git_setup" {
             $args = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", (Join-Path $scriptDir "git_setup.ps1"))
-            if ($Yes) { $args += "-Yes" }
             return @{ File = $ps; Args = $args }
         }
         "clone_repos" {
@@ -342,12 +354,10 @@ function Get-TaskCommand {
         }
         "taskbar_setup" {
             $args = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", (Join-Path $scriptDir "taskbar_setup.ps1"), "-ConfigPath", (Join-Path $repoRoot "config\taskbar_apps.txt"))
-            if ($Yes) { $args += "-Yes" }
             return @{ File = $ps; Args = $args }
         }
         "jenv_setup" {
             $args = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", (Join-Path $scriptDir "jenv_setup.ps1"))
-            if ($Yes) { $args += "-Yes" }
             return @{ File = $ps; Args = $args }
         }
         "vscode_setup" {
@@ -363,7 +373,7 @@ function Get-TaskCommand {
             return @{ File = $ps; Args = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", (Join-Path $scriptDir "backup_codex.ps1"), $backupTarget) }
         }
         "restore_codex" {
-            return @{ File = $ps; Args = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", (Join-Path $scriptDir "restore_codex.ps1"), $restoreSource, "-Yes") }
+            return @{ File = $ps; Args = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", (Join-Path $scriptDir "restore_codex.ps1"), $restoreSource) }
         }
         "verify_codex" {
             return @{ File = $ps; Args = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", (Join-Path $scriptDir "verify_codex_restore.ps1")) }
@@ -407,7 +417,7 @@ function Resolve-AdminScope {
         Write-Info ("{0}" -f $Task.AdminReason)
     }
 
-    if ($Yes -or -not [Environment]::UserInteractive) {
+    if (-not (Test-CanPrompt)) {
         $script:AdminBlockReason = ("{0} installs or configures Windows components that require an elevated PowerShell session. Launchpad is running non-elevated, so continuing can trigger hidden prompts, failed installs, or a stalled child process." -f $Task.Label)
         $script:AdminBlockFix = "Start PowerShell as Administrator, rerun this launchpad profile, or choose a profile without admin-scoped tasks such as ide-only."
         Write-EbkError ("{0} requires an elevated PowerShell session." -f $Task.Label)
@@ -417,8 +427,7 @@ function Resolve-AdminScope {
         return 1
     }
 
-    $answer = Read-Host "Continue without elevated PowerShell? This may prompt, fail, or stall. (y/N)"
-    if ($answer -notmatch '^[Yy]$') {
+    if (-not (Read-LaunchpadConfirmation -Prompt "Continue without elevated PowerShell? This may prompt, fail, or stall. (y/N)" -DefaultValue "n")) {
         $script:AdminBlockReason = "User did not approve running an admin-scoped task from a non-elevated PowerShell session."
         $script:AdminBlockFix = "Rerun from an elevated PowerShell session or choose a profile without admin-scoped tasks."
         Write-Warn ("Skipping {0} without elevated PowerShell." -f $Task.Label)
@@ -580,8 +589,7 @@ function Confirm-Plan {
         return $true
     }
 
-    $answer = Read-EbkDefault -Prompt "Proceed with this launchpad run? (Y/n)" -DefaultValue "y"
-    return ($answer -match '^[Yy]$')
+    return (Read-LaunchpadConfirmation -Prompt "Proceed with this launchpad run? (Y/n)" -DefaultValue "y")
 }
 
 function Write-LaunchpadOutputLine {
@@ -910,22 +918,19 @@ function Invoke-LaunchpadRun {
 
 Register-Tasks
 
-if (-not $Profile) {
-    if ($Yes -or -not [Environment]::UserInteractive) {
-        $Profile = "full"
-    } else {
-        $Profile = Prompt-Profile
+try {
+    if (-not $Profile) { $Profile = Prompt-Profile }
+    Select-ProfileTasks -SelectedProfile $Profile
+    Prompt-OptionalTasks
+    Prompt-TaskValues
+    Print-Plan
+    if (-not (Confirm-Plan)) {
+        Write-Warn "Launchpad run canceled."
+        exit 0
     }
-}
-
-Select-ProfileTasks -SelectedProfile $Profile
-Prompt-OptionalTasks
-Prompt-TaskValues
-Print-Plan
-
-if (-not (Confirm-Plan)) {
-    Write-Warn "Launchpad run canceled."
-    exit 0
+} catch {
+    Write-EbkError "Launchpad preparation canceled or failed: $_"
+    exit 1
 }
 
 $result = Invoke-LaunchpadRun

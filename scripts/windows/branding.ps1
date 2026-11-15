@@ -1,5 +1,18 @@
 # Shared CLI branding for dev-tools / Engineer Bootstrap Kit.
 
+function Read-EbkLine {
+    param([string]$Prompt)
+    if ([Console]::IsInputRedirected) {
+        Write-Host "${Prompt}: " -NoNewline
+        $value = [Console]::ReadLine()
+        if ($null -eq $value) {
+            throw [System.IO.EndOfStreamException]::new("Input ended before '$Prompt' was answered.")
+        }
+        return $value
+    }
+    return (Read-Host $Prompt)
+}
+
 function Read-EbkDefault {
     param(
         [string]$Prompt,
@@ -7,7 +20,7 @@ function Read-EbkDefault {
     )
 
     if ([Console]::IsInputRedirected -or [Console]::IsOutputRedirected) {
-        $value = Read-Host $Prompt
+        $value = Read-EbkLine -Prompt $Prompt
         if ([string]::IsNullOrEmpty($value)) { return $DefaultValue }
         return $value
     }

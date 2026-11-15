@@ -1,6 +1,18 @@
+param([switch]$InputProbe)
+
 $ErrorActionPreference = "Stop"
 $source = Get-Content -LiteralPath (Join-Path $PSScriptRoot "launchpad.ps1") -Raw
 . (Join-Path $PSScriptRoot "branding.ps1")
+if ($InputProbe) {
+    try {
+        $value = Read-EbkDefault -Prompt "Probe" -DefaultValue "y"
+        if ($value -ne "y") { throw "Unexpected default value: $value" }
+        exit 0
+    } catch {
+        Write-EbkError "Input probe failed: $_"
+        exit 1
+    }
+}
 $ast = [ScriptBlock]::Create($source).Ast
 foreach ($statement in $ast.EndBlock.Statements) {
     if ($statement -is [System.Management.Automation.Language.FunctionDefinitionAst]) {
@@ -9,6 +21,9 @@ foreach ($statement in $ast.EndBlock.Statements) {
 }
 
 $invokeSelectedOriginal = (Get-Command Invoke-SelectedTasks).ScriptBlock
+$commandOriginal = (Get-Command Get-TaskCommand).ScriptBlock
+$readDefaultOriginal = (Get-Command Read-EbkDefault).ScriptBlock
+$adminOriginal = (Get-Command Resolve-AdminScope).ScriptBlock
 
 function Assert-Launchpad {
     param([bool]$Condition, [string]$Message)
@@ -154,3 +169,90 @@ $summary = Print-Summary 6>&1
 Assert-Launchpad (($summary -join "`n") -match "Blocked: 1") "Blocked count is missing from summary."
 Assert-Launchpad (($summary -join "`n") -match "Prerequisite prereq is failed.") "Blocked reason is missing from summary."
 Write-EbkOk "Launchpad dependency and critical-policy regression checks passed."
+
+$script:Answers = New-Object System.Collections.Generic.Queue[string]
+function Read-EbkDefault {
+    param([string]$Prompt, [string]$DefaultValue)
+    if ($script:Answers.Count -eq 0) { throw [IO.EndOfStreamException]::new("Mock EOF") }
+    $answer = $script:Answers.Dequeue()
+    if ($answer -eq "") { return $DefaultValue }
+    return $answer
+}
+$script:Answers.Enqueue("typo")
+$script:Answers.Enqueue("3")
+Assert-Launchpad ((Prompt-Profile) -eq "ide-only") "Invalid profile must reprompt instead of choosing full."
+$script:Answers.Enqueue("")
+Assert-Launchpad ((Prompt-Profile) -eq "full") "Blank profile must preserve its default."
+$failed = $false
+try { Prompt-Profile } catch [IO.EndOfStreamException] { $failed = $true }
+Assert-Launchpad $failed "Profile EOF must propagate."
+$DryRun = $false
+$Yes = $false
+$script:Answers.Enqueue("invalid")
+$script:Answers.Enqueue("yes")
+Assert-Launchpad (Confirm-Plan) "Invalid confirmation must reprompt."
+$script:Answers.Enqueue("")
+Assert-Launchpad (Confirm-Plan) "Blank confirmation must preserve yes."
+$script:Answers.Enqueue("no")
+Assert-Launchpad (-not (Confirm-Plan)) "No confirmation must cancel."
+$failed = $false
+try { Confirm-Plan } catch [IO.EndOfStreamException] { $failed = $true }
+Assert-Launchpad $failed "Confirmation EOF must not approve or succeed."
+$Yes = $true
+Assert-Launchpad (Confirm-Plan) "Yes must skip final confirmation."
+Set-Item Function:Get-TaskCommand $commandOriginal
+foreach ($id in @("git_setup", "jenv_setup", "taskbar_setup", "restore_codex")) {
+    $command = Get-TaskCommand -Id $id
+    Assert-Launchpad ("-Yes" -notin $command.Args) "Launchpad Yes implicitly approved child task $id."
+}
+function Test-IsAdmin { return $false }
+function Test-CanPrompt { return $false }
+Set-Item Function:Resolve-AdminScope $adminOriginal
+$script:TaskOrder.Clear()
+$script:Tasks.Clear()
+Register-Tasks
+$rc = Resolve-AdminScope -Task $script:Tasks.setup_env
+Assert-Launchpad ($rc -eq 1) "Redirected admin approval must fail without prompting."
+$script:Selected.Clear()
+Select-Task -Id clone_repos
+$CloneDestination = ""
+Prompt-TaskValues
+Assert-Launchpad (-not $script:Selected.ContainsKey("clone_repos")) "Redirected cloning must remain opt-in."
+$CloneDestination = "C:\ExplicitDestination"
+Select-Task -Id clone_repos
+Prompt-TaskValues
+Assert-Launchpad ($script:Selected.ContainsKey("clone_repos")) "Explicit clone destination must opt in."
+function Test-CanPrompt { return $true }
+$script:Selected.Clear()
+Select-Task -Id restore_codex
+$CodexBackup = ""
+function Read-EbkLine { throw [IO.EndOfStreamException]::new("Mock required-path EOF") }
+$failed = $false
+try { Prompt-TaskValues } catch [IO.EndOfStreamException] { $failed = $true }
+Assert-Launchpad $failed "Required-path EOF must stop the prompt loop."
+Set-Item Function:Read-EbkDefault $readDefaultOriginal
+foreach ($sendBlank in @($false, $true)) {
+    $info = New-Object Diagnostics.ProcessStartInfo
+    $info.FileName = Get-PwshCommand
+    $info.Arguments = '-NoProfile -File "' + $PSCommandPath + '" -InputProbe'
+    $info.UseShellExecute = $false
+    $info.RedirectStandardInput = $true
+    $info.RedirectStandardOutput = $true
+    $info.RedirectStandardError = $true
+    $process = [Diagnostics.Process]::Start($info)
+    try {
+        $stdout = $process.StandardOutput.ReadToEndAsync()
+        $stderr = $process.StandardError.ReadToEndAsync()
+        if ($sendBlank) { $process.StandardInput.WriteLine("") }
+        $process.StandardInput.Close()
+        if (-not $process.WaitForExit(10000)) {
+            $process.Kill()
+            throw "Redirected input probe hung."
+        }
+        $expectedExit = if ($sendBlank) { 0 } else { 1 }
+        Assert-Launchpad ($process.ExitCode -eq $expectedExit) "Redirected EOF/default probe failed: $($stdout.Result) $($stderr.Result)"
+    } finally {
+        $process.Dispose()
+    }
+}
+Write-EbkOk "Launchpad prompt and EOF regression checks passed."

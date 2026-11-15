@@ -281,6 +281,33 @@ select_profile_tasks() {
   esac
 }
 
+read_launchpad_default() {
+  ebk_read_default "$1" "$2" || {
+    log_error "Input ended or was canceled; launchpad will not continue."
+    return 1
+  }
+}
+
+read_launchpad_line() {
+  printf '%s' "$1"
+  IFS= read -r REPLY || {
+    log_error "Input ended or was canceled; launchpad will not continue."
+    return 1
+  }
+}
+
+read_launchpad_confirmation() {
+  local prompt="$1" default_value="$2"
+  while true; do
+    read_launchpad_default "$prompt" "$default_value" || return 1
+    case "${REPLY:l}" in
+      y|yes) REPLY=y; return 0 ;;
+      n|no) REPLY=n; return 0 ;;
+      *) log_warn "Enter y or n." ;;
+    esac
+  done
+}
+
 prompt_profile() {
   local choice
 
@@ -290,30 +317,23 @@ prompt_profile() {
   printf "  3. ide-only     - VS Code, IntelliJ, and PyCharm plugin setup only\n"
   printf "  4. personalize  - Shell plugins, Dock, macOS settings, default apps\n"
   printf "  5. custom       - Choose individual tasks\n"
-  ebk_read_default $'\nSelect profile [1-5] (default: 1 - full): ' "1" || return 1
-  choice="$REPLY"
+  while true; do
+    read_launchpad_default $'\nSelect profile [1-5] (default: 1 - full): ' "1" || return 1
+    choice="${REPLY:l}"
 
-  case "$choice" in
-    ""|1|full)
-      PROFILE="full"
-      ;;
-    2|minimal-java)
-      PROFILE="minimal-java"
-      ;;
-    3|ide-only)
-      PROFILE="ide-only"
-      ;;
-    4|personalize)
-      PROFILE="personalize"
-      ;;
-    5|custom)
-      PROFILE="custom"
-      ;;
-    *)
-      log_warn "Unknown selection '$choice'; using full."
-      PROFILE="full"
-      ;;
-  esac
+    case "$choice" in
+      ""|1|full) PROFILE="full" ;;
+      2|minimal-java) PROFILE="minimal-java" ;;
+      3|ide-only) PROFILE="ide-only" ;;
+      4|personalize) PROFILE="personalize" ;;
+      5|custom) PROFILE="custom" ;;
+      *)
+        log_warn "Unknown selection '$choice'; choose a profile from 1 to 5."
+        continue
+        ;;
+    esac
+    return 0
+  done
 }
 
 prompt_custom_tasks() {
@@ -328,8 +348,8 @@ prompt_custom_tasks() {
     ((i++))
   done
 
-  printf "\nEnter comma-separated numbers or ids (example: 1,3,vscode_setup): "
-  read -r selection
+  read_launchpad_line $'\nEnter comma-separated numbers or ids (example: 1,3,vscode_setup): ' || return 1
+  selection="$REPLY"
 
   if [[ -z "$selection" ]]; then
     log_warn "No custom tasks selected."
@@ -339,6 +359,11 @@ prompt_custom_tasks() {
   selection="${selection//,/ }"
   for token in ${=selection}; do
     if [[ "$token" =~ '^[0-9]+$' ]]; then
+      if (( ${#token} > 9 )); then
+        log_warn "Ignoring invalid task number: $token"
+        continue
+      fi
+      token="$((10#$token))"
       if (( token < 1 || token > ${#TASK_ORDER[@]} )); then
         log_warn "Ignoring invalid task number: $token"
         continue
@@ -359,12 +384,15 @@ prompt_custom_tasks() {
 prompt_optional_tasks() {
   local answer
 
+  if [[ -n "$codex_backup_path" && -z "${SELECTED[restore_codex]:-}" ]]; then
+    select_with_deps restore_codex || return 1
+  fi
   if [[ ! -t 0 ]]; then
     return 0
   fi
 
   if [[ -z "${SELECTED[restore_codex]:-}" ]]; then
-    ebk_read_default $'\nRestore a Codex backup as part of this run? (y/N): ' "n" || return 1
+    read_launchpad_confirmation $'\nRestore a Codex backup as part of this run? (y/N): ' "n" || return 1
     answer="$REPLY"
     if [[ "$answer" =~ '^[Yy]$' ]]; then
       select_with_deps "restore_codex"
@@ -375,15 +403,19 @@ prompt_optional_tasks() {
 prompt_task_values() {
   local clone_answer
 
+  if [[ -n "${SELECTED[clone_repos]:-}" && ! -t 0 && -z "$clone_destination" ]]; then
+    unset 'SELECTED[clone_repos]' 'INCLUDED_BY_DEP[clone_repos]'
+    log_info "Repository cloning not selected; provide --clone-destination to opt in with redirected input."
+  fi
   if [[ -n "${SELECTED[clone_repos]:-}" && -t 0 ]]; then
     log_step "Clone GitHub repositories"
-    ebk_read_default "Clone repositories from config/github-repos.txt? (y/N): " "n" || return 1
+    read_launchpad_confirmation "Clone repositories from config/github-repos.txt? (y/N): " "n" || return 1
     clone_answer="$REPLY"
     case "${clone_answer:l}" in
       y|yes)
         while [[ -z "$clone_destination" ]]; do
-          printf "Directory to clone into (required): "
-          read -r clone_destination
+          read_launchpad_line "Directory to clone into (required): " || return 1
+          clone_destination="$REPLY"
           clone_destination="${clone_destination/#\~/$HOME}"
           if [[ -z "$clone_destination" ]]; then
             log_warn "A clone destination is required when clone_repos is selected."
@@ -394,28 +426,23 @@ prompt_task_values() {
         unset 'SELECTED[clone_repos]'
         unset 'INCLUDED_BY_DEP[clone_repos]'
         ;;
-      *)
-        log_warn "Unrecognized response '${clone_answer}'; skipping repository cloning."
-        unset 'SELECTED[clone_repos]'
-        unset 'INCLUDED_BY_DEP[clone_repos]'
-        ;;
     esac
   fi
 
   if [[ -n "${SELECTED[clone_repos]:-}" && -z "$clone_destination" ]]; then
     log_error "clone_repos needs --clone-destination."
-    exit 1
+    return 1
   fi
 
   if [[ -n "${SELECTED[restore_codex]:-}" && -z "$codex_backup_path" && ! -t 0 ]]; then
     log_error "Codex restore needs --codex-backup when stdin is not interactive."
-    exit 1
+    return 1
   fi
 
   if [[ -n "${SELECTED[restore_codex]:-}" ]]; then
     while [[ -z "$codex_backup_path" ]]; do
-      printf "\nCodex backup folder to restore from: "
-      read -r codex_backup_path
+      read_launchpad_line $'\nCodex backup folder to restore from: ' || return 1
+      codex_backup_path="$REPLY"
       codex_backup_path="${codex_backup_path/#\~/$HOME}"
       if [[ -z "$codex_backup_path" ]]; then
         log_warn "A backup path is required for Codex restore."
@@ -604,7 +631,10 @@ authorize_admin_for_task() {
     return 1
   fi
 
-  ebk_read_default "Enable admin privileges for this step only? (Y/n): " "y" || return 1
+  read_launchpad_confirmation "Enable admin privileges for this step only? (Y/n): " "y" || {
+    record_failure_reason "Admin approval input ended or was canceled."
+    return 1
+  }
   answer="$REPLY"
   if [[ ! "$answer" =~ '^[Yy]$' ]]; then
     log_warn "Skipping ${TASK_LABEL[$id]} without admin privileges."
@@ -733,7 +763,7 @@ confirm_plan() {
     return 0
   fi
 
-  ebk_read_default $'\nProceed with this launchpad run? (Y/n): ' "y" || return 1
+  read_launchpad_confirmation $'\nProceed with this launchpad run? (Y/n): ' "y" || return 2
   answer="$REPLY"
   [[ "$answer" =~ '^[Yy]$' ]]
 }
@@ -1121,15 +1151,19 @@ main() {
   register_tasks
 
   if [[ -z "$PROFILE" ]]; then
-    prompt_profile
+    prompt_profile || return 1
   fi
 
-  select_profile_tasks "$PROFILE"
-  prompt_optional_tasks
-  prompt_task_values
-  print_plan
+  select_profile_tasks "$PROFILE" || return 1
+  prompt_optional_tasks || return 1
+  prompt_task_values || return 1
+  print_plan || return 1
 
-  if ! confirm_plan; then
+  confirm_plan
+  local confirmation_rc=$?
+  if [[ "$confirmation_rc" -eq 2 ]]; then
+    return 1
+  elif [[ "$confirmation_rc" -ne 0 ]]; then
     log_warn "Launchpad run canceled."
     exit 0
   fi
