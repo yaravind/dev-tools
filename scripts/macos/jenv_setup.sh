@@ -82,20 +82,52 @@ add_java_runtime() {
 
 select_global_version() {
   local global_ver
+  local current_global_ver=""
+  local available_versions
+
+  log_info "Enter s or skip to leave the global Java version unchanged."
+  if ! available_versions="$(jenv versions --bare)"; then
+    record_failure "Failed to read the Java versions managed by jenv."
+    return 1
+  fi
+
+  if ! current_global_ver="$(jenv version-name 2>/dev/null)"; then
+    log_warn "Could not read the current jenv version; no default version will be selected."
+  elif [[ -n "$current_global_ver" ]] && ! printf '%s\n' "$available_versions" | grep -Fxq -- "$current_global_ver"; then
+    log_warn "Current jenv version '$current_global_ver' is not in the managed version list; no default version will be selected."
+    current_global_ver=""
+  fi
 
   while true; do
-    printf '\nChoose the version (from above) to set as global version: '
-    if ! read global_ver; then
-      record_failure "No global Java version was provided."
-      return 1
+    if [[ -n "$current_global_ver" ]]; then
+      if ! ebk_read_default $'\n'"Choose the version (from above) to set as global version (s to skip) [default: ${current_global_ver}]: " "$current_global_ver"; then
+        record_failure "No global Java version was provided."
+        return 1
+      fi
+      global_ver="$REPLY"
+    else
+      printf '\nChoose the version (from above) to set as global version (s to skip): '
+      if ! read global_ver; then
+        record_failure "No global Java version was provided."
+        return 1
+      fi
+    fi
+
+    if [[ "${global_ver:l}" == "s" || "${global_ver:l}" == "skip" ]]; then
+      log_ok "Skipped global Java version selection; leaving it unchanged."
+      return 0
     fi
 
     if [[ -z "$global_ver" ]]; then
-      log_warn "No version entered."
-      continue
+      if [[ -n "$current_global_ver" ]]; then
+        global_ver="$current_global_ver"
+      else
+        log_warn "No version entered."
+        continue
+      fi
     fi
 
-    if jenv versions --bare | grep -Fxq -- "$global_ver"; then
+    if printf '%s\n' "$available_versions" | grep -Fxq -- "$global_ver"; then
       break
     fi
 
@@ -109,8 +141,44 @@ select_global_version() {
     return 1
   fi
 
-  jenv rehash
-  hash -r
+}
+
+rehash_jenv() {
+  local output attempt
+  for attempt in 1 2 3; do
+    if output="$(jenv rehash 2>&1)"; then
+      hash -r
+      log_ok "jenv shims refreshed."
+      return 0
+    fi
+    if [[ "$output" != *"cannot rehash:"* || "$output" != *".jenv-shim exists"* ]]; then
+      printf '%s\n' "$output" >&2
+      record_failure "Failed to refresh jenv shims."
+      return 1
+    fi
+    if (( attempt < 3 )); then
+      log_warn "jenv rehash is locked; retrying in one second."
+      sleep 1
+    fi
+  done
+
+  printf '%s\n' "$output" >&2
+  log_warn "The rehash lock may be stale or another jenv rehash may still be running."
+  log_warn "Only approve force recovery if no other jenv setup or rehash is running."
+  if [[ -t 0 ]]; then
+    if ebk_read_default "Run jenv rehash --force to recover the lock? (y/N): " "n"; then
+      if [[ "${REPLY:l}" == "y" || "${REPLY:l}" == "yes" ]]; then
+        if output="$(jenv rehash --force 2>&1)"; then
+          hash -r
+          log_ok "Recovered the jenv rehash lock and refreshed shims."
+          return 0
+        fi
+        printf '%s\n' "$output" >&2
+      fi
+    fi
+  fi
+  record_failure "jenv rehash remains unsuccessful. When no other rehash is running, run: jenv rehash --force"
+  return 1
 }
 
 enable_jenv_plugin() {
@@ -197,6 +265,9 @@ main() {
   log_step "Enabling jenv plugins"
   enable_jenv_plugin export
   enable_jenv_plugin maven
+
+  log_step "Refreshing jenv shims"
+  rehash_jenv || exit 1
 
   verify_jenv_state
 

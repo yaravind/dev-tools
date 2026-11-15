@@ -270,7 +270,7 @@ function Resolve-Action {
         Write-Info "1. Skip changes"
         Write-Info "2. Update global Git identity and credential helper"
         Write-Info "3. Add another GitHub CLI account with gh auth login"
-        $choice = Read-Host "Select an option [1-3] (default: 1)"
+        $choice = Read-EbkDefault -Prompt "Select an option [1-3] (default: 1)" -DefaultValue "1"
         switch ($choice.Trim().ToLowerInvariant()) {
             { $_ -in @("", "1", "skip") } { return "Skip" }
             { $_ -in @("2", "update") } { return "UpdateIdentity" }
@@ -285,7 +285,7 @@ function Resolve-Action {
     Write-Info "1. Configure global Git identity and credential helper"
     Write-Info "2. Add a GitHub CLI account with gh auth login"
     Write-Info "3. Skip changes"
-    $newChoice = Read-Host "Select an option [1-3] (default: 1)"
+    $newChoice = Read-EbkDefault -Prompt "Select an option [1-3] (default: 1)" -DefaultValue "1"
     switch ($newChoice.Trim().ToLowerInvariant()) {
         { $_ -in @("", "1", "configure") } { return "UpdateIdentity" }
         { $_ -in @("2", "add") } { return "AddGitHubAccount" }

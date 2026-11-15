@@ -1,5 +1,62 @@
 # Shared CLI branding for dev-tools / Engineer Bootstrap Kit.
 
+function Read-EbkDefault {
+    param(
+        [string]$Prompt,
+        [string]$DefaultValue
+    )
+
+    if ([Console]::IsInputRedirected -or [Console]::IsOutputRedirected) {
+        $value = Read-Host $Prompt
+        if ([string]::IsNullOrEmpty($value)) { return $DefaultValue }
+        return $value
+    }
+
+    $prefix = "${Prompt}: "
+    $value = $DefaultValue
+    $position = $value.Length
+    [Console]::Write($prefix + $value)
+    while ($true) {
+        $key = [Console]::ReadKey($true)
+        if ($key.Key -eq [ConsoleKey]::Enter) {
+            [Console]::WriteLine()
+            if ($value.Length -eq 0) { return $DefaultValue }
+            return $value
+        }
+        if ($key.Key -eq [ConsoleKey]::C -and ($key.Modifiers -band [ConsoleModifiers]::Control)) {
+            [Console]::WriteLine()
+            throw [System.OperationCanceledException]::new("Input canceled by user.")
+        }
+
+        $oldLength = $value.Length
+        $oldPosition = $position
+        switch ($key.Key) {
+            Backspace {
+                if ($position -gt 0) {
+                    $value = $value.Remove($position - 1, 1)
+                    $position--
+                }
+            }
+            Delete {
+                if ($position -lt $value.Length) { $value = $value.Remove($position, 1) }
+            }
+            LeftArrow { if ($position -gt 0) { $position-- } }
+            RightArrow { if ($position -lt $value.Length) { $position++ } }
+            Home { $position = 0 }
+            End { $position = $value.Length }
+            Escape { $value = ""; $position = 0 }
+            default {
+                if (-not [char]::IsControl($key.KeyChar)) {
+                    $value = $value.Insert($position, [string]$key.KeyChar)
+                    $position++
+                }
+            }
+        }
+        [Console]::Write(("`b" * $oldPosition) + $value + (" " * [Math]::Max(0, $oldLength - $value.Length)))
+        [Console]::Write("`b" * ([Math]::Max($oldLength, $value.Length) - $position))
+    }
+}
+
 function Get-EbkTheme {
     param(
         [ValidateSet("Auto","Dark","Light")]

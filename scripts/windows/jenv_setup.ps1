@@ -303,7 +303,8 @@ function Get-ManagedJenvVersions {
     $versions = New-Object System.Collections.Generic.List[object]
     $inGlobalList = $false
     foreach ($line in $output) {
-        $value = ($line -replace '^[\*\s]+', '').Trim()
+        $isCurrent = $line -match '^\s*\*\s*'
+        $value = ($line -replace '^\s*\*\s*', '').Trim()
         if ([string]::IsNullOrWhiteSpace($value)) {
             continue
         }
@@ -329,6 +330,7 @@ function Get-ManagedJenvVersions {
             [void]$versions.Add([PSCustomObject]@{
                 Name = $name
                 Path = $path
+                Current = $isCurrent
             })
         }
     }
@@ -381,10 +383,11 @@ function Show-ManagedJenvChoices {
 
     $index = 1
     foreach ($version in $Versions) {
+        $currentLabel = if ($version.Current) { " (current)" } else { "" }
         if ($version.Path) {
-            Write-Host ("  {0,2}. {1,-28} {2}" -f $index, $version.Name, $version.Path)
+            Write-Host ("  {0,2}. {1,-28} {2}{3}" -f $index, $version.Name, $version.Path, $currentLabel)
         } else {
-            Write-Host ("  {0,2}. {1}" -f $index, $version.Name)
+            Write-Host ("  {0,2}. {1}{2}" -f $index, $version.Name, $currentLabel)
         }
         $index++
     }
@@ -417,20 +420,29 @@ function Select-GlobalVersion {
         Write-Warn "No -GlobalVersion provided in non-interactive mode; skipping global Java version selection."
         return
     } else {
+        $currentVersion = @($versions | Where-Object { $_.Current } | Select-Object -First 1)
         $attempts = 0
         while ($attempts -lt 5) {
-            $entered = Read-Host "Enter the number of the Java version to set as global"
+            if ($currentVersion.Count -gt 0) {
+                $entered = Read-EbkDefault -Prompt "Choose the version (from above) to set as global version [default: $($currentVersion[0].Name)]" -DefaultValue $currentVersion[0].Name
+            } else {
+                $entered = Read-Host "Enter the number of the Java version to set as global"
+            }
             $attempts++
             if ([string]::IsNullOrWhiteSpace($entered)) {
+                if ($currentVersion.Count -gt 0) {
+                    $script:SelectedVersion = $currentVersion[0].Name
+                    break
+                }
                 Write-Warn "No selection entered."
                 continue
             }
-            $resolvedVersion = Resolve-JEnvVersionSelection -Selection $entered -Versions $versions -RequireIndex
+            $resolvedVersion = Resolve-JEnvVersionSelection -Selection $entered -Versions $versions
             if ($resolvedVersion) {
                 $script:SelectedVersion = $resolvedVersion
                 break
             }
-            Write-Warn "Selection '$entered' is not a valid number from the list above."
+            Write-Warn "Selection '$entered' is not a valid number, name, or path from the list above."
         }
 
         if (-not $script:SelectedVersion) {

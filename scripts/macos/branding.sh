@@ -6,6 +6,26 @@ ebk_command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
+ebk_read_default() {
+  local prompt_text="$1" default_value="$2"
+  REPLY="$default_value"
+  if [[ -t 0 ]]; then
+    bindkey -N ebk-prompt emacs
+    bindkey -M ebk-prompt $'\e[3~' delete-char
+    bindkey -M ebk-prompt $'\e[H' beginning-of-line
+    bindkey -M ebk-prompt $'\e[1~' beginning-of-line
+    bindkey -M ebk-prompt $'\e[F' end-of-line
+    bindkey -M ebk-prompt $'\e[4~' end-of-line
+    # Launchpad pipes stdout through tee; line editing must use the input terminal.
+    vared -M ebk-prompt -p "$prompt_text" REPLY > /dev/tty 2> /dev/tty || return 1
+  else
+    printf '%s' "$prompt_text"
+    IFS= read -r REPLY || return 1
+  fi
+  [[ -n "$REPLY" ]] || REPLY="$default_value"
+  return 0
+}
+
 ebk_theme_from_rgb() {
   local red="$1" green="$2" blue="$3"
 

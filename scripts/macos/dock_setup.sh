@@ -229,12 +229,20 @@ if ! command_exists defaults; then
 fi
 
 ebk_log_info "Review the plan above before continuing."
-printf "\nWould you like to proceed? (y/n): "
-read -r proceed
-if [[ ! "$proceed" =~ ^[yY]$ ]]; then
-  ebk_log_warn "Aborted by user. No changes made."
-  exit "$USER_CANCEL_EXIT"
-fi
+ebk_read_default $'\nWould you like to proceed? (y/N; s to skip; default: skip): ' "skip" || exit "$USER_CANCEL_EXIT"
+proceed="$REPLY"
+case "${proceed:l}" in
+  y|yes)
+    ;;
+  ""|n|no|s|skip)
+    ebk_log_warn "Dock changes skipped by user. No changes made."
+    exit "$USER_CANCEL_EXIT"
+    ;;
+  *)
+    ebk_log_warn "Unrecognized response '${proceed}'; skipping Dock changes."
+    exit "$USER_CANCEL_EXIT"
+    ;;
+esac
 
 ebk_log_phase "Backing up current Dock to ${DOCK_PLIST_BAK}"
 run_cmd cp "$DOCK_PLIST" "$DOCK_PLIST_BAK" || { rollback "Failed to backup Dock plist."; }

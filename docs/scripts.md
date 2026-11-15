@@ -7,6 +7,16 @@ permalink: /scripts/
 
 This file documents the repository's helper scripts and what they do. For usage details, run the individual scripts with `-Help` (Windows PowerShell scripts) or check the comments at the top of each script.
 
+The launchpads default to the full profile; repository cloning is opt-in, and Codex restore is opt-in. The macOS Dock setup defaults to skipping changes unless explicitly approved. Git and JetBrains setup prompts retain their displayed defaults. jenv suggests the currently selected version and accepts another selection.
+
+Final launchpad confirmation defaults to `y` on both platforms. The macOS per-step admin approval also defaults to `y`; edit it to `n` to skip that admin-scoped step. This does not bypass sudo authentication.
+
+In interactive terminals, these prompts prefill the default as editable text after the prompt. Press Enter to accept it, or edit it using Backspace/Delete and the arrow keys (Home/End move within the value). The Dock prompt prefills `skip`. Redirected input continues to accept a blank line for the default.
+
+On macOS, editable prompts use the terminal directly even when launchpad pipes child-script output into its logs. Prompt editing is not captured in those logs; script results are still logged.
+
+The macOS jenv version prompt accepts `s` or `skip` to keep the global version unchanged while continuing plugin setup and verification. Final shim refresh retries a busy rehash lock; persistent locks require explicit approval before `jenv rehash --force`. Only approve recovery when no other jenv rehash is running. Unresolved rehash errors fail the task instead of reporting success.
+
 | Script Name                             | Description                                                                                                                                  |
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scripts/macos/setup_env.sh`            | Primary bootstrap script — installs and configures 30+ developer tools (JDK, Python, Rust, fonts, IDEs, shell utils) on macOS (Apple Silicon and Intel) |

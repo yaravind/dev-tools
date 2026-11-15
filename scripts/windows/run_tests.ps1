@@ -295,7 +295,7 @@ if "%1"=="list" (
   echo -path                 C:\Program Files\Microsoft\jdk-11.0.30.7-hotspot
   echo jdk-11.0.30.7-hotspot C:\Program Files\Microsoft\jdk-11.0.30.7-hotspot
   echo jdk-17.0.20.8-hotspot C:\Program Files\Microsoft\jdk-17.0.20.8-hotspot
-  echo jdk-21.0.12.8-hotspot $mockJdkForBatch
+  echo * jdk-21.0.12.8-hotspot $mockJdkForBatch
   echo All locally specified versions
   exit /b 0
 )
@@ -326,7 +326,7 @@ name                  path
 -path                 C:\Program Files\Microsoft\jdk-11.0.30.7-hotspot
 jdk-11.0.30.7-hotspot C:\Program Files\Microsoft\jdk-11.0.30.7-hotspot
 jdk-17.0.20.8-hotspot C:\Program Files\Microsoft\jdk-17.0.20.8-hotspot
-jdk-21.0.12.8-hotspot C:\Program Files\Microsoft\jdk-21.0.12.8-hotspot
+* jdk-21.0.12.8-hotspot C:\Program Files\Microsoft\jdk-21.0.12.8-hotspot
 All locally specified versions
 EOF
     exit 0
@@ -360,6 +360,9 @@ echo "mock java"
     }
     if ($mockOutputText -match "(?m)^\s+\d+\.\s+(-path|----)") {
         Add-DryRunFailure "jenv_setup.ps1 displayed invalid JEnv choices from jenv list output"
+    }
+    if ($mockOutputText -notmatch "jdk-21\.0\.12\.8-hotspot \(current\)") {
+        Add-DryRunFailure "jenv_setup.ps1 did not mark the currently selected Java version"
     }
 } catch {
     Add-DryRunFailure "MockRun FAILED: jenv_setup.ps1 JEnv choice resolution - $_"

@@ -285,8 +285,8 @@ prompt_profile() {
   printf "  3. ide-only     - VS Code, IntelliJ, and PyCharm plugin setup only\n"
   printf "  4. personalize  - Shell plugins, Dock, macOS settings, default apps\n"
   printf "  5. custom       - Choose individual tasks\n"
-  printf "\nSelect profile [1-5] (default: full): "
-  read -r choice
+  ebk_read_default $'\nSelect profile [1-5] (default: 1 - full): ' "1" || return 1
+  choice="$REPLY"
 
   case "$choice" in
     ""|1|full)
@@ -359,8 +359,8 @@ prompt_optional_tasks() {
   fi
 
   if [[ -z "${SELECTED[restore_codex]:-}" ]]; then
-    printf "\nRestore a Codex backup as part of this run? (y/N): "
-    read -r answer
+    ebk_read_default $'\nRestore a Codex backup as part of this run? (y/N): ' "n" || return 1
+    answer="$REPLY"
     if [[ "$answer" =~ '^[Yy]$' ]]; then
       select_with_deps "restore_codex"
     fi
@@ -372,21 +372,29 @@ prompt_task_values() {
 
   if [[ -n "${SELECTED[clone_repos]:-}" && -t 0 ]]; then
     log_step "Clone GitHub repositories"
-    printf "Clone repositories from config/github-repos.txt? (Y/n): "
-    read -r clone_answer
-    if [[ "$clone_answer" =~ '^[Nn]$' ]]; then
-      unset 'SELECTED[clone_repos]'
-      unset 'INCLUDED_BY_DEP[clone_repos]'
-    else
-      while [[ -z "$clone_destination" ]]; do
-        printf "Directory to clone into (required): "
-        read -r clone_destination
-        clone_destination="${clone_destination/#\~/$HOME}"
-        if [[ -z "$clone_destination" ]]; then
-          log_warn "A clone destination is required when clone_repos is selected."
-        fi
-      done
-    fi
+    ebk_read_default "Clone repositories from config/github-repos.txt? (y/N): " "n" || return 1
+    clone_answer="$REPLY"
+    case "${clone_answer:l}" in
+      y|yes)
+        while [[ -z "$clone_destination" ]]; do
+          printf "Directory to clone into (required): "
+          read -r clone_destination
+          clone_destination="${clone_destination/#\~/$HOME}"
+          if [[ -z "$clone_destination" ]]; then
+            log_warn "A clone destination is required when clone_repos is selected."
+          fi
+        done
+        ;;
+      ""|n|no)
+        unset 'SELECTED[clone_repos]'
+        unset 'INCLUDED_BY_DEP[clone_repos]'
+        ;;
+      *)
+        log_warn "Unrecognized response '${clone_answer}'; skipping repository cloning."
+        unset 'SELECTED[clone_repos]'
+        unset 'INCLUDED_BY_DEP[clone_repos]'
+        ;;
+    esac
   fi
 
   if [[ -n "${SELECTED[clone_repos]:-}" && -z "$clone_destination" ]]; then
@@ -538,8 +546,8 @@ authorize_admin_for_task() {
     return 1
   fi
 
-  printf "Enable admin privileges for this step only? (y/N): "
-  read -r answer
+  ebk_read_default "Enable admin privileges for this step only? (Y/n): " "y" || return 1
+  answer="$REPLY"
   if [[ ! "$answer" =~ '^[Yy]$' ]]; then
     log_warn "Skipping ${TASK_LABEL[$id]} without admin privileges."
     TASK_STATUS[$id]="skipped"
@@ -667,8 +675,8 @@ confirm_plan() {
     return 0
   fi
 
-  printf "\nProceed with this launchpad run? (y/N): "
-  read -r answer
+  ebk_read_default $'\nProceed with this launchpad run? (Y/n): ' "y" || return 1
+  answer="$REPLY"
   [[ "$answer" =~ '^[Yy]$' ]]
 }
 
@@ -772,7 +780,7 @@ run_task() {
     TASK_STATUS[$id]="skipped"
     {
       printf 'Launchpad status: skipped\n'
-      printf 'Reason: user canceled the Dock changes after reviewing the plan.\n'
+      printf 'Reason: user skipped the Dock changes after reviewing the plan.\n'
     } >> "$log_file"
     log_warn "${TASK_LABEL[$id]} skipped by user."
     return 0

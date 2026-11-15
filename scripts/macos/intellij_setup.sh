@@ -34,8 +34,8 @@ prompt_for_mode() {
 
   local choice
   while true; do
-    printf 'Enter mode [1/2] (default: --%s): ' "${MODE}"
-    IFS= read -r choice
+    ebk_read_default "Enter mode [1/2] (default: ${MODE}): " "$MODE" || return 1
+    choice="$REPLY"
     choice="$(trim "$choice")"
 
     case "$choice" in

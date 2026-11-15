@@ -69,7 +69,7 @@ function Resolve-Mode {
     }
 
     while ($true) {
-        $choice = Read-Host "Enter mode [1/2] (default: --$mode)"
+        $choice = Read-EbkDefault -Prompt "Enter mode [1/2] (default: $mode)" -DefaultValue $mode
         $choice = if ($null -eq $choice) { "" } else { $choice.Trim() }
         switch -Regex ($choice) {
             '^(|1|professional|--professional)$' { return "professional" }

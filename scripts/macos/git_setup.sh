@@ -241,8 +241,8 @@ prompt_action() {
     log_info "1. Skip changes"
     log_info "2. Update global Git identity and credential helper"
     log_info "3. Add another GitHub CLI account with gh auth login"
-    printf '\nSelect an option [1-3] (default: 1): '
-    IFS= read -r choice
+    ebk_read_default $'\nSelect an option [1-3] (default: 1): ' "1" || return 1
+    choice="$REPLY"
 
     case "$(trim "$choice")" in
       ""|1|skip)
@@ -267,8 +267,8 @@ prompt_action() {
     log_info "1. Configure global Git identity and credential helper"
     log_info "2. Add a GitHub CLI account with gh auth login"
     log_info "3. Skip changes"
-    printf '\nSelect an option [1-3] (default: 1): '
-    IFS= read -r choice
+    ebk_read_default $'\nSelect an option [1-3] (default: 1): ' "1" || return 1
+    choice="$REPLY"
 
     case "$(trim "$choice")" in
       ""|1|configure)

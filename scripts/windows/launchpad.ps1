@@ -177,7 +177,7 @@ function Prompt-Profile {
     Write-Host "  3. ide-only     - VS Code, IntelliJ, and PyCharm plugin setup only"
     Write-Host "  4. personalize  - PowerShell profile and Taskbar"
     Write-Host "  5. custom       - Choose individual tasks"
-    $choice = Read-Host "Select profile [1-5] (default: full)"
+    $choice = Read-EbkDefault -Prompt "Select profile [1-5] (default: 1 - full)" -DefaultValue "1"
 
     switch ($choice.Trim().ToLowerInvariant()) {
         { $_ -in @("", "1", "full") } { return "full" }
@@ -236,7 +236,7 @@ function Prompt-OptionalTasks {
     }
 
     if (-not $script:Selected.ContainsKey("restore_codex")) {
-        $answer = Read-Host "Restore a Codex backup as part of this run? (y/N)"
+        $answer = Read-EbkDefault -Prompt "Restore a Codex backup as part of this run? (y/N)" -DefaultValue "n"
         if ($answer -match '^[Yy]$') {
             Select-Task -Id "restore_codex"
         }
@@ -246,9 +246,12 @@ function Prompt-OptionalTasks {
 function Prompt-TaskValues {
     if ($script:Selected.ContainsKey("clone_repos") -and (Test-CanPrompt) -and -not $Yes) {
         Write-Step "Clone GitHub repositories"
-        $answer = Read-Host "Clone repositories from config/github-repos.txt? (Y/n)"
-        if ($answer -match '^[Nn]$') {
+        $answer = Read-EbkDefault -Prompt "Clone repositories from config/github-repos.txt? (y/N)" -DefaultValue "n"
+        if ($answer -notmatch '^[Yy]$') {
             $script:Selected.Remove("clone_repos")
+            if (-not [string]::IsNullOrWhiteSpace($answer) -and $answer -notmatch '^[Nn]$') {
+                Write-Warn "Unrecognized response '$answer'; skipping repository cloning."
+            }
         } elseif (-not $CloneDestination) {
             $value = Read-Host "Directory to clone into [default: current directory]"
             if (-not [string]::IsNullOrWhiteSpace($value)) {
@@ -519,7 +522,7 @@ function Confirm-Plan {
         return $true
     }
 
-    $answer = Read-Host "Proceed with this launchpad run? (y/N)"
+    $answer = Read-EbkDefault -Prompt "Proceed with this launchpad run? (Y/n)" -DefaultValue "y"
     return ($answer -match '^[Yy]$')
 }
 

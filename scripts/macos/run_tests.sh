@@ -34,6 +34,18 @@ shellcheck_fail=0
 shellcheck_checked=0
 missing_count=0
 
+for default_input in "" "y"; do
+  if printf '%s\n' "$default_input" | (
+    ebk_read_default "Test prompt: " "skip" >/dev/null &&
+      [[ "$REPLY" == "${default_input:-skip}" ]]
+  ); then
+    log_ok "Default prompt accepts '${default_input:-<blank>}' input"
+  else
+    log_warn "Default prompt input handling failed"
+    ((fail_count++))
+  fi
+done
+
 # ok_count was unused; keep counts derived from arrays and fail/missing totals.
 
 for script in "${scripts[@]}"; do
@@ -117,6 +129,10 @@ else
 fi
 
 log_step "macOS dry-run checks complete"
+if ! zsh "${SCRIPT_DIR}/test_jenv_setup.sh"; then
+  log_error "jenv regression checks failed."
+  ((fail_count++))
+fi
 if ((fail_count > 0 || shellcheck_fail > 0)); then
   exit 1
 fi
