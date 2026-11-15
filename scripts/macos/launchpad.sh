@@ -785,6 +785,12 @@ run_task() {
     TASK_STATUS[$id]="issues"
     log_warn "${TASK_LABEL[$id]} completed with issues. Continuing; review ${log_file}."
     return 0
+  elif [[ "$id" == "intellij_setup" || "$id" == "pycharm_setup" ]] &&
+       grep -Eq 'Status[[:space:]]+.*COMPLETED WITH ISSUES' "$log_file" &&
+       grep -Eq 'Failed installs[[:space:]]+0' "$log_file"; then
+    TASK_STATUS[$id]="issues"
+    log_warn "${TASK_LABEL[$id]} completed with issues. Continuing; review ${log_file}."
+    return 0
   else
     TASK_STATUS[$id]="failed"
     log_error "${TASK_LABEL[$id]} failed with exit code ${rc}."
@@ -841,6 +847,9 @@ print_log_error_excerpt() {
         if ($0 ~ /✖ ERROR/ ||
             lower ~ /(^|[[:space:]])fatal:/ ||
             lower ~ /(^|[[:space:]])error:/ ||
+            lower ~ /unknown plugins/ ||
+            lower ~ /completed with issues/ ||
+            lower ~ /failed installs/ ||
             lower ~ /traceback/ ||
             lower ~ /exception/ ||
             lower ~ /status[[:space:]]+.*failed/ ||

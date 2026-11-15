@@ -16,5 +16,4 @@ io.agnix.jetbrains
 be.ajuvercr.swls
 
 # Professional-only plugins (installed only in --professional mode)
-com.intellij.ml.llm.experimental
 ru.adelf.idea.dotenv

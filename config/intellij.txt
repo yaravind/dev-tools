@@ -26,4 +26,3 @@ community:be.ajuvercr.swls
 
 # Ultimate-only plugins (installed only in --ultimate mode)
 ultimate:com.intellij.cron
-com.intellij.ml.llm.experimental

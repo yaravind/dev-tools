@@ -99,7 +99,7 @@ Use community mode when you are on IntelliJ Community Edition:
 zsh scripts/macos/intellij_setup.sh --community
 ```
 
-This script always prints available mode options first and prompts you to select a mode (`--ultimate` or `--community`). It reads plugin IDs from [config/intellij.txt](/Users/ayarram/Developer/dev-tools/config/intellij.txt), ignores blank/comment lines, validates IDs, and installs each plugin via IntelliJ's CLI (`idea installPlugins`). `--ultimate` installs both `community:` and `ultimate:` entries, while `--community` warns and skips `ultimate:` entries. Use `bundled:` or `unavailable:` for documented plugin IDs that should not be installed through the JetBrains CLI.
+This script always prints available mode options first and prompts you to select a mode (`--ultimate` or `--community`). It reads plugin IDs from [config/intellij.txt](/Users/ayarram/Developer/dev-tools/config/intellij.txt), ignores blank/comment lines, validates IDs, and batches configured plugins in an IntelliJ CLI (`idea installPlugins`) invocation where possible. If a batch fails ambiguously, it retries individual plugins to preserve per-plugin diagnostics. `--ultimate` installs both `community:` and `ultimate:` entries, while `--community` warns and skips `ultimate:` entries.
 
 > Important: quit IntelliJ IDEA before running the script.
 

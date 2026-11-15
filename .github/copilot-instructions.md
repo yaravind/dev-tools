@@ -38,8 +38,9 @@
 ## JetBrains CLI conventions (intellij_setup.sh, pycharm_setup.sh)
 - Always resolve the **native app binary** (`/Applications/IntelliJ IDEA.app/Contents/MacOS/idea`, `/Applications/PyCharm.app/Contents/MacOS/pycharm`). Never use the Homebrew wrapper (`idea`, `charm`) for `installPlugins` — the `open -na` wrapper does not reliably return exit codes or install output.
 - `installPlugins` output is very noisy (JVM deprecation warnings, IntelliJ internal `WARN` logs, `ClassNotFoundException` stack traces). These are harmless startup-time exceptions from the running plugin environment, not script errors. Filter them from displayed output using `grep -Ev` on: timestamp-prefixed `WARN` lines, `    at ` stack frames, `java.`/`kotlin.` exception headers, `Caused by:`, and `WARNING:`.
-- Always inspect the **raw** (unfiltered) output for outcome detection: `already installed`, `unknown plugins`, and exit code.
+- Batch pending plugin IDs in one `installPlugins` invocation to avoid repeated IDE startup costs. Inspect raw output and classify each ID individually; only retry one-by-one when the batch exits unsuccessfully without an outcome for that ID.
 - Three install outcomes to handle: `already installed` (return 2 / skip), `unknown plugins` (return 3 / warn — plugin ID not in Marketplace), generic failure (return 1 / error).
+- In launchpad, report plugin setup as `issues` for a `COMPLETED WITH ISSUES` result only when `Failed installs` is zero; retain `failed` when any plugin install failed.
 - `intellij.indexing.shared` is an internal platform module, not a Marketplace plugin — it cannot be installed via `installPlugins` and should not be in config.
 - Both scripts support interactive mode selection printed at startup (before any other work); default is the higher-tier mode (`--ultimate` / `--professional`).
 

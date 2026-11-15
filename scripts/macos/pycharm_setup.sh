@@ -119,6 +119,8 @@ is_pycharm_running() {
 
 last_missing_dependencies=()
 typeset -A last_dependency_parent
+last_raw_output=""
+batch_exit_code=0
 
 install_plugin() {
   local plugin_id="$1"
@@ -168,6 +170,87 @@ install_plugin() {
   fi
 
   return 1
+}
+
+install_plugins_batch() {
+  local raw_output
+  local install_exit_code
+
+  last_missing_dependencies=()
+  last_dependency_parent=()
+  raw_output="$("${PYCHARM_CLI[@]}" installPlugins "$@" 2>&1)"
+  install_exit_code=$?
+  last_raw_output="$raw_output"
+  batch_exit_code="$install_exit_code"
+
+  local filtered_output
+  filtered_output="$(printf '%s\n' "$raw_output" | grep -Ev \
+    '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}|^[[:space:]]*plugin repositories: \[null\]$|^[[:space:]]+at |^(java|kotlin)\.|^Caused by:|^WARNING:|^[[:space:]]*$')"
+  if [[ -n "$filtered_output" ]]; then
+    printf '%s\n' "$filtered_output"
+  fi
+
+  while IFS='|' read -r dep_id dep_parent; do
+    dep_id="$(trim "$dep_id")"
+    dep_parent="$(trim "$dep_parent")"
+    if [[ -n "$dep_id" ]]; then
+      last_missing_dependencies+=("$dep_id")
+      if [[ -n "$dep_parent" ]]; then
+        last_dependency_parent[$dep_id]="$dep_parent"
+      fi
+    fi
+  done < <(printf '%s\n' "$raw_output" | sed -n "s/.*(\([^)]*\)).*dependency on '\([^']*\)'.*/\2|\1/p" | sort -u)
+
+  while IFS= read -r dep_id; do
+    dep_id="$(trim "$dep_id")"
+    if [[ -n "$dep_id" && -z "${last_dependency_parent[$dep_id]:-}" ]]; then
+      last_missing_dependencies+=("$dep_id")
+    fi
+  done < <(printf '%s\n' "$raw_output" | sed -n "s/.*dependency on '\([^']*\)'.*/\1/p" | sort -u)
+}
+
+plugin_report_status() {
+  local raw_output="$1"
+  local plugin_id="$2"
+  local status_label="$3"
+  local line report reported_id
+  local -a reported_ids
+
+  while IFS= read -r line; do
+    [[ "$line" == *"${status_label}:"* ]] || continue
+    report="${line#*${status_label}:}"
+    report="$(trim "$report")"
+    report="${report#\[}"
+    report="${report%\]}"
+    reported_ids=("${(@s:,:)report}")
+    for reported_id in "${reported_ids[@]}"; do
+      if [[ "$(trim "$reported_id")" == "$plugin_id" ]]; then
+        [[ "$status_label" == "already installed" ]] && return 2
+        return 3
+      fi
+    done
+  done <<< "$raw_output"
+  return 0
+}
+
+queue_missing_dependencies() {
+  local parent_id="$1"
+  local dep_id required_by
+
+  for dep_id in "${last_missing_dependencies[@]}"; do
+    [[ -n "$dep_id" ]] || continue
+    required_by="${last_dependency_parent[$dep_id]:-$parent_id}"
+    if [[ -z "${dependency_parent[$dep_id]:-}" ]]; then
+      dependency_parent[$dep_id]="$required_by"
+      dependency_order+=("$dep_id")
+    fi
+    if [[ "$seen_plugins" != *$'\n'"$dep_id"$'\n'* ]]; then
+      seen_plugins+="${dep_id}"$'\n'
+      plugins_to_install+=("$dep_id")
+      ((auto_dependency_count++))
+      log_info "Queued missing dependency plugin: ${dep_id} (required by ${required_by})"
+    fi
+  done
 }
 
 print_structured_report() {
@@ -338,53 +421,55 @@ unknown_count=0
 
 plugin_index=1
 while (( plugin_index <= ${#plugins_to_install[@]} )); do
-  plugin_id="${plugins_to_install[$plugin_index]}"
-  log_step "Installing plugin [${plugin_index}/${#plugins_to_install[@]}]: ${plugin_id}"
-  install_plugin "$plugin_id"
-  install_status=$?
+  batch_plugins=()
+  while (( plugin_index <= ${#plugins_to_install[@]} )); do
+    plugin_id="${plugins_to_install[$plugin_index]}"
+    log_step "Queueing plugin [${plugin_index}/${#plugins_to_install[@]}]: ${plugin_id}"
+    batch_plugins+=("$plugin_id")
+    ((plugin_index++))
+  done
 
-  if (( ${#last_missing_dependencies[@]} > 0 )); then
-    for dep_id in "${last_missing_dependencies[@]}"; do
-      if [[ -z "$dep_id" ]]; then
-        continue
+  install_plugins_batch "${batch_plugins[@]}"
+  queue_missing_dependencies "${batch_plugins[1]}"
+
+  for plugin_id in "${batch_plugins[@]}"; do
+    plugin_report_status "$last_raw_output" "$plugin_id" "already installed"
+    install_status=$?
+    if [[ "$install_status" -eq 0 ]]; then
+      plugin_report_status "$last_raw_output" "$plugin_id" "unknown plugins"
+      install_status=$?
+    fi
+
+    if [[ "$install_status" -eq 0 ]]; then
+      if [[ "$batch_exit_code" -eq 0 ]]; then
+        install_status=0
+      else
+        install_plugin "$plugin_id"
+        install_status=$?
+        queue_missing_dependencies "$plugin_id"
       fi
+    fi
 
-      local required_by="${last_dependency_parent[$dep_id]:-$plugin_id}"
-      if [[ -z "${dependency_parent[$dep_id]:-}" ]]; then
-        dependency_parent[$dep_id]="$required_by"
-        dependency_order+=("$dep_id")
-      fi
-
-      if [[ "$seen_plugins" != *$'\n'"$dep_id"$'\n'* ]]; then
-        seen_plugins+="${dep_id}"$'\n'
-        plugins_to_install+=("$dep_id")
-        ((auto_dependency_count++))
-        log_info "Queued missing dependency plugin: ${dep_id} (required by ${required_by})"
-      fi
-    done
-  fi
-
-  case "$install_status" in
-    0)
-      log_ok "Installed \"${plugin_id}\"."
-      ((install_count++))
-      net_new_plugins+=("$plugin_id")
-      ;;
-    2)
-      log_info "Plugin \"${plugin_id}\" is already installed. Skipping."
-      ((skip_count++))
-      ;;
-    3)
-      log_warn "Plugin \"${plugin_id}\" not found in Marketplace (unknown plugin ID). Check the ID or remove from config."
-      ((unknown_count++))
-      ;;
-    *)
-      log_error "Failed to install \"${plugin_id}\"."
-      ((fail_count++))
-      ;;
-  esac
-
-  ((plugin_index++))
+    case "$install_status" in
+      0)
+        log_ok "Installed \"${plugin_id}\"."
+        ((install_count++))
+        net_new_plugins+=("$plugin_id")
+        ;;
+      2)
+        log_info "Plugin \"${plugin_id}\" is already installed. Skipping."
+        ((skip_count++))
+        ;;
+      3)
+        log_warn "Plugin \"${plugin_id}\" not found in Marketplace (unknown plugin ID). Check the ID or remove from config."
+        ((unknown_count++))
+        ;;
+      *)
+        log_error "Failed to install \"${plugin_id}\"."
+        ((fail_count++))
+        ;;
+    esac
+  done
 done
 
 overall_status="SUCCESS"
