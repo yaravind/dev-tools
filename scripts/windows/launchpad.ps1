@@ -407,6 +407,35 @@ function Test-CommandExists {
     return $null -ne (Get-Command $Command -ErrorAction SilentlyContinue)
 }
 
+function Get-LaunchpadPersistedEnvironment {
+    param([string]$Name, [string]$Scope)
+    return [Environment]::GetEnvironmentVariable($Name, $Scope)
+}
+
+function Update-InstallEnvironment {
+    param([string]$Id)
+    if ($Id -notin @("setup_env", "setup_env_min")) { return }
+
+    $entries = New-Object System.Collections.Generic.List[string]
+    $seen = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+    foreach ($value in @(
+        (Get-LaunchpadPersistedEnvironment -Name "Path" -Scope "Machine"),
+        (Get-LaunchpadPersistedEnvironment -Name "Path" -Scope "User"),
+        $env:Path
+    )) {
+        foreach ($entry in ($value -split ";")) {
+            if (-not [string]::IsNullOrWhiteSpace($entry) -and $seen.Add($entry)) {
+                [void]$entries.Add($entry)
+            }
+        }
+    }
+    $env:Path = $entries -join ";"
+    $javaHome = Get-LaunchpadPersistedEnvironment -Name "JAVA_HOME" -Scope "User"
+    if (-not $javaHome) { $javaHome = Get-LaunchpadPersistedEnvironment -Name "JAVA_HOME" -Scope "Machine" }
+    if ($javaHome) { $env:JAVA_HOME = $javaHome }
+    Write-Info "Refreshed the launchpad PATH and persisted Java environment."
+}
+
 function Check-TaskReady {
     param([string]$Id)
 
@@ -652,6 +681,15 @@ function Invoke-TaskCore {
     Add-Content -Path $logFile -Value ("Exit code: {0}" -f $rc)
 
     if ($rc -eq 0) {
+        try {
+            Update-InstallEnvironment -Id $Id
+        } catch {
+            $script:TaskStatus[$Id] = "failed"
+            $script:TaskExit[$Id] = 1
+            Write-EbkError "Environment refresh failed: $_"
+            Add-Content -Path $logFile -Value "Launchpad status: failed environment refresh`nError: $_"
+            return 1
+        }
         $script:TaskStatus[$Id] = "success"
         Write-Ok ("{0} completed." -f $task.Label)
         return 0

@@ -67,6 +67,12 @@ function Require-Config {
 
 Write-Step "Starting Windows script dry-run checks"
 
+try {
+    & (Join-Path $scriptDir "test_launchpad_regressions.ps1")
+} catch {
+    Add-DryRunFailure "Launchpad regression checks failed: $_"
+}
+
 $scripts = @(
     "gen_taskbar_apps.ps1",
     "backup_codex.ps1",

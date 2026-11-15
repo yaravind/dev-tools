@@ -505,6 +505,34 @@ command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
+refresh_install_environment() {
+  local id="$1" brew_bin="" prefix candidate
+  case "$id" in
+    pre_setup|setup_env_non_admin|setup_env_admin|setup_env_min) ;;
+    *) return 0 ;;
+  esac
+
+  if command_exists brew; then
+    brew_bin="$(command -v brew)"
+  else
+    for candidate in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+      if [[ -x "$candidate" ]]; then
+        brew_bin="$candidate"
+        break
+      fi
+    done
+  fi
+  if [[ -z "$brew_bin" ]] || ! prefix="$("$brew_bin" --prefix)" || [[ ! -d "$prefix/bin" ]]; then
+    record_failure_reason "Cannot refresh the launchpad Homebrew environment after ${TASK_LABEL[$id]}."
+    return 1
+  fi
+  export HOMEBREW_PREFIX="$prefix"
+  path=("$prefix/bin" "$prefix/sbin" "${path[@]}")
+  typeset -gU path
+  rehash
+  log_info "Refreshed the launchpad Homebrew environment."
+}
+
 task_requires_admin() {
   local id="$1"
   [[ "${TASK_ADMIN[$id]:-0}" == "1" ]]
@@ -798,6 +826,12 @@ run_task_impl() {
   fi
 
   if [[ "$rc" -eq 0 ]]; then
+    if ! refresh_install_environment "$id"; then
+      TASK_STATUS[$id]="failed"
+      TASK_EXIT[$id]=1
+      printf 'Launchpad status: failed environment refresh\nError: %s\n' "$LAST_ERROR" >> "$log_file"
+      return 1
+    fi
     TASK_STATUS[$id]="success"
     log_ok "${TASK_LABEL[$id]} completed."
   elif task_allows_issues "$id"; then

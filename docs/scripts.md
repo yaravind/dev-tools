@@ -13,6 +13,8 @@ Final launchpad confirmation defaults to `y` on both platforms. The macOS per-st
 
 Both launchpad summaries include a `Time (s)` column and overall execution time, in seconds with five decimal places. Per-task time includes preparation, prompts, and execution (or dry-run planning); tasks never reached show `-`. Each task log records the same duration. Overall time covers the task execution phase, including skipped attempts and between-task overhead, but excludes initial profile selection and final confirmation.
 
+After successful installation phases, launchpad refreshes its own tool environment before starting subsequent tasks. macOS resolves the Homebrew prefix and adds its binary directories; Windows merges persisted machine/user PATH entries with existing session entries and refreshes persisted JAVA_HOME. Refresh failures are reported as task failures.
+
 In interactive terminals, these prompts prefill the default as editable text after the prompt. Press Enter to accept it, or edit it using Backspace/Delete and the arrow keys (Home/End move within the value). The Dock prompt prefills `skip`. Redirected input continues to accept a blank line for the default.
 
 On macOS, editable prompts use the terminal directly even when launchpad pipes child-script output into its logs. Prompt editing is not captured in those logs; script results are still logged.
