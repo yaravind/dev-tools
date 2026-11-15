@@ -480,6 +480,14 @@ fi
 attempted_total=$((plugin_index - 1))
 print_structured_report "$overall_status" "$attempted_total"
 
+result_state=success
+if (( fail_count > 0 )); then
+  result_state=failed
+elif [[ "$overall_status" != SUCCESS ]]; then
+  result_state=issues
+fi
+ebk_write_task_result "$result_state" "$fail_count" || exit 1
+
 if [[ "$overall_status" != "SUCCESS" ]]; then
   exit 1
 fi

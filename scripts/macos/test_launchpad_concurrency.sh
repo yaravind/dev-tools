@@ -11,7 +11,7 @@ cleanup() {
   local run
   for run in "$first_run" "$second_run"; do
     if [[ -n "$run" && "$run" == "$test_repo_root/.run/launchpad/"* && -d "$run" ]]; then
-      rm -f "$run/vscode_setup.log" "$run/intellij_setup.log" "$run/pycharm_setup.log"
+      rm -f "$run/vscode_setup.log" "$run/intellij_setup.log" "$run/pycharm_setup.log" "$run/summary.json"
       rmdir "$run"
     fi
   done

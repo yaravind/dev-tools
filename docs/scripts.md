@@ -27,6 +27,10 @@ Windows child output uses one append-mode UTF-8 writer per invocation instead of
 
 Selected task commands are resolved once before the plan is displayed, including generated backup paths. The same executable and argument arrays are used for execution and logs; displayed commands use zsh escaping or PowerShell single-quoted literals with the call operator. Command text is never evaluated to execute a task.
 
+Launchpad supplies `EBK_RESULT_FILE` for optional version-1 child JSON results: `{"schema_version":1,"status":"issues","failed_installs":0}`. JetBrains scripts on both platforms emit this sidecar; status is no longer inferred from human summary text. Supported outcomes are `success` (exit 0), `issues` (exit 1, zero failed installs), `skipped` (exit 75), and `failed` (nonzero exit). Malformed or contradictory results fail explicitly. Legacy children without results use exit codes and existing task-specific soft-failure/Dock-skip policies.
+
+Each completed run persists `summary.json` with `schema_version`, overall `duration_seconds`, and ordered `tasks`. Task objects contain `id`, `status`, `exit_code`, `child_exit_code`, `duration_seconds`, `log_file`, and prerequisite `reason`; unavailable values are JSON null. The human summary retains five-decimal display precision. Summary-write failure makes the run unsuccessful.
+
 In interactive terminals, these prompts prefill the default as editable text after the prompt. Press Enter to accept it, or edit it using Backspace/Delete and the arrow keys (Home/End move within the value). The Dock prompt prefills `skip`. Redirected input continues to accept a blank line for the default.
 
 On macOS, editable prompts use the terminal directly even when launchpad pipes child-script output into its logs. Prompt editing is not captured in those logs; script results are still logged.

@@ -835,6 +835,56 @@ capture_task_output() {
   ' "$1"
 }
 
+read_child_result() {
+  local file="$1" rc="$2"
+  REPLY=""
+  [[ -f "$file" ]] || return 0
+  REPLY="$(perl -MJSON::PP -e '
+    open my $f, "<", $ARGV[0] or die "Cannot read child result: $!\n";
+    local $/; my $r = decode_json(<$f>);
+    die "Invalid child result schema\n" unless ref($r) eq "HASH" &&
+      defined($r->{schema_version}) && encode_json($r->{schema_version}) eq "1" &&
+      defined($r->{status}) && $r->{status} =~ /^(success|issues|skipped|failed)$/ &&
+      defined($r->{failed_installs}) && encode_json($r->{failed_installs}) =~ /^\d+$/;
+    my ($s, $n, $rc) = ($r->{status}, $r->{failed_installs}, $ARGV[1]);
+    die "Contradictory child result\n" unless
+      ($s eq "success" && $rc == 0 && $n == 0) ||
+      ($s eq "issues" && $rc == 1 && $n == 0) ||
+      ($s eq "skipped" && $rc == 75 && $n == 0) ||
+      ($s eq "failed" && $rc != 0);
+    print $s;
+  ' "$file" "$rc")" || {
+    record_failure_reason "Invalid structured child result: $file"
+    return 1
+  }
+}
+
+write_run_summary() {
+  [[ -n "$RUN_ROOT" && -d "$RUN_ROOT" ]] || return 0
+  local id
+  local -a rows
+  for id in "${TASK_ORDER[@]}"; do
+    [[ -n "${SELECTED[$id]:-}" ]] || continue
+    rows+=("$id" "${TASK_STATUS[$id]:-not-run}" "${TASK_EXIT[$id]:--}" "${TASK_CHILD_EXIT[$id]:--}" \
+      "${TASK_DURATION[$id]:--}" "${TASK_LOG[$id]:-}" "${TASK_BLOCK_REASON[$id]:-}")
+  done
+  perl -MJSON::PP -e '
+    my $duration = shift @ARGV;
+    my @tasks;
+    while (@ARGV) {
+      my ($id,$state,$rc,$child,$time,$log,$reason) = splice @ARGV,0,7;
+      push @tasks, { id=>$id, status=>$state, exit_code=>($rc eq "-" ? undef : 0+$rc),
+        child_exit_code=>($child eq "-" ? undef : 0+$child),
+        duration_seconds=>($time eq "-" ? undef : 0+$time), log_file=>($log || undef), reason=>($reason || undef) };
+    }
+    print JSON::PP->new->canonical->pretty->encode({schema_version=>1,
+      duration_seconds=>($duration eq "-" ? undef : 0+$duration), tasks=>\@tasks});
+  ' "${RUN_DURATION:--}" "${rows[@]}" > "$RUN_ROOT/summary.json" || {
+    log_error "Cannot persist launchpad summary: $RUN_ROOT/summary.json"
+    return 1
+  }
+}
+
 fail_task() {
   local id="$1" message="$2" rc="${3:-1}"
   TASK_STATUS[$id]="failed"
@@ -858,6 +908,7 @@ handle_run_signal() {
     fi
   fi
   printf -v RUN_DURATION '%.5f' "$((SECONDS - RUN_STARTED_AT))"
+  write_run_summary || rc=1
   print_summary
   exit "$rc"
 }
@@ -896,6 +947,7 @@ run_task() {
 run_task_impl() {
   local id="$1"
   local log_file="${RUN_ROOT}/${id}.log"
+  local result_file="${RUN_ROOT}/${id}.result.json" result_state
   local rc
   local -a pipeline_codes
 
@@ -976,7 +1028,8 @@ run_task_impl() {
     return 1
   fi
 
-  EBK_FORCE_COLOR=1 "${cmd[@]}" 2>&1 | capture_task_output "$log_file"
+  rm -f "$result_file" || return 1
+  EBK_FORCE_COLOR=1 EBK_RESULT_FILE="$result_file" "${cmd[@]}" 2>&1 | capture_task_output "$log_file"
   pipeline_codes=("${pipestatus[@]}")
   rc="${pipeline_codes[1]}"
   TASK_CHILD_EXIT[$id]="$rc"
@@ -992,7 +1045,17 @@ run_task_impl() {
     printf 'Exit code: %d\n' "$rc"
   } >> "$log_file" || return 1
 
-  if [[ "$id" == "dock_setup" && "$rc" -eq 75 ]]; then
+  if ! read_child_result "$result_file" "$rc"; then
+    fail_task "$id" "$LAST_ERROR"
+    return 1
+  fi
+  result_state="$REPLY"
+  if [[ "$result_state" == issues || "$result_state" == skipped ]]; then
+    TASK_STATUS[$id]="$result_state"
+    log_warn "${TASK_LABEL[$id]} completed with structured status: $result_state."
+    return 0
+  fi
+  if [[ -z "$result_state" && "$id" == "dock_setup" && "$rc" -eq 75 ]]; then
     TASK_STATUS[$id]="skipped"
     {
       printf 'Launchpad status: skipped\n'
@@ -1012,13 +1075,7 @@ run_task_impl() {
     fi
     TASK_STATUS[$id]="success"
     log_ok "${TASK_LABEL[$id]} completed."
-  elif task_allows_issues "$id"; then
-    TASK_STATUS[$id]="issues"
-    log_warn "${TASK_LABEL[$id]} completed with issues. Continuing; review ${log_file}."
-    return 0
-  elif [[ "$id" == "intellij_setup" || "$id" == "pycharm_setup" ]] &&
-       grep -Eq 'Status[[:space:]]+.*COMPLETED WITH ISSUES' "$log_file" &&
-       grep -Eq 'Failed installs[[:space:]]+0' "$log_file"; then
+  elif [[ -z "$result_state" ]] && task_allows_issues "$id"; then
     TASK_STATUS[$id]="issues"
     log_warn "${TASK_LABEL[$id]} completed with issues. Continuing; review ${log_file}."
     return 0
@@ -1080,6 +1137,7 @@ print_log_error_excerpt() {
     perl -pe 's/\e\[[0-9;]*[[:alpha:]]//g' "$log_file" | awk '
       {
         lower = tolower($0)
+        if (lower ~ /failed installs[[:space:]]+0[[:space:]]*$/) next
         if ($0 ~ /✖ ERROR/ ||
             lower ~ /(^|[[:space:]])fatal:/ ||
             lower ~ /(^|[[:space:]])error:/ ||
@@ -1227,6 +1285,7 @@ main() {
   local rc=$?
   trap - INT TERM EXIT
   printf -v RUN_DURATION '%.5f' "$((SECONDS - RUN_STARTED_AT))"
+  write_run_summary || rc=1
   print_summary
   return "$rc"
 }

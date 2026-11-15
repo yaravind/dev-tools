@@ -1,5 +1,15 @@
 # Shared CLI branding for dev-tools / Engineer Bootstrap Kit.
 
+function Write-EbkTaskResult {
+    param(
+        [ValidateSet("success", "issues", "skipped", "failed")][string]$Status,
+        [ValidateRange(0, [int]::MaxValue)][int]$FailedInstalls = 0
+    )
+    if (-not $env:EBK_RESULT_FILE) { return }
+    $result = @{ schema_version = 1; status = $Status; failed_installs = $FailedInstalls }
+    [IO.File]::WriteAllText($env:EBK_RESULT_FILE, ($result | ConvertTo-Json -Compress), [Text.UTF8Encoding]::new($false))
+}
+
 function Read-EbkLine {
     param([string]$Prompt)
     if ([Console]::IsInputRedirected) {

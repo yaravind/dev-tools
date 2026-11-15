@@ -74,6 +74,7 @@ try {
         foreach ($id in @("vscode_setup", "intellij_setup", "pycharm_setup")) {
             Remove-Item -LiteralPath (Join-Path $run "$id.log") -Force
         }
+        Remove-Item -LiteralPath (Join-Path $run "summary.json") -Force
         Remove-Item -LiteralPath $run
     }
     Remove-Item -LiteralPath (Join-Path $testRoot "block") -Force

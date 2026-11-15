@@ -420,6 +420,9 @@ Print-StructuredReport `
     -DependencyOrder @($dependencyOrder) `
     -DependencyParent $dependencyParent
 
+$resultState = if ($failCount -gt 0) { "failed" } elseif ($overallStatus -ne "SUCCESS") { "issues" } else { "success" }
+Write-EbkTaskResult -Status $resultState -FailedInstalls $failCount
+
 if ($overallStatus -ne "SUCCESS") {
     Write-Err "PyCharm setup completed with issues."
     exit 1

@@ -114,7 +114,7 @@ try {
     Assert-Launchpad (($runOutput | Where-Object { $_ -is [int] }) -eq 1) "Unexpected run failure lost exit status."
     Assert-Launchpad (($runOutput -join "`n") -match "Launchpad summary") "Exception bypassed final summary."
 } finally {
-    Remove-Item -LiteralPath (Join-Path $testRoot "logs/vscode_setup.log"), (Join-Path $testRoot "block") -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath (Join-Path $testRoot "logs/vscode_setup.log"), (Join-Path $testRoot "logs/summary.json"), (Join-Path $testRoot "block") -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath (Join-Path $testRoot "logs"), $testRoot -Force
 }
 Write-EbkOk "Launchpad infrastructure regression checks passed."

@@ -696,10 +696,54 @@ function New-TaskLogWriter {
     return [IO.StreamWriter]::new($LogFile, $true, [Text.UTF8Encoding]::new($false))
 }
 
+function Read-ChildResult {
+    param([string]$File, [int]$ExitCode)
+    if (-not (Test-Path -LiteralPath $File)) { return $null }
+    $result = Get-Content -LiteralPath $File -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+    if (($result.schema_version -isnot [int] -and $result.schema_version -isnot [long]) -or
+        $result.schema_version -ne 1 -or $result.status -notin @("success", "issues", "skipped", "failed") -or
+        ($result.failed_installs -isnot [int] -and $result.failed_installs -isnot [long]) -or $result.failed_installs -lt 0) {
+        throw "Invalid child result schema: $File"
+    }
+    $valid = switch ($result.status) {
+        "success" { $ExitCode -eq 0 -and $result.failed_installs -eq 0 }
+        "issues" { $ExitCode -eq 1 -and $result.failed_installs -eq 0 }
+        "skipped" { $ExitCode -eq 75 -and $result.failed_installs -eq 0 }
+        "failed" { $ExitCode -ne 0 }
+    }
+    if (-not $valid) { throw "Contradictory child result: $File" }
+    return $result.status
+}
+
+function Write-RunSummary {
+    if (-not $runRoot -or -not (Test-Path -LiteralPath $runRoot -PathType Container)) { return }
+    $rows = @(
+        foreach ($id in $script:TaskOrder) {
+            if (-not $script:Selected.ContainsKey($id)) { continue }
+            [ordered]@{
+                id = $id
+                status = if ($script:TaskStatus.ContainsKey($id)) { $script:TaskStatus[$id] } else { "not-run" }
+                exit_code = if ($script:TaskExit.ContainsKey($id) -and $script:TaskExit[$id] -ne "-") { [int]$script:TaskExit[$id] } else { $null }
+                child_exit_code = if ($script:TaskChildExit.ContainsKey($id)) { [int]$script:TaskChildExit[$id] } else { $null }
+                duration_seconds = if ($script:TaskDuration.ContainsKey($id)) { [double]::Parse($script:TaskDuration[$id], [Globalization.CultureInfo]::InvariantCulture) } else { $null }
+                log_file = if ($script:TaskLog.ContainsKey($id)) { $script:TaskLog[$id] } else { $null }
+                reason = if ($script:TaskBlockReason.ContainsKey($id)) { $script:TaskBlockReason[$id] } else { $null }
+            }
+        }
+    )
+    $summary = [ordered]@{
+        schema_version = 1
+        duration_seconds = if ($script:RunDuration -ne "-") { [double]::Parse($script:RunDuration, [Globalization.CultureInfo]::InvariantCulture) } else { $null }
+        tasks = $rows
+    }
+    [IO.File]::WriteAllText((Join-Path $runRoot "summary.json"), ($summary | ConvertTo-Json -Depth 5), [Text.UTF8Encoding]::new($false))
+}
+
 function Invoke-ChildTask {
     param([string]$Id, [hashtable]$Command, [string]$LogFile)
     $application = Get-Command $Command.File -CommandType Application -ErrorAction Stop
     $previousColor = $env:EBK_FORCE_COLOR
+    $previousResult = $env:EBK_RESULT_FILE
     # Windows PowerShell represents native stderr as ErrorRecords, even for warnings.
     $ErrorActionPreference = "Continue"
     $PSNativeCommandUseErrorActionPreference = $false
@@ -708,6 +752,9 @@ function Invoke-ChildTask {
         Initialize-EbkPaletteIfNeeded
         $writer = New-TaskLogWriter -LogFile $LogFile
         $writer.AutoFlush = $true
+        $resultFile = Join-Path (Split-Path -Parent $LogFile) "$Id.result.json"
+        if (Test-Path -LiteralPath $resultFile) { Remove-Item -LiteralPath $resultFile -ErrorAction Stop }
+        $env:EBK_RESULT_FILE = $resultFile
         $env:EBK_FORCE_COLOR = "1"
         $global:LASTEXITCODE = $null
         & $application.Source @($Command.Args) 2>&1 | ForEach-Object {
@@ -720,6 +767,7 @@ function Invoke-ChildTask {
         return $LASTEXITCODE
     } finally {
         $env:EBK_FORCE_COLOR = $previousColor
+        $env:EBK_RESULT_FILE = $previousResult
         if ($null -ne $LASTEXITCODE) { $script:TaskChildExit[$Id] = $LASTEXITCODE }
         if ($null -ne $writer) { $writer.Dispose() }
     }
@@ -796,6 +844,13 @@ function Invoke-TaskCore {
     Add-Content -Path $logFile -Value ("Finished: {0}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz'))
     Add-Content -Path $logFile -Value ("Exit code: {0}" -f $rc)
 
+    $resultState = Read-ChildResult -File (Join-Path $runRoot "$Id.result.json") -ExitCode $rc
+    if ($resultState -in @("issues", "skipped")) {
+        $script:TaskStatus[$Id] = $resultState
+        Write-Warn ("{0} completed with structured status: {1}." -f $task.Label, $resultState)
+        return 0
+    }
+
     if ($rc -eq 0) {
         try {
             Update-InstallEnvironment -Id $Id
@@ -811,7 +866,7 @@ function Invoke-TaskCore {
         return 0
     }
 
-    if ($task.SoftFail) {
+    if (-not $resultState -and $task.SoftFail) {
         $script:TaskStatus[$Id] = "issues"
         Write-Warn ("{0} completed with issues. Continuing; review {1}." -f $task.Label, $logFile)
         return 0
@@ -875,7 +930,7 @@ function Print-ProblemDetails {
 
         if (Test-Path -LiteralPath $logFile) {
             $matches = Get-Content -Path $logFile -ErrorAction SilentlyContinue |
-                Where-Object { $_ -match 'ERROR|FAIL|fatal:|Traceback|Exception|failed' } |
+                Where-Object { $_ -match 'ERROR|FAIL|fatal:|Traceback|Exception|failed' -and $_ -notmatch 'Failed installs\s+0\s*$' } |
                 Select-Object -First 8
             if ($matches) {
                 $matches | ForEach-Object { Write-Host ("      {0}" -f $_) }
@@ -943,6 +998,12 @@ function Invoke-LaunchpadRun {
     } finally {
         $runTimer.Stop()
         $script:RunDuration = $runTimer.Elapsed.TotalSeconds.ToString("F5", [Globalization.CultureInfo]::InvariantCulture)
+        try {
+            Write-RunSummary
+        } catch {
+            Write-EbkError "Cannot persist launchpad summary: $_"
+            $result = 1
+        }
         Print-Summary
     }
     return $result

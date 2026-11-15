@@ -6,6 +6,20 @@ ebk_command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
+ebk_write_task_result() {
+  local state="$1" failed_installs="${2:-0}"
+  [[ -n "${EBK_RESULT_FILE:-}" ]] || return 0
+  if [[ "$state" != success && "$state" != issues && "$state" != skipped && "$state" != failed ]] ||
+     [[ ! "$failed_installs" =~ '^[0-9]+$' ]]; then
+    ebk_log_error "Invalid structured task result."
+    return 1
+  fi
+  printf '{"schema_version":1,"status":"%s","failed_installs":%s}\n' "$state" "$failed_installs" > "$EBK_RESULT_FILE" || {
+    ebk_log_error "Cannot write structured task result: $EBK_RESULT_FILE"
+    return 1
+  }
+}
+
 ebk_read_default() {
   local prompt_text="$1" default_value="$2"
   REPLY="$default_value"
