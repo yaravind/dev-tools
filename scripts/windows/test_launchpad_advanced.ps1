@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "branding.ps1")
-$source = Get-Content -LiteralPath (Join-Path $PSScriptRoot "launchpad.ps1") -Raw
+$source = Get-Content -LiteralPath (Join-Path $PSScriptRoot "launchpad.ps1") -Raw -Encoding UTF8
 foreach ($statement in [ScriptBlock]::Create($source).Ast.EndBlock.Statements) {
     if ($statement -is [System.Management.Automation.Language.FunctionDefinitionAst]) {
         . ([ScriptBlock]::Create($statement.Extent.Text))
@@ -16,7 +16,9 @@ $script:TaskChildExit = @{}
 $writerFactory = (Get-Command New-TaskLogWriter).ScriptBlock
 $renderLine = (Get-Command Write-LaunchpadOutputLine).ScriptBlock
 $previousColor = $env:EBK_FORCE_COLOR
+$previousOutputEncoding = [Console]::OutputEncoding
 try {
+    [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
     $script:WriterCount = 0
     $script:RenderedCount = 0
     function New-TaskLogWriter {
@@ -54,6 +56,7 @@ try {
     Assert-Advanced $failed "Invalid log path must fail explicitly."
 } finally {
     $env:EBK_FORCE_COLOR = $previousColor
+    [Console]::OutputEncoding = $previousOutputEncoding
     Remove-Item Function:\Add-Content
     Set-Item Function:New-TaskLogWriter $writerFactory
     Set-Item Function:Write-LaunchpadOutputLine $renderLine

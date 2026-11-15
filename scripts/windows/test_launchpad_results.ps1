@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "branding.ps1")
-$source = Get-Content -LiteralPath (Join-Path $PSScriptRoot "launchpad.ps1") -Raw
+$source = Get-Content -LiteralPath (Join-Path $PSScriptRoot "launchpad.ps1") -Raw -Encoding UTF8
 foreach ($statement in [ScriptBlock]::Create($source).Ast.EndBlock.Statements) {
     if ($statement -is [System.Management.Automation.Language.FunctionDefinitionAst]) {
         . ([ScriptBlock]::Create($statement.Extent.Text))
@@ -69,7 +69,7 @@ try {
     try { Read-ChildResult -File $file -ExitCode 0 } catch { $failed = $true }
     if (-not $failed) { throw "Contradictory success exit code was accepted." }
     foreach ($scriptName in @("intellij_setup.ps1", "pycharm_setup.ps1")) {
-        $childSource = Get-Content -LiteralPath (Join-Path $PSScriptRoot $scriptName) -Raw
+        $childSource = Get-Content -LiteralPath (Join-Path $PSScriptRoot $scriptName) -Raw -Encoding UTF8
         $resultBlock = [regex]::Match($childSource, '(?s)\$resultState = if .*?Write-EbkTaskResult[^\r\n]+').Value
         if (-not $resultBlock) { throw "Child script is not wired to structured results: $scriptName" }
         foreach ($failCount in @(0, 2)) {

@@ -35,8 +35,12 @@ jobs:
           ./scripts/macos/test_setup_env_min.sh
 
   windows-tests:
-    name: Windows Script Tests
+    name: Windows Script Tests (${{ matrix.shell }})
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [powershell, pwsh]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,11 +52,11 @@ jobs:
         run: pwsh -c 'Import-Module PSScriptAnalyzer; Invoke-ScriptAnalyzer -Path scripts/windows/*.ps1'
 
       - name: Run Windows dry-run harness
-        shell: pwsh
+        shell: ${{ matrix.shell }}
         run: |
           ./scripts/windows/run_tests.ps1
 
       - name: Run Windows minimal setup verifier
-        shell: pwsh
+        shell: ${{ matrix.shell }}
         run: |
           ./scripts/windows/test_setup_env_min.ps1

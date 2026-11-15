@@ -1,7 +1,7 @@
 param([switch]$InputProbe)
 
 $ErrorActionPreference = "Stop"
-$source = Get-Content -LiteralPath (Join-Path $PSScriptRoot "launchpad.ps1") -Raw
+$source = Get-Content -LiteralPath (Join-Path $PSScriptRoot "launchpad.ps1") -Raw -Encoding UTF8
 . (Join-Path $PSScriptRoot "branding.ps1")
 if ($InputProbe) {
     try {

@@ -153,6 +153,10 @@ if ! zsh "${SCRIPT_DIR}/test_launchpad_results.sh"; then
   log_error "Launchpad result regression checks failed."
   ((fail_count++))
 fi
+if ! zsh "${SCRIPT_DIR}/test_launchpad_failures.sh"; then
+  log_error "Launchpad failure matrix checks failed."
+  ((fail_count++))
+fi
 if ((fail_count > 0 || shellcheck_fail > 0)); then
   exit 1
 fi

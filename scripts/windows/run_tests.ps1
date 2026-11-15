@@ -72,6 +72,7 @@ try {
     & (Join-Path $scriptDir "test_launchpad_concurrency.ps1")
     & (Join-Path $scriptDir "test_launchpad_advanced.ps1")
     & (Join-Path $scriptDir "test_launchpad_results.ps1")
+    & (Join-Path $scriptDir "test_launchpad_failures.ps1")
 } catch {
     Add-DryRunFailure "Launchpad regression checks failed: $_"
 }

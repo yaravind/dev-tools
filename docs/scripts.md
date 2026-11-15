@@ -31,6 +31,8 @@ Launchpad supplies `EBK_RESULT_FILE` for optional version-1 child JSON results: 
 
 Each completed run persists `summary.json` with `schema_version`, overall `duration_seconds`, and ordered `tasks`. Task objects contain `id`, `status`, `exit_code`, `child_exit_code`, `duration_seconds`, `log_file`, and prerequisite `reason`; unavailable values are JSON null. The human summary retains five-decimal display precision. Summary-write failure makes the run unsuccessful.
 
+The standard harnesses include mock-only launchpad failure matrices, environment handoff, command quoting, UTF-8 streaming, result validation, whole-run summary checks, and concurrent dry-runs. Expected error output from intentional failures does not indicate a failed test; use the harness exit code. Windows CI runs the harness under both Windows PowerShell 5.1 (`powershell`) and PowerShell 7 (`pwsh`).
+
 In interactive terminals, these prompts prefill the default as editable text after the prompt. Press Enter to accept it, or edit it using Backspace/Delete and the arrow keys (Home/End move within the value). The Dock prompt prefills `skip`. Redirected input continues to accept a blank line for the default.
 
 On macOS, editable prompts use the terminal directly even when launchpad pipes child-script output into its logs. Prompt editing is not captured in those logs; script results are still logged.

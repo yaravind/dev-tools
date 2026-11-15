@@ -6,6 +6,7 @@ function Write-EbkTaskResult {
         [ValidateRange(0, [int]::MaxValue)][int]$FailedInstalls = 0
     )
     if (-not $env:EBK_RESULT_FILE) { return }
+    $ErrorActionPreference = "Stop"
     $result = @{ schema_version = 1; status = $Status; failed_installs = $FailedInstalls }
     [IO.File]::WriteAllText($env:EBK_RESULT_FILE, ($result | ConvertTo-Json -Compress), [Text.UTF8Encoding]::new($false))
 }

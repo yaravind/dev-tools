@@ -930,7 +930,9 @@ function Print-ProblemDetails {
 
         if (Test-Path -LiteralPath $logFile) {
             $matches = Get-Content -Path $logFile -ErrorAction SilentlyContinue |
-                Where-Object { $_ -match 'ERROR|FAIL|fatal:|Traceback|Exception|failed' -and $_ -notmatch 'Failed installs\s+0\s*$' } |
+                Where-Object {
+                    $_ -match '^\s*(?:\S+\s+)?ERROR\s+|^\s*(?:Error:|fatal:|Traceback|Launchpad status: failed)|Failed installs\s+[1-9]|unknown plugins|completed with issues|^\s*\w+Exception:'
+                } |
                 Select-Object -First 8
             if ($matches) {
                 $matches | ForEach-Object { Write-Host ("      {0}" -f $_) }
